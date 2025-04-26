@@ -1,0 +1,36 @@
+<RCC>
+    <qresource prefix="/background">
+        <file>src/background/start_background.png</file>
+    </qresource>
+    <qresource prefix="/audio">
+        <file>src/sound/btnHoverSound.mp3</file>
+        <file>src/sound/btnclick.mp3</file>
+    </qresource>
+    <qresource prefix="/item">
+        <file>src/item/hexagon.png</file>
+        <file>src/item/classic.png</file>
+        <file>src/item/classic_hover.png</file>
+        <file>src/item/hexagon_hover.png</file>
+        <file>src/item/title.png</file>
+        <file>src/item/rankIcon.png</file>
+        <file>src/item/settingIcon.png</file>
+        <file>src/item/createModeIcon.png</file>
+        <file>src/item/levelBlock.png</file>
+        <file>src/item/backIcon.png</file>
+    </qresource>
+    <qresource prefix="/bgm">
+        <file>src/bgm/startSceneBGM.mp3</file>
+    </qresource>
+    <qresource prefix="/Levels">
+        <file>src/levelsDoc/ClassicL1.txt</file>
+        <file>src/levelsDoc/ClassicL2.txt</file>
+        <file>src/levelsDoc/ClassicL3.txt</file>
+        <file>src/levelsDoc/ClassicL4.txt</file>
+        <file>src/levelsDoc/ClassicL5.txt</file>
+        <file>src/levelsDoc/HexL1.txt</file>
+        <file>src/levelsDoc/HexL2.txt</file>
+        <file>src/levelsDoc/HexL3.txt</file>
+        <file>src/levelsDoc/HexL4.txt</file>
+        <file>src/levelsDoc/HexL5.txt</file>
+    </qresource>
+</RCC>
