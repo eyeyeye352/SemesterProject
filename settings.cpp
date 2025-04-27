@@ -13,3 +13,10 @@ int Settings::hexBtnY = 350;
 
 int Settings::musicVol = 1;
 int Settings::soundVol = 1;
+
+double Settings::startBtnOriginScale = 2;
+double Settings::funcBtnOriginScale = 1;
+double Settings::funcBtnOriginOpacity = 0.5;
+
+double Settings::levelBlockOriginScale = 1;
+double Settings::levelBlockSpacing = 35;

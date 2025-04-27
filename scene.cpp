@@ -6,8 +6,10 @@ Scene::Scene(QObject *parent)
     : QGraphicsScene{parent}
 {}
 
-StartScene::StartScene(QObject *parent):Scene{parent}
+StartScene::StartScene(QObject *parent)
+    :Scene{parent}
 {
+
     setSceneRect(QRectF(0,0,Settings::screenWidth,Settings::screenHeight));
     bg1 = new QGraphicsPixmapItem(QPixmap(":/background/src/background/start_background.png"));
     bg2 = new QGraphicsPixmapItem(QPixmap(":/background/src/background/start_background.png"));
@@ -23,7 +25,7 @@ StartScene::StartScene(QObject *parent):Scene{parent}
     classicBtn->setScale(2);
     hexBtn->setScale(2);
 
-    classicBtn->setPos(Settings::screenWidth/2 - classicBtn->sceneBoundingRect().width()/2,Settings::classicBtnY);
+    classicBtn->setPos((Settings::screenWidth - classicBtn->sceneBoundingRect().width())/2,Settings::classicBtnY);
     hexBtn->setPos(Settings::screenWidth/2 - hexBtn->sceneBoundingRect().width()/2,Settings::hexBtnY);
 
     addItem(classicBtn);
@@ -54,11 +56,13 @@ StartScene::StartScene(QObject *parent):Scene{parent}
     addItem(backBtn);
 
 
-    //levels
+    //levelBlocks
     for (int n = 1; n <= 5; ++n) {
         LevelBlock * l = new LevelBlock(n);
         //排版
-        l->moveBy(40*n + l->sceneBoundingRect().width()*(n-1),(Settings::screenHeight - l->sceneBoundingRect().height())/2);
+        l->moveBy(Settings::levelBlockSpacing*n + l->sceneBoundingRect().width()*(n-1),
+                  (Settings::screenHeight - l->sceneBoundingRect().height())/2);
+
         levels.push_back(l);
         l->setOpacity(0);
         addItem(l);
@@ -90,123 +94,120 @@ void StartScene::moveBG()
 
 
 
-//经典模式按钮
-ClassicBtn::ClassicBtn(QGraphicsItem *parent):
-    QGraphicsPixmapItem{QPixmap(":/item/src/item/classic.png"),parent}
+
+//加载场景
+LoadScene::LoadScene(QObject *parent):
+    Scene{parent},
+    dotNum(0)
 {
-    setAcceptHoverEvents(true);
-}
+    addPixmap(QPixmap(":/background/src/background/loadScene1.png"));
 
-void ClassicBtn::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
-{
-    MusicPlayer::getMPlayer()->startBtnSound();
-    setPixmap(QPixmap(":/item/src/item/classic_hover.png"));
-}
+    //半透明黑框
+    QGraphicsRectItem * blackArea = new QGraphicsRectItem(0,Settings::screenHeight-Settings::screenHeight/5,Settings::screenWidth,Settings::screenHeight/5);
+    blackArea->setBrush(Qt::black);
+    blackArea->setOpacity(0.5);
+    addItem(blackArea);
 
-void ClassicBtn::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
-{
-    setPixmap(QPixmap(":/item/src/item/classic.png"));
-}
+    //loadingtext
+    loadingText = new QGraphicsTextItem("Loading.");
 
-void ClassicBtn::mousePressEvent(QGraphicsSceneMouseEvent *event)
-{
-    //保证中心缩放后位置不变
-    QPointF center = sceneBoundingRect().center();
-    setScale(scale()*0.9);
-    QPointF dir = (center - sceneBoundingRect().center());
-    moveBy(dir.x(),dir.y());
-}
+    //(font)
+    int fontId = QFontDatabase::addApplicationFont(":/fonts/src/fonts/AaYuanWeiTuSi-2.ttf");
+    QString fontFamily = QFontDatabase::applicationFontFamilies(fontId).at(0);
+    QFont font(fontFamily,16);
+    loadingText->setFont(font);
+    loadingText->setDefaultTextColor(Qt::white);
 
-void ClassicBtn::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
-{
-    //保证中心缩放后位置不变
-    QPointF center = sceneBoundingRect().center();
-    setScale(2);
-    QPointF dir = center - sceneBoundingRect().center();
-    moveBy(dir.x(),dir.y());
-    MusicPlayer::getMPlayer()->clickSound();
-    emit clicked();
+    loadingText->moveBy(10,blackArea->sceneBoundingRect().center().y() - loadingText->sceneBoundingRect().height()/2);
+    addItem(loadingText);
+
+    //text: loading...anime( 0~3个点 )
+    QTimer* timer = new QTimer(this);
+    timer->start(300);
+    QObject::connect(timer,&QTimer::timeout,[this]{
+        dotNum = (dotNum + 1) % 4;
+        loadingText->setPlainText(QString("Loading%1").arg(QString(dotNum,'.')));
+    });
 
 
-}
-
-//hex模式按钮设置
-HexBtn::HexBtn(QGraphicsItem *parent):
-    QGraphicsPixmapItem{QPixmap(":/item/src/item/hexagon.png"),parent}
-{
-    setAcceptHoverEvents(true);
-}
-
-void HexBtn::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
-{
-    MusicPlayer::getMPlayer()->startBtnSound();
-    setPixmap(QPixmap(":/item/src/item/hexagon_hover.png"));
-}
-
-void HexBtn::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
-{
-    setPixmap(QPixmap(":/item/src/item/hexagon.png"));
-}
-
-void HexBtn::mousePressEvent(QGraphicsSceneMouseEvent *event)
-{
-    //保证中心缩放后位置不变
-    QPointF center = sceneBoundingRect().center();
-    setScale(scale()*0.9);
-    QPointF dir = (center - sceneBoundingRect().center());
-    moveBy(dir.x(),dir.y());
-}
-
-void HexBtn::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
-{
-    //保证中心缩放后位置不变
-    QPointF center = sceneBoundingRect().center();
-    setScale(2);
-    QPointF dir = center - sceneBoundingRect().center();
-    moveBy(dir.x(),dir.y());
-    MusicPlayer::getMPlayer()->clickSound();
-    emit clicked();
 }
 
 
 
 
 
-FunctionBtn::FunctionBtn(QPixmap pixmap, QGraphicsItem *parent):
-    QGraphicsPixmapItem{pixmap,parent}
+//游戏内关卡场景
+LevelScene::LevelScene(QObject *parent)
+    :Scene{parent}
 {
-    setAcceptHoverEvents(true);
-    setOpacity(0.5);
+    setSceneRect(QRectF(0,0,Settings::screenWidth,Settings::screenHeight));
+    QGraphicsPixmapItem * bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/ingame_background1.png"));
+    addItem(bg);
+
+    //functional btns
+    settingBtn = new FunctionBtn(QPixmap(":/item/src/item/settingIcon.png"));
+    rankBtn = new FunctionBtn(QPixmap(":/item/src/item/rankIcon.png"));
+    backBtn = new FunctionBtn(QPixmap(":/item/src/item/backIcon.png"));
+
+    settingBtn->setPos(5,Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
+    rankBtn->setPos(10 + settingBtn->sceneBoundingRect().width() , Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
+    backBtn->setPos(15 + 2*settingBtn->sceneBoundingRect().width() ,Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
+
+    settingBtn->setOpacity(Settings::funcBtnOriginOpacity*0.5);
+    rankBtn->setOpacity(Settings::funcBtnOriginOpacity*0.5);
+    backBtn->setOpacity(Settings::funcBtnOriginOpacity*0.5);
+
+    addItem(settingBtn);
+    addItem(rankBtn);
+    addItem(backBtn);
+
+    //title
+    title = new QGraphicsTextItem();
+    //style
+    int fontId = QFontDatabase::addApplicationFont(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf");
+    QString fontFamily = QFontDatabase::applicationFontFamilies(fontId).at(0);
+    QFont font(fontFamily,25);
+    title->setFont(font);
+    title->setDefaultTextColor(Qt::white);
+    title->setPos((Settings::screenWidth - title->sceneBoundingRect().width())/2,Settings::screenHeight/10);
+    addItem(title);
+
 }
 
-void FunctionBtn::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
+void LevelScene::loadLevel(QString levelInfo)
 {
-    setOpacity(1);
+    info = levelInfo;
+    QStringList strList = info.split("\r\n");
+    QString titleName;
+
+    //字符串处理
+    for (int line = 0; line < strList.size(); ++line) {
+        if(strList[line].startsWith("title=")){
+            titleName = strList[line].remove("title=");
+        }
+        else if(strList[line].startsWith("difficulty=")){
+            QStringList nums = strList[line].remove("difficulty=").split(',');
+            rows = nums[0].toInt();
+            cols = nums[1].toInt();
+        }
+        else if(strList[line].startsWith("content=")){
+            for (int y = line+1; y < line+1+cols; ++y) {
+                contents.append(strList[y]);
+            }
+            //读取结束
+            break;
+        }
+    }
+
+    //test(succeed)
+    // qDebug() << "title: " << title;
+    // qDebug() << "r/c: " << rows << "/" << cols;
+    // qDebug() << "content" << contents;
+
+    title->setPlainText(titleName);
+
+
 }
 
-void FunctionBtn::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
-{
-    setOpacity(0.5);
-}
-
-void FunctionBtn::mousePressEvent(QGraphicsSceneMouseEvent *event)
-{
-    //保证中心缩放后位置不变
-    QPointF center = sceneBoundingRect().center();
-    setScale(0.9);
-    QPointF dir = (center - sceneBoundingRect().center());
-    moveBy(dir.x(),dir.y());
-}
-
-void FunctionBtn::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
-{
-    //保证中心缩放后位置不变
-    QPointF center = sceneBoundingRect().center();
-    setScale(1);
-    QPointF dir = center - sceneBoundingRect().center();
-    moveBy(dir.x(),dir.y());
-    MusicPlayer::getMPlayer()->clickSound();
-    emit clicked();
-}
 
 

@@ -18,6 +18,12 @@
 #include <QPropertyAnimation>
 #include <QParallelAnimationGroup>
 #include <QSequentialAnimationGroup>
+#include <QFontDatabase>
+
+enum Mode{
+    CLASSIC,
+    HEX,
+};
 
 class Settings
 {
@@ -37,6 +43,13 @@ public:
     //audio 音量
     static int musicVol;
     static int soundVol;
+
+    //排版美观相关参数
+    static double startBtnOriginScale;
+    static double funcBtnOriginScale;
+    static double funcBtnOriginOpacity;
+    static double levelBlockOriginScale;
+    static double levelBlockSpacing;
 };
 
 #endif // SETTINGS_H

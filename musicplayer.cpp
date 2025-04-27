@@ -53,3 +53,8 @@ void MusicPlayer::clickSound()
     clicksound->play();
 }
 
+QMediaPlayer *MusicPlayer::getBgmPlayer()
+{
+    return bgm;
+}
+

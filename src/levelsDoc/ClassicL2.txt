@@ -1,0 +1,7 @@
+title=月夜
+difficulty=5,4
+content=
+夜静月如霜
+林深宿鸟藏
+寒溪流碎影
+幽梦绕山乡

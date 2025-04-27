@@ -26,8 +26,10 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         settings.h settings.cpp
         src.qrc
         musicplayer.h musicplayer.cpp
-        levels.h levels.cpp
+
         animation.h animation.cpp
+        gameobject.h gameobject.cpp
+        textblock.h textblock.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET SemesterPJ APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

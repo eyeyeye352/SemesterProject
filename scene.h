@@ -3,84 +3,15 @@
 
 #include "settings.h"
 #include "musicplayer.h"
-#include "levels.h"
+#include "gameobject.h"
+#include "textblock.h"
+
 class Scene : public QGraphicsScene
 {
 
 public:
     Scene(QObject *parent = nullptr);
 };
-
-
-class ClassicBtn : public QObject , public QGraphicsPixmapItem{
-
-    Q_OBJECT
-    // 声明 opacity 属性
-    Q_PROPERTY(qreal opacity READ opacity WRITE setOpacity)
-    // 声明 pos 属性
-    Q_PROPERTY(QPointF pos READ pos WRITE setPos)
-
-public:
-    ClassicBtn(QGraphicsItem *parent = nullptr);
-
-    //鼠标悬停特效
-    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
-    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
-    //点击效果
-    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
-
-signals:
-    void clicked();
-};
-
-class HexBtn : public QObject , public QGraphicsPixmapItem{
-
-    Q_OBJECT
-    // 声明 opacity 属性
-    Q_PROPERTY(qreal opacity READ opacity WRITE setOpacity)
-    // 声明 pos 属性
-    Q_PROPERTY(QPointF pos READ pos WRITE setPos)
-
-public:
-    HexBtn(QGraphicsItem *parent = nullptr);
-
-    //鼠标悬停特效
-    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
-    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
-    //点击效果
-    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
-
-signals:
-    void clicked();
-};
-
-
-
-class FunctionBtn : public QObject , public QGraphicsPixmapItem{
-
-    Q_OBJECT
-    // 声明 opacity 属性
-    Q_PROPERTY(qreal opacity READ opacity WRITE setOpacity)
-    // 声明 pos 属性
-    Q_PROPERTY(QPointF pos READ pos WRITE setPos)
-
-public:
-    FunctionBtn(QPixmap pixmap,QGraphicsItem *parent = nullptr);
-
-    //鼠标悬停特效
-    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
-    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
-    //点击效果
-    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
-
-signals:
-    void clicked();
-};
-
-
 
 
 
@@ -111,12 +42,45 @@ public:
     //五个关卡
     QList<LevelBlock*> levels;
 
-signals:
-
-
+    Mode currentMode;
 
 public slots:
     void moveBG();
+};
+
+
+
+
+class LevelScene : public Scene{
+public:
+    LevelScene(QObject* parent = nullptr);
+
+    //三个功能按钮
+    FunctionBtn *settingBtn, *rankBtn, *backBtn;
+
+    //关卡元素们
+    QList<TextBlock*> textBlocks;
+
+    //载入关卡内容
+    void loadLevel(QString levelInfo);
+
+    //关卡内容
+    QString info;
+    QGraphicsTextItem * title;
+    QString contents;
+    int cols,rows;
+};
+
+
+
+class LoadScene : public Scene{
+public:
+    LoadScene(QObject* parent = nullptr);
+
+
+private:
+    QGraphicsTextItem* loadingText;
+    int dotNum;
 };
 
 #endif // SCENE_H

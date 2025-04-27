@@ -1,0 +1,7 @@
+title=春景
+difficulty=5,4
+content=
+春风拂翠枝
+嫩蕊绽新姿
+燕舞花间戏
+蝶翩映碧池
