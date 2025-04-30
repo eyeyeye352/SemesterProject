@@ -4,13 +4,13 @@
 
 Scene::Scene(QObject *parent)
     : QGraphicsScene{parent}
-{}
+{
+    setSceneRect(QRectF(0,0,Settings::screenWidth,Settings::screenHeight));
+}
 
 StartScene::StartScene(QObject *parent)
     :Scene{parent}
 {
-
-    setSceneRect(QRectF(0,0,Settings::screenWidth,Settings::screenHeight));
     bg1 = new QGraphicsPixmapItem(QPixmap(":/background/src/background/start_background.png"));
     bg2 = new QGraphicsPixmapItem(QPixmap(":/background/src/background/start_background.png"));
     bg2->setX(Settings::screenWidth - 1);
@@ -67,9 +67,6 @@ StartScene::StartScene(QObject *parent)
         l->setOpacity(0);
         addItem(l);
     }
-
-
-
 }
 
 StartScene::~StartScene(){}
@@ -128,8 +125,6 @@ LoadScene::LoadScene(QObject *parent):
         dotNum = (dotNum + 1) % 4;
         loadingText->setPlainText(QString("Loading%1").arg(QString(dotNum,'.')));
     });
-
-
 }
 
 
@@ -140,7 +135,6 @@ LoadScene::LoadScene(QObject *parent):
 LevelScene::LevelScene(QObject *parent)
     :Scene{parent}
 {
-    setSceneRect(QRectF(0,0,Settings::screenWidth,Settings::screenHeight));
     QGraphicsPixmapItem * bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/ingame_background1.png"));
     addItem(bg);
 
@@ -153,9 +147,9 @@ LevelScene::LevelScene(QObject *parent)
     rankBtn->setPos(10 + settingBtn->sceneBoundingRect().width() , Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
     backBtn->setPos(15 + 2*settingBtn->sceneBoundingRect().width() ,Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
 
-    settingBtn->setOpacity(Settings::funcBtnOriginOpacity*0.5);
-    rankBtn->setOpacity(Settings::funcBtnOriginOpacity*0.5);
-    backBtn->setOpacity(Settings::funcBtnOriginOpacity*0.5);
+    settingBtn->setOpacity(Settings::funcBtnOriginOpacity);
+    rankBtn->setOpacity(Settings::funcBtnOriginOpacity);
+    backBtn->setOpacity(Settings::funcBtnOriginOpacity);
 
     addItem(settingBtn);
     addItem(rankBtn);
@@ -169,13 +163,20 @@ LevelScene::LevelScene(QObject *parent)
     QFont font(fontFamily,25);
     title->setFont(font);
     title->setDefaultTextColor(Qt::white);
-    title->setPos((Settings::screenWidth - title->sceneBoundingRect().width())/2,Settings::screenHeight/10);
+
     addItem(title);
+    title->setPos((Settings::screenWidth - title->sceneBoundingRect().width())/2,10);
 
 }
 
 void LevelScene::loadLevel(QString levelInfo)
 {
+
+    for (TextBlock* tb:textBlocks) {
+        removeItem(tb);
+    }
+    textBlocks.clear();
+
     info = levelInfo;
     QStringList strList = info.split("\r\n");
     QString titleName;
@@ -200,14 +201,74 @@ void LevelScene::loadLevel(QString levelInfo)
     }
 
     //test(succeed)
-    // qDebug() << "title: " << title;
-    // qDebug() << "r/c: " << rows << "/" << cols;
-    // qDebug() << "content" << contents;
+    qDebug() << "content" << contents;
 
     title->setPlainText(titleName);
+
+    //textblocks
+    //big rect size
+    double rectWidth = rows*Settings::textBlockSize;
+    double rectHeight = cols*Settings::textBlockSize;
+
+    for (int y = 0; y < cols; ++y) {
+        for (int x = 0; x < rows; ++x) {
+            QPoint xy(x,y);
+            QString word = contents[y*rows + x];
+            TextBlock * block = new TextBlock(xy,word);
+
+            //排版到中央
+            double startX = (Settings::screenWidth - rectWidth)/2 + x*Settings::textBlockSize;
+            double startY = (Settings::screenHeight - rectHeight)/2 + y*Settings::textBlockSize;
+
+            block->setPos(startX,startY);
+            textBlocks.append(block);
+            addItem(block);
+        }
+    }
 
 
 }
 
 
 
+
+
+SettingPage::SettingPage(QObject *parent)
+    :Scene{parent}
+{
+
+    QGraphicsPixmapItem* bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/settingPage.png"));
+    addItem(bg);
+
+    bg->setPos((Settings::screenWidth - bg->sceneBoundingRect().width())/2,
+               (Settings::screenHeight - bg->sceneBoundingRect().height())/2);
+
+    //Valsets
+    musicSli = new ValSets(bg);
+    soundSli = new ValSets(bg);
+    musicSli->setPos(Settings::settingPage_MusicValSet);
+    soundSli->setPos(Settings::settingPage_SoundValSet);
+    addItem(musicSli);
+    addItem(soundSli);
+    connect(musicSli,&ValSets::valueChanged,[this](double newVol){
+        emit changeMusicVol(newVol);
+    });
+    connect(soundSli,&ValSets::valueChanged,[this](double newVol){
+        emit changeSoundVol(newVol);
+    });
+
+
+    //btn
+    backHomeBtn = new FunctionBtn(QPixmap(":/item/src/item/BackHome_inSettingPage.png"),bg);
+    backHomeBtn->setOpacity(1);
+    backHomeBtn->setPos((bg->sceneBoundingRect().width()-backHomeBtn->sceneBoundingRect().width())/2,
+                        bg->sceneBoundingRect().height() - backHomeBtn->sceneBoundingRect().height());
+    addItem(backHomeBtn);
+
+
+    QObject::connect(backHomeBtn,&GameBtn::clicked,[this]{ emit backHome();});
+
+
+
+
+}

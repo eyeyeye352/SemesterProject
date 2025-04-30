@@ -29,9 +29,8 @@ public:
     void startBGM();
     void startBtnSound();
     void clickSound();
-    QMediaPlayer* getBgmPlayer();
-
-private:
+    void setBgmVol(double vol);
+    void setSoundVol(double vol);
 
     QMediaPlayer* bgm;
     QMediaPlayer* btnsound;

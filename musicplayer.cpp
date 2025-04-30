@@ -53,8 +53,14 @@ void MusicPlayer::clickSound()
     clicksound->play();
 }
 
-QMediaPlayer *MusicPlayer::getBgmPlayer()
+void MusicPlayer::setBgmVol(double vol)
 {
-    return bgm;
+    bgm->audioOutput()->setVolume(vol);
+}
+
+void MusicPlayer::setSoundVol(double vol)
+{
+    btnsound->audioOutput()->setVolume(vol);
+    clicksound->audioOutput()->setVolume(vol);
 }
 

@@ -24,9 +24,10 @@ class GameBtn : public GameObject
 {
     Q_OBJECT
 
-protected:
-
+public:
     GameBtn(QPixmap pixmap,QGraphicsItem *parent = nullptr);
+
+protected:
 
     //鼠标特效
     virtual void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override{}
@@ -125,13 +126,7 @@ private:
 
 
 
-class BlackOverlay : public GameObject{
 
-    Q_OBJECT
-    Q_PROPERTY(qreal opacity READ opacity WRITE setOpacity)
-public:
-    BlackOverlay(QGraphicsItem *parent = nullptr);
-};
 
 
 

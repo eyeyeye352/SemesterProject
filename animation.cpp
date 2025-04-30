@@ -3,190 +3,121 @@
 
 Animation::Animation() {}
 
-void Animation::switchToLevelPage(StartScene * startScene)
+//切换场景的通用接口
+void Animation::changeScene(Scene *origin, Scene *dest,QGraphicsView* view,int loadingTime)
 {
-
-
-    QPropertyAnimation * classicBtnAnime = Animation::out(startScene->classicBtn,500);
-    QPropertyAnimation * hexBtnAnime = Animation::out(startScene->hexBtn,500);
-    QPropertyAnimation * backBtnAnime = Animation::in(startScene->backBtn,500,0,Settings::funcBtnOriginOpacity);
-
-    QParallelAnimationGroup * outs = new QParallelAnimationGroup;
-    outs->addAnimation(classicBtnAnime);
-    outs->addAnimation(hexBtnAnime);
-
-
-    QParallelAnimationGroup * ins = new QParallelAnimationGroup;
-    ins->addAnimation(backBtnAnime);
-
-    for (int i = 0; i < startScene->levels.size(); ++i) {
-        QPropertyAnimation* in = Animation::in(startScene->levels[i],500);
-        ins->addAnimation(in);
-    }
-
-
-    QSequentialAnimationGroup * allAnime = new QSequentialAnimationGroup;
-    allAnime->addAnimation(outs);
-    allAnime->addAnimation(ins);
-    allAnime->start(QAbstractAnimation::DeleteWhenStopped);
-
-}
-
-void Animation::backToHost(StartScene * startScene)
-{
-
-    QPropertyAnimation * classicBtnAnime = Animation::in(startScene->classicBtn,500);
-    QPropertyAnimation * hexBtnAnime = Animation::in(startScene->hexBtn,500);
-    QPropertyAnimation * backBtnAnime = Animation::out(startScene->backBtn,500,Settings::funcBtnOriginOpacity,0);
-
-    QParallelAnimationGroup * ins = new QParallelAnimationGroup;
-    ins->addAnimation(classicBtnAnime);
-    ins->addAnimation(hexBtnAnime);
-
-
-    QParallelAnimationGroup * outs = new QParallelAnimationGroup;
-    outs->addAnimation(backBtnAnime);
-
-    for (int i = 0; i < startScene->levels.size(); ++i) {
-        QPropertyAnimation* out = Animation::out(startScene->levels[i],500);
-        outs->addAnimation(out);
-    }
-
-
-    QSequentialAnimationGroup * allAnime = new QSequentialAnimationGroup;
-    allAnime->addAnimation(outs);
-    allAnime->addAnimation(ins);
-    allAnime->start(QAbstractAnimation::DeleteWhenStopped);
-}
-
-void Animation::backToHost(LevelScene * gamescene, StartScene * startscene, QGraphicsView* view)
-{
+    //先用黑布盖住
     BlackOverlay* black = new BlackOverlay;
     LoadScene* loadScene = new LoadScene;
-    gamescene->addItem(black);
+    origin->addItem(black);
 
-    QPropertyAnimation* blackin = Animation::in(black,300);
-    QPropertyAnimation* blackin2 = Animation::in(black,300);
-    QPropertyAnimation* blackout = Animation::out(black,300);
-    QPropertyAnimation* blackout2 = Animation::out(black,300);
+    QSequentialAnimationGroup* anime = new QSequentialAnimationGroup;
 
-    QSequentialAnimationGroup* allAnime = new QSequentialAnimationGroup;
-    allAnime->addAnimation(blackin);
-    allAnime->addAnimation(blackout);
-    allAnime->addPause(1000);
-    allAnime->addAnimation(blackin2);
-    allAnime->addAnimation(blackout2);
+    //黑幕淡入淡出2次
+    anime->addAnimation(Animation::MakeAnime(black,"opacity",300,0,1));
+    anime->addAnimation(Animation::MakeAnime(black,"opacity",300,1,0));
+    anime->addPause(loadingTime);
+    anime->addAnimation(Animation::MakeAnime(black,"opacity",300,0,1));
+    anime->addAnimation(Animation::MakeAnime(black,"opacity",300,1,0));
+
 
     //暂停期间更换scene到loadscene，然后在换到gamescene
-    QObject::connect(blackin,&QPropertyAnimation::finished,[=]{
+    QObject::connect(anime->animationAt(0),&QPropertyAnimation::finished,[=]{
         loadScene->addItem(black);
         view->setScene(loadScene);
     });
-    QObject::connect(blackin2,&QPropertyAnimation::finished,[=]{
-        startscene->addItem(black);
-        view->setScene(startscene);
-    });
-    QObject::connect(blackout2,&QPropertyAnimation::finished,[=]{
-        startscene->removeItem(black);
-        gamescene->removeItem(black);
+    QObject::connect(anime->animationAt(3),&QPropertyAnimation::finished,[=]{
+        dest->addItem(black);
+        view->setScene(dest);
         delete loadScene;
     });
-
-    allAnime->start(QAbstractAnimation::DeleteWhenStopped);
+    anime->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
 
-void Animation::transToGame(StartScene * startScene, LevelScene * gameScene,QGraphicsView* view)
+
+void Animation::goLevelSelection(StartScene * startScene)
+{
+    QParallelAnimationGroup* outs = new QParallelAnimationGroup;
+    QParallelAnimationGroup* ins = new QParallelAnimationGroup;
+
+    outs->addAnimation(Animation::MakeAnime(startScene->classicBtn,"opacity",500,1,0));
+    outs->addAnimation(Animation::MakeAnime(startScene->hexBtn,"opacity",500,1,0));
+
+    ins->addAnimation(Animation::MakeAnime(startScene->backBtn,"opacity",500,0,Settings::funcBtnOriginOpacity));
+
+    for (int i = 0; i < startScene->levels.size(); ++i) {
+        ins->addAnimation(Animation::MakeAnime(startScene->levels[i],"opacity",500,0,1));
+    }
+
+
+    QSequentialAnimationGroup * anime = new QSequentialAnimationGroup;
+    anime->addAnimation(outs);
+    anime->addAnimation(ins);
+    anime->start(QAbstractAnimation::DeleteWhenStopped);
+
+}
+
+//选择关卡页面回到起始页面
+void Animation::backModeSelection(StartScene * startScene)
 {
 
-    BlackOverlay* black = new BlackOverlay;
-    LoadScene* loadScene = new LoadScene;
-    startScene->addItem(black);
+    QParallelAnimationGroup* outs = new QParallelAnimationGroup;
+    QParallelAnimationGroup* ins = new QParallelAnimationGroup;
 
-    QPropertyAnimation* blackin = Animation::in(black,500);
-    QPropertyAnimation* blackin2 = Animation::in(black,500);
-    QPropertyAnimation* blackout = Animation::out(black,500);
-    QPropertyAnimation* blackout2 = Animation::out(black,500);
+    outs->addAnimation(Animation::MakeAnime(startScene->backBtn,"opacity",500,Settings::funcBtnOriginOpacity,0));
 
-    QSequentialAnimationGroup* allAnime = new QSequentialAnimationGroup;
-    allAnime->addAnimation(blackin);
-    allAnime->addAnimation(blackout);
-    allAnime->addPause(2000);
-    allAnime->addAnimation(blackin2);
-    allAnime->addAnimation(blackout2);
+    for (int i = 0; i < startScene->levels.size(); ++i) {
+        outs->addAnimation(Animation::MakeAnime(startScene->levels[i],"opacity",500,1,0));
+    }
 
-    //暂停期间更换scene到loadscene，然后在换到gamescene
-    QObject::connect(blackin,&QPropertyAnimation::finished,[=]{
-        loadScene->addItem(black);
-        view->setScene(loadScene);
-    });
-    QObject::connect(blackin2,&QPropertyAnimation::finished,[=]{
-        gameScene->addItem(black);
-        view->setScene(gameScene);
-    });
-    QObject::connect(blackout2,&QPropertyAnimation::finished,[=]{
-        startScene->removeItem(black);
-        gameScene->removeItem(black);
-        delete loadScene;
-    });
 
-    allAnime->start(QAbstractAnimation::DeleteWhenStopped);
+    ins->addAnimation(Animation::MakeAnime(startScene->classicBtn,"opacity",500,0,1));
+    ins->addAnimation(Animation::MakeAnime(startScene->hexBtn,"opacity",500,0,1));
+
+
+    QSequentialAnimationGroup * anime = new QSequentialAnimationGroup;
+    anime->addAnimation(outs);
+    anime->addAnimation(ins);
+    anime->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
 
 
 
-
-QPropertyAnimation *Animation::out(QObject *obj, int time, double sVal, double eVal)
-{
-    QPropertyAnimation * outAnime = new QPropertyAnimation(obj,"opacity");
-    outAnime->setDuration(time);
-    outAnime->setStartValue(sVal);
-    outAnime->setEndValue(eVal);
-    return outAnime;
-}
-
-
-QPropertyAnimation * Animation::in(QObject *obj, int time, double sVal, double eVal)
-{
-    QPropertyAnimation * inAnime = new QPropertyAnimation(obj,"opacity");
-    inAnime->setDuration(time);
-    inAnime->setStartValue(sVal);
-    inAnime->setEndValue(eVal);
-    return inAnime;
-}
 
 
 void Animation::changeMusic(QUrl url)
 {
     //音乐淡入淡出，更换
-    QMediaPlayer* bgm = MusicPlayer::getMPlayer()->getBgmPlayer();
-    QAudioOutput* bgmOutPut = bgm->audioOutput();
-
-    QPropertyAnimation* mFadeout = new QPropertyAnimation(bgmOutPut,"volume");
-    QPropertyAnimation* mFadein = new QPropertyAnimation(bgmOutPut,"volume");
-
-    mFadeout->setDuration(300);
-    mFadeout->setStartValue(Settings::musicVol);
-    mFadeout->setEndValue(0);
-
-    mFadein->setDuration(300);
-    mFadein->setStartValue(0);
-    mFadein->setEndValue(Settings::musicVol);
+    QMediaPlayer* bgm = MusicPlayer::getMPlayer()->bgm;
 
     QSequentialAnimationGroup * anime = new QSequentialAnimationGroup;
-    anime->addAnimation(mFadeout);
+    anime->addAnimation(Animation::MakeAnime(bgm->audioOutput(),"volumn",300,Settings::musicVol,0));
     anime->addPause(1000);
-    anime->addAnimation(mFadein);
+    anime->addAnimation(Animation::MakeAnime(bgm->audioOutput(),"volumn",300,0,Settings::musicVol));
 
-    QObject::connect(mFadeout,&QPropertyAnimation::finished,[bgm,url]{
+
+
+    QObject::connect(anime->animationAt(0),&QPropertyAnimation::finished,[bgm,url]{
         bgm->setSource(QUrl(url));
     });
-    QObject::connect(mFadein,&QPropertyAnimation::finished,[bgm,url]{
+    QObject::connect(anime->animationAt(1),&QPropertyAnimation::finished,[bgm,url]{
         bgm->setLoops(QMediaPlayer::Infinite);
         bgm->play();
     });
 
     anime->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+
+
+QPropertyAnimation *Animation::MakeAnime(QObject *obj, QByteArray property, int time, QVariant sval, QVariant eval)
+{
+    QPropertyAnimation* anime = new QPropertyAnimation(obj,property);
+    anime->setDuration(time);
+    anime->setStartValue(sval);
+    anime->setEndValue(eval);
+    return anime;
 }
 

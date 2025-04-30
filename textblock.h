@@ -10,9 +10,12 @@ class TextBlock : public GameObject
     Q_OBJECT
 public:
     TextBlock(QGraphicsItem *parent = nullptr);
+    TextBlock(QPoint xypos,QString word,QGraphicsItem *parent = nullptr);
+
+    void setWord(QString newWord);
 
     QPoint xy;
-    QString word;
+    QGraphicsTextItem* word;
 };
 
 

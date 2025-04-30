@@ -4,6 +4,7 @@
         <file>src/background/ingame_background1.png</file>
         <file>src/background/loadScene1.png</file>
         <file>src/background/BlackOverLay.png</file>
+        <file>src/background/settingPage.png</file>
     </qresource>
     <qresource prefix="/audio">
         <file>src/sound/btnHoverSound.mp3</file>
@@ -21,6 +22,10 @@
         <file>src/item/levelBlock.png</file>
         <file>src/item/backIcon.png</file>
         <file>src/item/wordBlock.png</file>
+        <file>src/item/BackHome_inSettingPage.png</file>
+        <file>src/item/Myslider_Scrollbar30050.png</file>
+        <file>src/item/MySliderObj.png</file>
+        <file>src/item/valSetsBtn.png</file>
     </qresource>
     <qresource prefix="/bgm">
         <file>src/bgm/startSceneBGM.mp3</file>
@@ -41,5 +46,7 @@
     <qresource prefix="/fonts">
         <file>src/fonts/AaYuanWeiTuSi-2.ttf</file>
         <file>src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf</file>
+        <file>src/fonts/dinglieciweifont20250217-2.ttf</file>
+        <file>src/fonts/XiangJiaoKuanMaoShuaLingGanTi-2.ttf</file>
     </qresource>
 </RCC>

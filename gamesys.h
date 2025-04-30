@@ -25,6 +25,8 @@ public slots:
 
     //功能纽
     void checkSetting();
+
+
     void checkRank();
     void goCreateMode();
 
@@ -36,7 +38,8 @@ public slots:
 private:
     StartScene* startscene;
     LevelScene* gamescene;
-    QGraphicsView* view;
+    SettingPage* settingPage;
+    QGraphicsView* view , *tempview;
 
     //timers
     QTimer * bgmoveTimer;

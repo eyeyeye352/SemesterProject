@@ -19,6 +19,15 @@
 #include <QParallelAnimationGroup>
 #include <QSequentialAnimationGroup>
 #include <QFontDatabase>
+#include <QSlider>
+#include <QGraphicsWidget>
+#include <QStyle>
+#include <QStyleOptionGraphicsItem>
+#include <QGraphicsProxyWidget>
+#include <QGraphicsSceneMouseEvent>
+#include <QTextCharFormat>
+#include <QTextFormat>
+#include <QTextCursor>
 
 enum Mode{
     CLASSIC,
@@ -41,8 +50,8 @@ public:
     static int hexBtnY;
 
     //audio 音量
-    static int musicVol;
-    static int soundVol;
+    static double musicVol;
+    static double soundVol;
 
     //排版美观相关参数
     static double startBtnOriginScale;
@@ -50,6 +59,13 @@ public:
     static double funcBtnOriginOpacity;
     static double levelBlockOriginScale;
     static double levelBlockSpacing;
+
+    //关卡文字方块大小
+    static double textBlockSize;
+
+    //设置页面大小
+    static QPointF settingPage_MusicValSet;
+    static QPointF settingPage_SoundValSet;
 };
 
 #endif // SETTINGS_H

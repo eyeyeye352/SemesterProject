@@ -5,6 +5,7 @@
 #include "musicplayer.h"
 #include "gameobject.h"
 #include "textblock.h"
+#include "otheritems.h"
 
 class Scene : public QGraphicsScene
 {
@@ -82,5 +83,31 @@ private:
     QGraphicsTextItem* loadingText;
     int dotNum;
 };
+
+
+
+
+class SettingPage : public Scene
+{
+    Q_OBJECT
+public:
+    SettingPage(QObject *parent = nullptr);
+
+
+signals:
+    void changeMusicVol(double);
+    void changeSoundVol(double);
+    void backHome();
+    void closeSetting();
+
+
+private:
+    ValSets *musicSli;
+    ValSets *soundSli;
+    FunctionBtn *backHomeBtn;
+    FunctionBtn *backBtn;
+};
+
+
 
 #endif // SCENE_H

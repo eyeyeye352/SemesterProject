@@ -173,9 +173,6 @@ void LevelBlock::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 
 
-//黑幕
-BlackOverlay::BlackOverlay(QGraphicsItem *parent):
-    GameObject{QPixmap(":/background/src/background/BlackOverLay.png"),parent}
-{
-    setOpacity(0);
-}
+
+
+

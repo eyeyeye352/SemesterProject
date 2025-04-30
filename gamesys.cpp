@@ -1,6 +1,7 @@
 #include "gamesys.h"
 #include "animation.h"
 
+
 Gamesys::Gamesys(QWidget *parent)
     : QWidget(parent)
 {
@@ -10,12 +11,22 @@ Gamesys::Gamesys(QWidget *parent)
     //scene and view
     startscene = new StartScene(this);
     gamescene = new LevelScene(this);
+    settingPage = new SettingPage;
+
 
     view = new QGraphicsView(this);
-    view->setGeometry(0, 0, Settings::screenWidth, Settings::screenHeight);
+    view->setGeometry(0,0,Settings::screenWidth,Settings::screenHeight);
     view->setScene(startscene);
     view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    tempview = new QGraphicsView(this);
+    tempview->setGeometry(0,0,Settings::screenWidth,Settings::screenHeight);
+    tempview->setStyleSheet("background: transparent; border: none;");
+    tempview->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    tempview->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    tempview->hide();
+
 
 
     //timers
@@ -36,17 +47,40 @@ Gamesys::Gamesys(QWidget *parent)
     connect(startscene->createModeBtn,&GameBtn::clicked,this,&Gamesys::goCreateMode);
     connect(startscene->backBtn,&GameBtn::clicked,this,&Gamesys::backToStartScene);
 
-    //items connections(levelScene)
-    connect(gamescene->settingBtn,&GameBtn::clicked,this,&Gamesys::checkSetting);
-    connect(gamescene->rankBtn,&GameBtn::clicked,this,&Gamesys::checkRank);
-    connect(gamescene->backBtn,&GameBtn::clicked,[this]{
-        Animation::backToHost(gamescene,startscene,view);
-        Animation::changeMusic(QUrl("qrc:/bgm/src/bgm/startSceneBGM.mp3"));
-    });
-
     for (int n = 0; n < startscene->levels.size(); ++n) {
         connect(startscene->levels[n],&LevelBlock::selected,this,&Gamesys::startGame);
     }
+
+    //connections(levelScene)
+    connect(gamescene->settingBtn,&GameBtn::clicked,this,&Gamesys::checkSetting);
+    connect(gamescene->rankBtn,&GameBtn::clicked,this,&Gamesys::checkRank);
+    connect(gamescene->backBtn,&GameBtn::clicked,[this]{
+        Animation::changeScene(gamescene,startscene,view,1500);
+        Animation::changeMusic(QUrl("qrc:/bgm/src/bgm/startSceneBGM.mp3"));
+    });
+
+    //connection(settingpage)
+    connect(settingPage,&SettingPage::backHome,[this]{
+        if(view->scene() == gamescene){
+            Animation::changeScene(gamescene,startscene,view,1500);
+        }
+        tempview->hide();
+    });
+    connect(settingPage,&SettingPage::changeMusicVol,[this](double vol){
+        Settings::musicVol = vol;
+        MusicPlayer::getMPlayer()->setBgmVol(vol);
+        qDebug() << "mvol" << MusicPlayer::getMPlayer()->bgm->audioOutput()->volume();
+    });
+    connect(settingPage,&SettingPage::changeSoundVol,[this](double vol){
+        Settings::soundVol = vol;
+        MusicPlayer::getMPlayer()->setSoundVol(vol);
+        qDebug() << "svol" << MusicPlayer::getMPlayer()->btnsound->audioOutput()->volume()
+                 << MusicPlayer::getMPlayer()->clicksound->audioOutput()->volume();
+    });
+
+
+
+
 
 }
 
@@ -57,7 +91,7 @@ Gamesys::~Gamesys()
 
 void Gamesys::goLevelSelection(Mode mode)
 {
-    Animation::switchToLevelPage(startscene);
+    Animation::goLevelSelection(startscene);
     currentMode = mode;
     qDebug() << "mode:" << mode;
 
@@ -81,14 +115,16 @@ void Gamesys::goLevelSelection(Mode mode)
 
 void Gamesys::backToStartScene()
 {
-    Animation::backToHost(startscene);
+    Animation::backModeSelection(startscene);
 }
 
 
 
 void Gamesys::checkSetting()
 {
-
+    //settingpage
+    tempview->setScene(settingPage);
+    tempview->show();
 }
 
 
@@ -104,8 +140,10 @@ void Gamesys::goCreateMode()
 
 void Gamesys::startGame(QString levelInfo)
 {
-    gamescene->loadLevel(levelInfo);
-    Animation::transToGame(startscene,gamescene,view);
+    Animation::changeScene(startscene,gamescene,view,2000);
+    QTimer::singleShot(1000,[this,levelInfo]{
+        gamescene->loadLevel(levelInfo);
+    });
     Animation::changeMusic(QUrl("qrc:/bgm/src/bgm/ingameBgm.mp3"));
 }
 
