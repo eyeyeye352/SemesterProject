@@ -5,7 +5,8 @@
 GameObject::GameObject(QGraphicsItem *parent):QGraphicsPixmapItem{parent}{}
 
 GameObject::GameObject(QPixmap pixmap, QGraphicsItem *parent)
-    :QGraphicsPixmapItem{pixmap,parent}{}
+    :QGraphicsPixmapItem{pixmap,parent}
+{}
 
 
 //按键可接受hover事件。
@@ -28,7 +29,10 @@ void GameBtn::resizing(double scale)
 
 //经典模式按钮
 ClassicBtn::ClassicBtn(QGraphicsItem *parent):
-    GameBtn{QPixmap(":/item/src/item/classic.png"),parent}{}
+    GameBtn{QPixmap(":/item/src/item/classic.png"),parent}
+{
+    resizing(Settings::startBtnOriginScale);
+}
 
 
 void ClassicBtn::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
@@ -44,6 +48,7 @@ void ClassicBtn::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
 
 void ClassicBtn::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
+    //模式按键大小调整
     resizing(Settings::startBtnOriginScale*0.9);
 }
 
@@ -57,7 +62,10 @@ void ClassicBtn::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 //hex模式按钮
 HexBtn::HexBtn(QGraphicsItem *parent):
-    GameBtn{QPixmap(":/item/src/item/hexagon.png"),parent}{}
+    GameBtn{QPixmap(":/item/src/item/hexagon.png"),parent}
+{
+    resizing(Settings::startBtnOriginScale);
+}
 
 void HexBtn::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
 {
@@ -88,8 +96,11 @@ void HexBtn::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 FunctionBtn::FunctionBtn(QPixmap pixmap, QGraphicsItem *parent):
     GameBtn{pixmap,parent}
+{}
+
+FunctionBtn::~FunctionBtn()
 {
-    setOpacity(Settings::funcBtnOriginOpacity);
+    qDebug() << "funcbtn delete!";
 }
 
 void FunctionBtn::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -107,7 +118,7 @@ void FunctionBtn::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 
 
-LevelBlock::LevelBlock(int l, QGraphicsItem *parent)
+LevelSelectBlock::LevelSelectBlock(int l, QGraphicsItem *parent)
     :GameBtn{QPixmap(":/item/src/item/levelBlock.png"),parent},
     levelNum(l)
 {
@@ -124,46 +135,31 @@ LevelBlock::LevelBlock(int l, QGraphicsItem *parent)
 
 }
 
-void LevelBlock::loadFile(QString filepath)
-{
-    QFile file(filepath);
-    file.open(QIODevice::ReadOnly);
 
 
-    info = file.readAll();
-
-    //调试用
-    qDebug() << "Level" << levelNum << ": " << info;
-}
-
-QString LevelBlock::getInfo() const
-{
-    return info;
-}
-
-void LevelBlock::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
+void LevelSelectBlock::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
 {
     QGraphicsColorizeEffect* fx = new QGraphicsColorizeEffect(this);
     fx->setColor(Qt::black);
-    fx->setStrength(1);
+    fx->setStrength(0.5);
     setGraphicsEffect(fx);
 }
 
-void LevelBlock::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
+void LevelSelectBlock::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
 {
     setGraphicsEffect(nullptr);
 }
 
-void LevelBlock::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void LevelSelectBlock::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     resizing(Settings::levelBlockOriginScale*0.9);
 }
 
-void LevelBlock::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void LevelSelectBlock::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     resizing(Settings::levelBlockOriginScale);
     MusicPlayer::getMPlayer()->clickSound();
-    emit selected(info);
+    emit selected(levelNum);
 }
 
 

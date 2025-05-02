@@ -1,4 +1,5 @@
 #include "musicplayer.h"
+#include "animation.h"
 
 
 MusicPlayer* MusicPlayer::instance = nullptr;
@@ -25,7 +26,11 @@ MusicPlayer::MusicPlayer() {
     o2->setVolume(Settings::soundVol);
     o3->setVolume(Settings::soundVol);
 
-    bgm->setLoops(QMediaPlayer::Infinite);
+    /* debug
+     *
+     * qDebug() << "musicvol: " << o1->volume() << "expect: " << Settings::musicVol;
+     * qDebug() << "soundvol: " << o2->volume() << ',' << o3->volume() << "expect: " << Settings::soundVol;
+    */
 }
 
 MusicPlayer::~MusicPlayer()
@@ -39,6 +44,7 @@ void MusicPlayer::startBGM()
     bgm->setLoops(QMediaPlayer::Infinite);
     bgm->play();
 
+    // qDebug() << "bgm start playing. loop:" << bgm->loops() << " expect:" << QMediaPlayer::Infinite;
 }
 
 void MusicPlayer::startBtnSound()
@@ -56,11 +62,37 @@ void MusicPlayer::clickSound()
 void MusicPlayer::setBgmVol(double vol)
 {
     bgm->audioOutput()->setVolume(vol);
+
+    // qDebug() << "set bgm volume to:" << vol;
 }
 
 void MusicPlayer::setSoundVol(double vol)
 {
     btnsound->audioOutput()->setVolume(vol);
     clicksound->audioOutput()->setVolume(vol);
+
+    // qDebug() << "set sound volume to:" << vol;
+}
+
+void MusicPlayer::changeBgm(QUrl url)
+{
+    //音乐淡入淡出，更换
+    QSequentialAnimationGroup * anime = new QSequentialAnimationGroup;
+    anime->addAnimation(Animation::MakeAnime(bgm->audioOutput(),"volume",500,Settings::musicVol,0));
+    anime->addPause(500);
+    anime->addAnimation(Animation::MakeAnime(bgm->audioOutput(),"volume",500,0,Settings::musicVol));
+
+
+    QObject::connect(anime->animationAt(0),&QPropertyAnimation::finished,[this,url]{
+        bgm->setSource(url);
+        bgm->setLoops(QMediaPlayer::Infinite);
+    });
+    QObject::connect(anime->animationAt(1),&QPropertyAnimation::finished,[this,url]{
+        bgm->play();
+    });
+
+    anime->start(QAbstractAnimation::DeleteWhenStopped);
+
+    // qDebug() << "set music to:" << url << " loops:" << bgm->loops() << " expect:" << QMediaPlayer::Infinite;
 }
 

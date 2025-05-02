@@ -11,8 +11,12 @@ public:
     static void goLevelSelection(StartScene*);
     static void backModeSelection(StartScene*);
 
-    static void changeMusic(QUrl);
-    static void changeScene(Scene * origin,Scene * dest,QGraphicsView* view,int loadingTime);
+    static QSequentialAnimationGroup* changeScene(Scene * origin,Scene * dest,QGraphicsView* view,int loadingTime);
+
+    //打开、关闭temp页面的动画，返回整个动画组（打开：加黑幕-tempscene飞入，关闭：tempscene飞出，去掉黑幕）
+    static QPropertyAnimation * TempPagein(QGraphicsView* bgView,QGraphicsView* tempView);
+    static QPropertyAnimation * TempPageout(QGraphicsView* bgView,QGraphicsView* tempView);
+
 
 
     static QPropertyAnimation* MakeAnime(QObject* obj,QByteArray property,int time,QVariant sval,QVariant eval);

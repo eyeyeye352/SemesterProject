@@ -1,5 +1,5 @@
 #include "scene.h"
-#include "animation.h"
+#include "objpool.h"
 
 
 Scene::Scene(QObject *parent)
@@ -19,11 +19,8 @@ StartScene::StartScene(QObject *parent)
     addItem(bg2);
 
     //btns
-    classicBtn = new ClassicBtn();
-    hexBtn = new HexBtn();
-
-    classicBtn->setScale(2);
-    hexBtn->setScale(2);
+    classicBtn = new ClassicBtn;
+    hexBtn = new HexBtn;
 
     classicBtn->setPos((Settings::screenWidth - classicBtn->sceneBoundingRect().width())/2,Settings::classicBtnY);
     hexBtn->setPos(Settings::screenWidth/2 - hexBtn->sceneBoundingRect().width()/2,Settings::hexBtnY);
@@ -34,8 +31,10 @@ StartScene::StartScene(QObject *parent)
 
     //title
     title = new QGraphicsPixmapItem(QPixmap(":/item/src/item/title.png"));
-    title->setScale(1.3);
-    title->setPos((Settings::screenWidth - title->sceneBoundingRect().width())/2,50);
+    title->setScale(Settings::startSceneTitleScale);
+    //title x置中 y设高度50
+    title->setPos((Settings::screenWidth - title->sceneBoundingRect().width())/2,
+                  Settings::startSceneTitleY);
     addItem(title);
 
     //functional btns
@@ -44,10 +43,20 @@ StartScene::StartScene(QObject *parent)
     createModeBtn = new FunctionBtn(QPixmap(":/item/src/item/createModeIcon.png"));
     backBtn = new FunctionBtn(QPixmap(":/item/src/item/backIcon.png"));
 
-    settingBtn->setPos(5,Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
-    rankBtn->setPos(10 + settingBtn->sceneBoundingRect().width() , Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
-    createModeBtn->setPos(15 + 2*settingBtn->sceneBoundingRect().width() ,Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
-    backBtn->setPos(20 + 3*settingBtn->sceneBoundingRect().width() ,Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
+    //功能按键列的位置排版
+    settingBtn->setPos(Settings::functionBtnInterval,
+                       Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
+
+    rankBtn->setPos(2*Settings::functionBtnInterval + settingBtn->sceneBoundingRect().width(),
+                    Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
+
+    createModeBtn->setPos(3*Settings::functionBtnInterval + 2*settingBtn->sceneBoundingRect().width(),
+                          Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
+
+    backBtn->setPos(4*Settings::functionBtnInterval + 3*settingBtn->sceneBoundingRect().width(),
+                    Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
+
+    //backBtn初始不可见。
     backBtn->setOpacity(0);
 
     addItem(settingBtn);
@@ -55,30 +64,30 @@ StartScene::StartScene(QObject *parent)
     addItem(createModeBtn);
     addItem(backBtn);
 
-
-    //levelBlocks
+    //levelselectBlocks
     for (int n = 1; n <= 5; ++n) {
-        LevelBlock * l = new LevelBlock(n);
+        LevelSelectBlock * l = new LevelSelectBlock(n);
+
         //排版
         l->moveBy(Settings::levelBlockSpacing*n + l->sceneBoundingRect().width()*(n-1),
                   (Settings::screenHeight - l->sceneBoundingRect().height())/2);
 
-        levels.push_back(l);
         l->setOpacity(0);
+
+        //加进容器+场景
+        levels.push_back(l);
         addItem(l);
     }
 }
 
-StartScene::~StartScene(){}
 
-
+//背景交替循环移动。
 void StartScene::moveBG()
 {
-
     bg1->moveBy(-Settings::backgroundMoveSpeed,0);
     bg2->moveBy(-Settings::backgroundMoveSpeed,0);
 
-    // - 1 优化边界闪烁问题
+    // - 1 小段重叠，优化边界闪烁问题
     if(bg1->sceneBoundingRect().right() < 0){
         bg1->setX(bg2->sceneBoundingRect().right() - 1);
     }
@@ -99,26 +108,29 @@ LoadScene::LoadScene(QObject *parent):
 {
     addPixmap(QPixmap(":/background/src/background/loadScene1.png"));
 
-    //半透明黑框
-    QGraphicsRectItem * blackArea = new QGraphicsRectItem(0,Settings::screenHeight-Settings::screenHeight/5,Settings::screenWidth,Settings::screenHeight/5);
+    //底部半透明黑框
+    QGraphicsRectItem * blackArea = new QGraphicsRectItem(0,Settings::screenHeight-Settings::screenHeight/5,
+                                                         Settings::screenWidth,Settings::screenHeight/5);
     blackArea->setBrush(Qt::black);
     blackArea->setOpacity(0.5);
     addItem(blackArea);
 
     //loadingtext
-    loadingText = new QGraphicsTextItem("Loading.");
+    loadingText = new QGraphicsTextItem("Loading");
 
-    //(font)
+    //font
     int fontId = QFontDatabase::addApplicationFont(":/fonts/src/fonts/AaYuanWeiTuSi-2.ttf");
     QString fontFamily = QFontDatabase::applicationFontFamilies(fontId).at(0);
     QFont font(fontFamily,16);
     loadingText->setFont(font);
     loadingText->setDefaultTextColor(Qt::white);
 
-    loadingText->moveBy(10,blackArea->sceneBoundingRect().center().y() - loadingText->sceneBoundingRect().height()/2);
+    loadingText->setPos(Settings::loadingTextX,
+                        blackArea->sceneBoundingRect().center().y() - loadingText->sceneBoundingRect().height()/2);
+
     addItem(loadingText);
 
-    //text: loading...anime( 0~3个点 )
+    //loading...动画效果( 0~3个点 )
     QTimer* timer = new QTimer(this);
     timer->start(300);
     QObject::connect(timer,&QTimer::timeout,[this]{
@@ -141,94 +153,147 @@ LevelScene::LevelScene(QObject *parent)
     //functional btns
     settingBtn = new FunctionBtn(QPixmap(":/item/src/item/settingIcon.png"));
     rankBtn = new FunctionBtn(QPixmap(":/item/src/item/rankIcon.png"));
-    backBtn = new FunctionBtn(QPixmap(":/item/src/item/backIcon.png"));
 
-    settingBtn->setPos(5,Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
-    rankBtn->setPos(10 + settingBtn->sceneBoundingRect().width() , Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
-    backBtn->setPos(15 + 2*settingBtn->sceneBoundingRect().width() ,Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
+    /* developing
+     *
+     * saveBtn = new FunctionBtn(QPixmap(""));
+     * saveBtn->setPos(15 + 2*settingBtn->sceneBoundingRect().width() ,Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
+     * saveBtn->setOpacity(Settings::funcBtnOriginOpacity);
+     * addItem(saveBtn);
+     *
+    */
 
-    settingBtn->setOpacity(Settings::funcBtnOriginOpacity);
-    rankBtn->setOpacity(Settings::funcBtnOriginOpacity);
-    backBtn->setOpacity(Settings::funcBtnOriginOpacity);
+    //功能按键
+    settingBtn->setPos(Settings::functionBtnInterval,
+                       Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
+
+    rankBtn->setPos(2*Settings::functionBtnInterval + settingBtn->sceneBoundingRect().width(),
+                    Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
 
     addItem(settingBtn);
     addItem(rankBtn);
-    addItem(backBtn);
 
-    //title
-    title = new QGraphicsTextItem();
-    //style
+
+    //title & font
+    title = new QGraphicsTextItem;
+
     int fontId = QFontDatabase::addApplicationFont(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf");
     QString fontFamily = QFontDatabase::applicationFontFamilies(fontId).at(0);
     QFont font(fontFamily,25);
     title->setFont(font);
     title->setDefaultTextColor(Qt::white);
-
+    title->setPos((Settings::screenWidth - title->sceneBoundingRect().width())/2,
+                  Settings::levelSceneTiTleY);
     addItem(title);
-    title->setPos((Settings::screenWidth - title->sceneBoundingRect().width())/2,10);
 
 }
 
-void LevelScene::loadLevel(QString levelInfo)
+void LevelScene::loadLevel(QString filepath)
 {
+    release();
 
-    for (TextBlock* tb:textBlocks) {
-        removeItem(tb);
-    }
-    textBlocks.clear();
+    QFile file(filepath);
+    file.open(QIODevice::ReadOnly);
 
-    info = levelInfo;
-    QStringList strList = info.split("\r\n");
-    QString titleName;
+    //qDebug() << "fileopen:" << file.isOpen();
+
+    //处理字符串
+    QString whole = file.readAll();
+    QStringList strList = whole.split("\r\n");
+
+    //qDebug() << whole;
 
     //字符串处理
     for (int line = 0; line < strList.size(); ++line) {
+
+        //title部分
         if(strList[line].startsWith("title=")){
-            titleName = strList[line].remove("title=");
+            title->setPlainText(strList[line].remove("title="));
         }
+
+        //难度（行列数）部分
         else if(strList[line].startsWith("difficulty=")){
-            QStringList nums = strList[line].remove("difficulty=").split(',');
-            rows = nums[0].toInt();
-            cols = nums[1].toInt();
+
+            //确保格式错误时不会崩溃 ,标准格式："数字,数字"
+            QRegularExpression regex("^(\\d+),(\\d+)$");
+            QString nums = strList[line].remove("difficulty=");
+            QRegularExpressionMatch match = regex.match(nums);
+
+
+            if (match.hasMatch()) {
+                rows = match.captured(1).toInt();
+                cols = match.captured(2).toInt();
+            } else {
+                rows = 0;
+                cols = 0;
+            }
+
+
         }
+
+        //模式
+        else if(strList[line].startsWith("mode=")){
+            QString t = strList[line].remove("mode=");
+            if(t == "classic") mode = CLASSIC;
+            else if(t == "hex") mode = HEX;
+        }
+
+        //contents内容
         else if(strList[line].startsWith("content=")){
-            for (int y = line+1; y < line+1+cols; ++y) {
+            for (int y = line+1; y <= line+cols && y < strList.size(); ++y) {
                 contents.append(strList[y]);
             }
-            //读取结束
             break;
         }
     }
 
-    //test(succeed)
+    //debug信息
     qDebug() << "content" << contents;
 
-    title->setPlainText(titleName);
-
-    //textblocks
-    //big rect size
-    double rectWidth = rows*Settings::textBlockSize;
-    double rectHeight = cols*Settings::textBlockSize;
+    //textblocks渲染
+    double Width = rows * Settings::textBlockSize;
+    double Height = cols * Settings::textBlockSize;
 
     for (int y = 0; y < cols; ++y) {
         for (int x = 0; x < rows; ++x) {
-            QPoint xy(x,y);
+
+            //每个textBlock储存其位置[（0,0）~(rows,cols)]与一个汉字
+            //目标汉字位于 contents的 y*每行字数 + x
             QString word = contents[y*rows + x];
-            TextBlock * block = new TextBlock(xy,word);
+            TextBlock * block = objPool::getinstance()->getTextBlock();
+            block->setWord(word);
+            block->setxy({x,y});
 
-            //排版到中央
-            double startX = (Settings::screenWidth - rectWidth)/2 + x*Settings::textBlockSize;
-            double startY = (Settings::screenHeight - rectHeight)/2 + y*Settings::textBlockSize;
+            qDebug() << "testdebug(block setpos and word)";
 
-            block->setPos(startX,startY);
+            //排版置中
+            double posx = (Settings::screenWidth - Width)/2 + x*Settings::textBlockSize;
+            double posy = (Settings::screenHeight - Height)/2 + y*Settings::textBlockSize;
+            block->setPos(posx,posy);
+
             textBlocks.append(block);
             addItem(block);
         }
     }
 
+    qDebug() << "loadfinish";
 
+    file.close();
 }
 
+void LevelScene::release()
+{
+    contents = "";
+
+    for (int n = 0; n < textBlocks.size(); ++n) {
+        objPool::getinstance()->recycle(textBlocks[n]);
+        removeItem(textBlocks[n]);
+    }
+
+    textBlocks.clear();
+    qDebug() << "release success.";
+
+}
 
 
 
@@ -237,38 +302,43 @@ SettingPage::SettingPage(QObject *parent)
     :Scene{parent}
 {
 
-    QGraphicsPixmapItem* bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/settingPage.png"));
+    bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/settingPage.png"));
     addItem(bg);
 
-    bg->setPos((Settings::screenWidth - bg->sceneBoundingRect().width())/2,
-               (Settings::screenHeight - bg->sceneBoundingRect().height())/2);
+    bg->setPos((Settings::screenWidth - bg->boundingRect().width())/2,
+               (Settings::screenHeight - bg->boundingRect().height())/2);
 
     //Valsets
     musicSli = new ValSets(bg);
     soundSli = new ValSets(bg);
     musicSli->setPos(Settings::settingPage_MusicValSet);
     soundSli->setPos(Settings::settingPage_SoundValSet);
-    addItem(musicSli);
-    addItem(soundSli);
-    connect(musicSli,&ValSets::valueChanged,[this](double newVol){
-        emit changeMusicVol(newVol);
+
+    //设置页面内部连接信号更改声音
+    connect(musicSli,&ValSets::valueChanged,[this](double vol){
+        Settings::musicVol = vol;
+        MusicPlayer::getMPlayer()->setBgmVol(vol);
     });
-    connect(soundSli,&ValSets::valueChanged,[this](double newVol){
-        emit changeSoundVol(newVol);
+    connect(soundSli,&ValSets::valueChanged,[this](double vol){
+        Settings::soundVol = vol;
+        MusicPlayer::getMPlayer()->setSoundVol(vol);
     });
 
 
     //btn
-    backHomeBtn = new FunctionBtn(QPixmap(":/item/src/item/BackHome_inSettingPage.png"),bg);
+    backHomeBtn = new FunctionBtn(QPixmap(":/item/src/item/backHomeBtn.png"),bg);
+    closeSettingBtn = new FunctionBtn(QPixmap(":/item/src/item/closeSettingBtn.png"),bg);
     backHomeBtn->setOpacity(1);
-    backHomeBtn->setPos((bg->sceneBoundingRect().width()-backHomeBtn->sceneBoundingRect().width())/2,
-                        bg->sceneBoundingRect().height() - backHomeBtn->sceneBoundingRect().height());
-    addItem(backHomeBtn);
+    closeSettingBtn->setOpacity(1);
+
+
+    backHomeBtn->setPos((bg->boundingRect().width() - backHomeBtn->boundingRect().width())/2,
+                        bg->boundingRect().height() - backHomeBtn->boundingRect().height() - 25);
+
+    closeSettingBtn->setPos({25,25});
 
 
     QObject::connect(backHomeBtn,&GameBtn::clicked,[this]{ emit backHome();});
-
-
-
+    QObject::connect(closeSettingBtn,&GameBtn::clicked,[this]{ emit closeSetting(); });
 
 }

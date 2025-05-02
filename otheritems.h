@@ -50,6 +50,7 @@ class ValSets : public GameObject{
 
 public:
     ValSets(QGraphicsItem *parent = nullptr);
+    ~ValSets();
 
     FunctionBtn* upBtn, *downBtn;
     QGraphicsTextItem* valText;

@@ -13,7 +13,6 @@ class GameObject : public QObject, public QGraphicsPixmapItem
     Q_PROPERTY(QPointF pos READ pos WRITE setPos)
 
 public:
-
     GameObject(QGraphicsItem *parent = nullptr);
     GameObject(QPixmap pixmap,QGraphicsItem *parent = nullptr);
 
@@ -85,6 +84,7 @@ class FunctionBtn : public GameBtn
 
 public:
     FunctionBtn(QPixmap pixmap,QGraphicsItem *parent = nullptr);
+    ~FunctionBtn();
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
@@ -92,18 +92,16 @@ public:
 
 
 
-//level选择界面的level方块
-class LevelBlock :  public GameBtn{
+//level选择界面的方块
+class LevelSelectBlock :  public GameBtn{
 
     Q_OBJECT
 
 public:
 
-    LevelBlock(int l,QGraphicsItem *parent = nullptr);
+    LevelSelectBlock(int l,QGraphicsItem *parent = nullptr);
 
     //载入文件记录关卡信息
-    void loadFile(QString);
-    QString getInfo() const;
 
     void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
     void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
@@ -112,15 +110,11 @@ public:
 
 signals:
     //被选中的关卡,将关卡内容传出
-    void selected(QString);
+    void selected(int);
 
 private:
     //哪一关
     int levelNum;
-    //关卡详细信息
-    QString info;
-
-    Mode currentMode;
 
 };
 

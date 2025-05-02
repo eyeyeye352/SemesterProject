@@ -16,12 +16,20 @@ double Settings::soundVol = 1;
 
 double Settings::startBtnOriginScale = 2;
 double Settings::funcBtnOriginScale = 1;
-double Settings::funcBtnOriginOpacity = 0.5;
+double Settings::funcBtnOriginOpacity = 1;
 
 double Settings::levelBlockOriginScale = 1;
 double Settings::levelBlockSpacing = 35;
 
 double Settings::textBlockSize = 50;
+
+double Settings::startSceneTitleScale = 1.3;
+int Settings::startSceneTitleY = 50;
+int Settings::levelSceneTiTleY = 10;
+
+int Settings::functionBtnInterval = 5;
+
+int Settings::loadingTextX = 10;
 
 QPointF Settings::settingPage_MusicValSet = {150,170};
 QPointF Settings::settingPage_SoundValSet = {150,280};

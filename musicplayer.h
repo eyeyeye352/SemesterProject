@@ -32,6 +32,8 @@ public:
     void setBgmVol(double vol);
     void setSoundVol(double vol);
 
+    void changeBgm(QUrl);
+
     QMediaPlayer* bgm;
     QMediaPlayer* btnsound;
     QMediaPlayer* clicksound;

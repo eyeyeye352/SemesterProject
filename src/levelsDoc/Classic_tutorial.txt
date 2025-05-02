@@ -1,5 +1,6 @@
 title=鹿柴
 difficulty=5,4
+mode=classic
 content=
 空山不见人
 但闻人语响

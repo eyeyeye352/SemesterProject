@@ -1,5 +1,6 @@
 title=夏日漫步
 difficulty=10,10
+mode=classic
 content=
 漫步在夏日的海边阳光
 倾洒碎金满滩海浪轻涌

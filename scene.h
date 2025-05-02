@@ -24,7 +24,6 @@ class StartScene : public Scene{
 
 public:
     StartScene(QObject *parent = nullptr);
-    ~StartScene();
 
 
     //循环播放的移动式场景
@@ -41,12 +40,11 @@ public:
     FunctionBtn * settingBtn, *rankBtn, *createModeBtn ,*backBtn;
 
     //五个关卡
-    QList<LevelBlock*> levels;
-
-    Mode currentMode;
+    QList<LevelSelectBlock*> levels;
 
 public slots:
     void moveBG();
+
 };
 
 
@@ -56,30 +54,39 @@ class LevelScene : public Scene{
 public:
     LevelScene(QObject* parent = nullptr);
 
-    //三个功能按钮
-    FunctionBtn *settingBtn, *rankBtn, *backBtn;
+    //设置、排行查看、存档按钮
+    FunctionBtn *settingBtn, *rankBtn, *saveBtn;
 
-    //关卡元素们
-    QList<TextBlock*> textBlocks;
+    //载入关卡内容并渲染
+    void loadLevel(QString filepath);
 
-    //载入关卡内容
-    void loadLevel(QString levelInfo);
+    //优化内存释放控件
+    void release();
+
+private:
 
     //关卡内容
-    QString info;
     QGraphicsTextItem * title;
+    Mode mode;
+    int rows,cols;
     QString contents;
-    int cols,rows;
+
+
+    //方块们（小矩形或六边形）
+    QList<TextBlock*> textBlocks;
+
 };
 
 
 
+//加载过度页面
 class LoadScene : public Scene{
+
 public:
     LoadScene(QObject* parent = nullptr);
 
-
 private:
+    //loading... 三个点轮流变换的效果
     QGraphicsTextItem* loadingText;
     int dotNum;
 };
@@ -95,8 +102,6 @@ public:
 
 
 signals:
-    void changeMusicVol(double);
-    void changeSoundVol(double);
     void backHome();
     void closeSetting();
 
@@ -105,7 +110,8 @@ private:
     ValSets *musicSli;
     ValSets *soundSli;
     FunctionBtn *backHomeBtn;
-    FunctionBtn *backBtn;
+    FunctionBtn *closeSettingBtn;
+    QGraphicsPixmapItem* bg;
 };
 
 

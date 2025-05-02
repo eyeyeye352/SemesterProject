@@ -4,7 +4,7 @@
 Animation::Animation() {}
 
 //切换场景的通用接口
-void Animation::changeScene(Scene *origin, Scene *dest,QGraphicsView* view,int loadingTime)
+QSequentialAnimationGroup* Animation::changeScene(Scene *origin, Scene *dest,QGraphicsView* view,int loadingTime)
 {
     //先用黑布盖住
     BlackOverlay* black = new BlackOverlay;
@@ -14,11 +14,11 @@ void Animation::changeScene(Scene *origin, Scene *dest,QGraphicsView* view,int l
     QSequentialAnimationGroup* anime = new QSequentialAnimationGroup;
 
     //黑幕淡入淡出2次
-    anime->addAnimation(Animation::MakeAnime(black,"opacity",300,0,1));
-    anime->addAnimation(Animation::MakeAnime(black,"opacity",300,1,0));
+    anime->addAnimation(Animation::MakeAnime(black,"opacity",500,0,1));
+    anime->addAnimation(Animation::MakeAnime(black,"opacity",500,1,0));
     anime->addPause(loadingTime);
-    anime->addAnimation(Animation::MakeAnime(black,"opacity",300,0,1));
-    anime->addAnimation(Animation::MakeAnime(black,"opacity",300,1,0));
+    anime->addAnimation(Animation::MakeAnime(black,"opacity",500,0,1));
+    anime->addAnimation(Animation::MakeAnime(black,"opacity",500,1,0));
 
 
     //暂停期间更换scene到loadscene，然后在换到gamescene
@@ -31,8 +31,58 @@ void Animation::changeScene(Scene *origin, Scene *dest,QGraphicsView* view,int l
         view->setScene(dest);
         delete loadScene;
     });
-    anime->start(QAbstractAnimation::DeleteWhenStopped);
+
+    //释放和黑幕资源
+    QObject::connect(anime,&QSequentialAnimationGroup::finished,[=]{
+        origin->removeItem(black);
+        dest->removeItem(black);
+    });
+    return anime;
 }
+
+
+
+//打开如设置、排行榜等功能的动画
+//打开：加黑幕-tempscene飞入
+QPropertyAnimation * Animation::TempPagein(QGraphicsView *bgView, QGraphicsView *tempView)
+{
+    tempView->setProperty("pos",QPointF(0,Settings::screenHeight));
+    tempView->show();
+
+    BlackOverlay* black = new BlackOverlay;
+    black->setData(0,"tempBlackOverlay");
+    black->setOpacity(0.5);
+    bgView->scene()->addItem(black);
+
+    QPropertyAnimation* anime = Animation::MakeAnime(tempView,"pos",500,
+                                                     QPointF(0,Settings::screenHeight),QPointF(0,0));
+    anime->setEasingCurve(QEasingCurve::OutBack);
+    return anime;
+}
+
+//关闭：tempscene飞出，去掉黑幕）
+QPropertyAnimation * Animation::TempPageout(QGraphicsView *bgView, QGraphicsView *tempView)
+{
+    QPropertyAnimation* anime = Animation::MakeAnime(tempView,"pos",500,
+                                                     QPointF(0,0),QPointF(0,Settings::screenHeight));
+    //先播动画在删除黑幕。然后在清除tempview
+    QObject::connect(anime,&QPropertyAnimation::finished,[bgView,tempView]{
+
+        for (QGraphicsItem* item : bgView->items()) {
+            if(item->data(0).toString() == "tempBlackOverlay"){
+                bgView->scene()->removeItem(item);
+            }
+        }
+
+        tempView->hide();
+    });
+    anime->setEasingCurve(QEasingCurve::InBack);
+    return anime;
+}
+
+
+
+
 
 
 
@@ -84,31 +134,6 @@ void Animation::backModeSelection(StartScene * startScene)
 
 
 
-
-
-
-void Animation::changeMusic(QUrl url)
-{
-    //音乐淡入淡出，更换
-    QMediaPlayer* bgm = MusicPlayer::getMPlayer()->bgm;
-
-    QSequentialAnimationGroup * anime = new QSequentialAnimationGroup;
-    anime->addAnimation(Animation::MakeAnime(bgm->audioOutput(),"volumn",300,Settings::musicVol,0));
-    anime->addPause(1000);
-    anime->addAnimation(Animation::MakeAnime(bgm->audioOutput(),"volumn",300,0,Settings::musicVol));
-
-
-
-    QObject::connect(anime->animationAt(0),&QPropertyAnimation::finished,[bgm,url]{
-        bgm->setSource(QUrl(url));
-    });
-    QObject::connect(anime->animationAt(1),&QPropertyAnimation::finished,[bgm,url]{
-        bgm->setLoops(QMediaPlayer::Infinite);
-        bgm->play();
-    });
-
-    anime->start(QAbstractAnimation::DeleteWhenStopped);
-}
 
 
 

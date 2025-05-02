@@ -1,5 +1,6 @@
 title=春景
 difficulty=5,4
+mode=classic
 content=
 春风拂翠枝
 嫩蕊绽新姿

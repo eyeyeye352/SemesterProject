@@ -1,2 +1,4 @@
-h1knasd: 
-asdn
+title=
+difficulty=
+mode=hex
+content=

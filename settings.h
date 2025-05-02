@@ -60,6 +60,14 @@ public:
     static double levelBlockOriginScale;
     static double levelBlockSpacing;
 
+    static double startSceneTitleScale;
+    static int startSceneTitleY;
+    static int levelSceneTiTleY;
+
+    static int loadingTextX;
+
+    static int functionBtnInterval;
+
     //关卡文字方块大小
     static double textBlockSize;
 

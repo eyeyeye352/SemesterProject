@@ -26,6 +26,8 @@
         <file>src/item/Myslider_Scrollbar30050.png</file>
         <file>src/item/MySliderObj.png</file>
         <file>src/item/valSetsBtn.png</file>
+        <file>src/item/closeSettingBtn.png</file>
+        <file>src/item/backHomeBtn.png</file>
     </qresource>
     <qresource prefix="/bgm">
         <file>src/bgm/startSceneBGM.mp3</file>

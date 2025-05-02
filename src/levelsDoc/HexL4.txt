@@ -1,1 +1,4 @@
-h4444
+title=
+difficulty=
+mode=hex
+content=

@@ -120,14 +120,22 @@ ValSets::ValSets(QGraphicsItem *parent):
         emit valueChanged(val);
     });
     connect(downBtn,&GameBtn::clicked,[this]{
+
         if(val - 0.1 > 0){
             val-=0.1;
+            emit valueChanged(val);
+        }else{
+            val = 0;
+            emit valueChanged(0);
         }
-
         valText->setPlainText(QString::number(val*10,'f',0));
 
-        emit valueChanged(val);
     });
+}
+
+ValSets::~ValSets()
+{
+    qDebug() << "valsets delete!";
 }
 
 

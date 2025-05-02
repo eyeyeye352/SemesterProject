@@ -3,6 +3,7 @@
 
 #include "scene.h"
 #include "settings.h"
+#include "objpool.h"
 
 
 
@@ -23,21 +24,24 @@ public slots:
     //返回起始页面
     void backToStartScene();
 
-    //功能纽
-    void checkSetting();
+    //打开，关闭设置
+    void openSetting();
+    void closeSetting();
+
+    void backHome();
 
 
     void checkRank();
     void goCreateMode();
 
-    //选择关卡后进入游戏场景
-    void startGame(QString);
+    //选择关卡后进入游戏场景,参数为第几关
+    void startGame(int);
 
 
 
 private:
     StartScene* startscene;
-    LevelScene* gamescene;
+    LevelScene* levelscene;
     SettingPage* settingPage;
     QGraphicsView* view , *tempview;
 

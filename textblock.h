@@ -9,10 +9,13 @@ class TextBlock : public GameObject
 {
     Q_OBJECT
 public:
-    TextBlock(QGraphicsItem *parent = nullptr);
-    TextBlock(QPoint xypos,QString word,QGraphicsItem *parent = nullptr);
+    TextBlock(QPoint xypos = {0,0},QString word = "",QGraphicsItem *parent = nullptr);
+    ~TextBlock();
 
     void setWord(QString newWord);
+    void setxy(QPoint);
+
+private:
 
     QPoint xy;
     QGraphicsTextItem* word;
