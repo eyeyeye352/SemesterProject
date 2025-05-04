@@ -7,6 +7,7 @@
 #include "textblock.h"
 #include "otheritems.h"
 #include "gamesidebar.h"
+#include "gamerecord.h"
 
 class Scene : public QGraphicsScene
 {
@@ -41,7 +42,7 @@ public:
     QGraphicsPixmapItem *title;
 
     //4个功能按钮
-    FunctionBtn * settingBtn, *rankBtn, *createModeBtn ,*backBtn;
+    FunctionBtn * settingBtn, *rankBtn, *createModeBtn ,*backBtn ,*saveBtn;
 
     //五个关卡
     QList<LevelSelectBlock*> levels;
@@ -62,7 +63,7 @@ public:
     LevelScene(QObject* parent = nullptr);
 
     //设置、排行查看、存档按钮
-    FunctionBtn *settingBtn, *rankBtn, *saveBtn ,*tipBtn;
+    FunctionBtn *settingBtn, *rankBtn, *saveBtn ,*tipBtn ,*undoBtn ,*doBtn;
 
     //载入关卡内容并渲染
     void loadLevel(QString filepath);
@@ -87,8 +88,12 @@ public:
     void colSwitch(TextBlock*);
     void crossSwitch(TextBlock*);
 
-    //设置游戏模式，（同时调整sideBar为对应的模式）
+    //设置游戏模式，（调整sideBar为对应的模式）
     void setGameMode(Mode);
+
+    QString getLevelContent();
+    int getCols();
+    int getRows();
 
 
 
@@ -97,18 +102,15 @@ public slots:
     void changeTransType(TranslateIcons::Type);
 
 
-
 private:
 
     //关卡内容
     QGraphicsTextItem * title;
     Mode mode;
     int rows,cols;
+
+    //内容，同时作为解答
     QString contents;
-
-    //tips文字
-    QGraphicsTextItem* tips;
-
 
     //方块们（小矩形或六边形）
     QList<TextBlock*> textBlocks;
@@ -118,6 +120,9 @@ private:
 
     TranslateIcons::Type curTransType;
     MySideBar* sideBar;
+
+    //gamerecords
+    QList<GameRecord*> gameRecords;
 
 };
 
@@ -157,6 +162,33 @@ private:
     FunctionBtn *closeSettingBtn;
     QGraphicsPixmapItem* bg;
 };
+
+
+
+class TipPage : public Scene
+{
+    Q_OBJECT
+
+public:
+    TipPage(QObject *parent = nullptr);
+
+    void setAnswer(QString text,int cols);
+
+signals:
+    void closeTip();
+
+private:
+    QGraphicsPixmapItem* bg;
+    QGraphicsTextItem* answer;
+    FunctionBtn *closeTipBtn;
+};
+
+
+
+
+class RankPage : public Scene{};
+class SavePage : public Scene{};
+class CompletePage : public Scene{};
 
 
 

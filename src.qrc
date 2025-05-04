@@ -5,6 +5,7 @@
         <file>src/background/loadScene1.png</file>
         <file>src/background/BlackOverLay.png</file>
         <file>src/background/settingPage.png</file>
+        <file>src/background/tipPage.png</file>
     </qresource>
     <qresource prefix="/audio">
         <file>src/sound/btnHoverSound.mp3</file>
@@ -36,6 +37,8 @@
         <file>src/item/sideBarBtn.png</file>
         <file>src/item/saveIcon.png</file>
         <file>src/item/tipIcon.png</file>
+        <file>src/item/doIcon.png</file>
+        <file>src/item/undoIcon.png</file>
     </qresource>
     <qresource prefix="/bgm">
         <file>src/bgm/startSceneBGM.mp3</file>
@@ -58,6 +61,7 @@
         <file>src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf</file>
         <file>src/fonts/dinglieciweifont20250217-2.ttf</file>
         <file>src/fonts/XiangJiaoKuanMaoShuaLingGanTi-2.ttf</file>
+        <file>src/fonts/tipPageTextFont.ttf</file>
     </qresource>
     <qresource prefix="/icons">
         <file>src/icon/gameIcon.ico</file>

@@ -4,6 +4,7 @@
 #include "scene.h"
 #include "settings.h"
 #include "objpool.h"
+#include "gamerecord.h"
 
 
 
@@ -46,12 +47,19 @@ public slots:
     //选择关卡后进入游戏场景,参数为第几关
     void startGame(int);
 
+    void completeGame();
+
 
 
 private:
     StartScene* startscene;
     LevelScene* levelscene;
     SettingPage* settingPage;
+    TipPage* tipPage;
+    RankPage* rankPage;
+    SavePage* savePage;
+    CompletePage* complatePage;
+
     QGraphicsView* view , *tempview;
 
     //timers
@@ -60,5 +68,22 @@ private:
     //current gameMode
     Mode currentMode;
 
+
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #endif // GAMESYS_H

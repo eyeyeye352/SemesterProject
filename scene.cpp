@@ -55,6 +55,7 @@ StartScene::StartScene(QObject *parent)
     rankBtn = new FunctionBtn(QPixmap(":/item/src/item/rankIcon.png"));
     createModeBtn = new FunctionBtn(QPixmap(":/item/src/item/createModeIcon.png"));
     backBtn = new FunctionBtn(QPixmap(":/item/src/item/backIcon.png"));
+    saveBtn = new FunctionBtn(QPixmap(":/item/src/item/saveIcon.png"));
 
     //功能按键列的位置排版
     settingBtn->setPos(Settings::functionBtnInterval,
@@ -66,8 +67,14 @@ StartScene::StartScene(QObject *parent)
     createModeBtn->setPos(3*Settings::functionBtnInterval + 2*settingBtn->sceneBoundingRect().width(),
                           Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
 
-    backBtn->setPos(4*Settings::functionBtnInterval + 3*settingBtn->sceneBoundingRect().width(),
+    saveBtn->setPos(4*Settings::functionBtnInterval + 3*settingBtn->sceneBoundingRect().width(),
                     Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
+
+    backBtn->setPos(5*Settings::functionBtnInterval + 4*settingBtn->sceneBoundingRect().width(),
+                    Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
+
+
+
 
     //backBtn初始不可见。
     backBtn->setOpacity(0);
@@ -75,7 +82,9 @@ StartScene::StartScene(QObject *parent)
     addItem(settingBtn);
     addItem(rankBtn);
     addItem(createModeBtn);
+    addItem(saveBtn);
     addItem(backBtn);
+
 
     //levelselectBlocks
     for (int n = 1; n <= 5; ++n) {
@@ -170,13 +179,18 @@ LevelScene::LevelScene(QObject *parent)
     rankBtn = new FunctionBtn(QPixmap(":/item/src/item/rankIcon.png"));
     saveBtn = new FunctionBtn(QPixmap(":/item/src/item/saveIcon.png"));
     tipBtn = new FunctionBtn(QPixmap(":/item/src/item/tipIcon.png"));
+    undoBtn = new FunctionBtn(QPixmap(":/item/src/item/undoIcon.png"));
+    doBtn = new FunctionBtn(QPixmap(":/item/src/item/doIcon.png"));
+
+
     settingBtn->setOpacity(0.5);
     rankBtn->setOpacity(0.5);
     saveBtn->setOpacity(0.5);
     tipBtn->setOpacity(0.5);
+    undoBtn->setOpacity(0.5);
+    doBtn->setOpacity(0.5);
 
 
-    //功能按键
     settingBtn->setPos(Settings::functionBtnInterval,
                        Settings::screenHeight - settingBtn->boundingRect().height() - 5);
 
@@ -186,32 +200,35 @@ LevelScene::LevelScene(QObject *parent)
                     Settings::screenHeight - settingBtn->boundingRect().height() - 5);
     tipBtn->setPos(4*Settings::functionBtnInterval + 3*settingBtn->boundingRect().width(),
                     Settings::screenHeight - settingBtn->boundingRect().height() - 5);
+    undoBtn->setPos(5*Settings::functionBtnInterval + 4*settingBtn->boundingRect().width(),
+                    Settings::screenHeight - settingBtn->boundingRect().height() - 5);
+    doBtn->setPos(6*Settings::functionBtnInterval + 5*settingBtn->boundingRect().width(),
+                  Settings::screenHeight - settingBtn->boundingRect().height() - 5);
 
     addItem(settingBtn);
     addItem(rankBtn);
     addItem(saveBtn);
     addItem(tipBtn);
+    addItem(undoBtn);
+    addItem(doBtn);
 
 
-    //加进菜单栏
-    sideBar = new MySideBar();
+    //变换模式选择菜单栏
+    sideBar = new MySideBar;
     sideBar->setPos(Settings::screenWidth - sideBar->btn->boundingRect().width(),0);
-
-    addItem(sideBar);
     connect(sideBar,&MySideBar::SelectTransType,this,&LevelScene::changeTransType);
+    addItem(sideBar);
 
 
     //title
-    title = new QGraphicsTextItem;
-
+    title = new QGraphicsTextItem(sideBar);
 
     //font
     int fontId = QFontDatabase::addApplicationFont(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf");
     QString fontFamily = QFontDatabase::applicationFontFamilies(fontId).at(0);
-    QFont font(fontFamily,25);
+    QFont font(fontFamily,18);
     title->setFont(font);
     title->setDefaultTextColor(Qt::white);
-    title->setPos(10,10);
     addItem(title);
 
 }
@@ -235,6 +252,7 @@ void LevelScene::loadLevel(QString filepath)
         //title部分
         if(strList[line].startsWith("title=")){
             title->setPlainText(strList[line].remove("title="));
+            title->setPos((sideBar->boundingRect().width() - title->boundingRect().width())/2 + 10 , 600);
         }
 
         //难度（行列数）部分
@@ -311,7 +329,8 @@ void LevelScene::loadLevel(QString filepath)
             textBlocks.append(block);
             addItem(block);
 
-            //链接
+            //链接(防止重复链接)
+            disconnect(block, &TextBlock::clicked, nullptr, nullptr);
             connect(block,&TextBlock::clicked,[this](TextBlock* t){
                 hasSelectBlocks ? switchBlocks(t) : selectBlocks(t);
             });
@@ -331,7 +350,9 @@ void LevelScene::loadLevel(QString filepath)
 void LevelScene::reset()
 {
     contents = "";
+    curTransType = TranslateIcons::NONE;
     cancelSelect();
+    gameRecords.clear();
 
     for (int n = 0; n < textBlocks.size(); ++n) {
         objPool::getinstance()->recycle(textBlocks[n]);
@@ -339,9 +360,9 @@ void LevelScene::reset()
     }
 
     textBlocks.clear();
-    qDebug() << "release success.";
+    qDebug() << "reset success.";
 
-    curTransType = TranslateIcons::NONE;
+
 
 }
 
@@ -360,8 +381,6 @@ void LevelScene::changeTransType(TranslateIcons::Type type)
 
 void LevelScene::selectBlocks(TextBlock* target)
 {
-
-    selectedBlocks.clear();
 
     switch(curTransType){
 
@@ -451,7 +470,7 @@ void LevelScene::cancelSelect()
 {
     hasSelectBlocks = false;
 
-    for (TextBlock* t : textBlocks) {
+    for (TextBlock* t : selectedBlocks) {
         t->hideGoldRect();
     }
     selectedBlocks.clear();
@@ -568,7 +587,22 @@ void LevelScene::crossSwitch(TextBlock* dest)
 void LevelScene::setGameMode(Mode m)
 {
     mode = m;
+    reset();
     sideBar->setGameMode(mode);
+}
+
+QString LevelScene::getLevelContent()
+{
+    return contents;
+}
+
+int LevelScene::getCols()
+{
+    return cols;
+}
+int LevelScene::getRows()
+{
+    return rows;
 }
 
 
@@ -617,5 +651,49 @@ SettingPage::SettingPage(QObject *parent)
 
     QObject::connect(backHomeBtn,&GameBtn::clicked,[this]{ emit backHome();});
     QObject::connect(closeSettingBtn,&GameBtn::clicked,[this]{ emit closeSetting(); });
+
+}
+
+
+TipPage::TipPage(QObject *parent):
+    Scene(parent)
+{
+    bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/tipPage.png"));
+    addItem(bg);
+
+    bg->setPos((Settings::screenWidth - bg->boundingRect().width())/2,
+               (Settings::screenHeight - bg->boundingRect().height())/2);
+
+    answer = new QGraphicsTextItem(bg);
+    //font
+    int fontId = QFontDatabase::addApplicationFont(":/fonts/src/fonts/tipPageTextFont.ttf");
+    QString fontFamily = QFontDatabase::applicationFontFamilies(fontId).at(0);
+    QFont font(fontFamily,17);
+    answer->setFont(font);
+    answer->setDefaultTextColor(Qt::white);
+    addItem(answer);
+
+    //btn
+    closeTipBtn = new FunctionBtn(QPixmap(":/item/src/item/closeSettingBtn.png"),bg);
+    closeTipBtn->setPos(25,25);
+    addItem(closeTipBtn);
+    QObject::connect(closeTipBtn,&GameBtn::clicked,[this]{ emit closeTip(); });
+
+}
+
+void TipPage::setAnswer(QString text,int cols)
+{
+    QString ansText;
+    for (int n = 0; n < text.size(); ++n) {
+        if(n % cols == 0 && n != 0){
+            ansText.append('\n');
+        }
+        ansText.append(text[n]);
+    }
+
+    qDebug() << "anstext:" << ansText;
+    answer->setPlainText(ansText);
+    answer->setPos((bg->boundingRect().width() - answer->boundingRect().width())/2,
+                   100);
 
 }

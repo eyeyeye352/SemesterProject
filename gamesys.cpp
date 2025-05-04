@@ -27,7 +27,9 @@ Gamesys::Gamesys(QWidget *parent)
     tempview->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     tempview->hide();
 
+    //other scene
     settingPage = new SettingPage(this);
+    tipPage = new TipPage(this);
 
 
 
@@ -60,6 +62,9 @@ Gamesys::Gamesys(QWidget *parent)
     //connection(settingpage)
     connect(settingPage,&SettingPage::backHome,this,&Gamesys::backHome);
     connect(settingPage,&SettingPage::closeSetting,this,&Gamesys::closeSetting);
+
+    //connection(tipPage)
+    connect(tipPage,&TipPage::closeTip,this,&Gamesys::closeTips);
 
 
 
@@ -115,17 +120,19 @@ void Gamesys::backHome()
     //关闭tempview动画结束后，返回首页
     else if(view->scene() == levelscene){
 
+        levelscene->reset();
         QPropertyAnimation* anime = Animation::TempPageout(view,tempview);
 
         connect(anime,&QPropertyAnimation::finished,[this]{
             Animation::changeScene(levelscene,startscene,view,1500)->start(QAbstractAnimation::DeleteWhenStopped);
             MusicPlayer::getMPlayer()->changeBgm(QUrl("qrc:/bgm/src/bgm/startSceneBGM.mp3"));
             tempview->setScene(nullptr);
-            levelscene->reset();
+
         });
 
         anime->start(QAbstractAnimation::DeleteWhenStopped);
     }
+    tipPage->setAnswer("",0);
 }
 
 void Gamesys::openSaveAndLoad()
@@ -140,12 +147,19 @@ void Gamesys::closeSaveAndLoad()
 
 void Gamesys::openTips()
 {
+    tempview->setScene(tipPage);
+    Animation::TempPagein(view,tempview)->start(QAbstractAnimation::DeleteWhenStopped);
 
 }
 
 void Gamesys::closeTips()
 {
+    QPropertyAnimation* anime = Animation::TempPageout(view,tempview);
+    anime->start(QAbstractAnimation::DeleteWhenStopped);
 
+    connect(anime,&QPropertyAnimation::finished,[this]{
+        tempview->setScene(nullptr);
+    });
 }
 
 
@@ -180,8 +194,14 @@ void Gamesys::startGame(int levelNum)
     connect(anime->animationAt(1),&QPropertyAnimation::finished,[this,filepath]{
         //动画暂停时加载文件
         levelscene->loadLevel(filepath);
+        tipPage->setAnswer(levelscene->getLevelContent(),levelscene->getCols());
     });
     anime->start(QAbstractAnimation::DeleteWhenStopped);
+
+}
+
+void Gamesys::completeGame()
+{
 
 }
 
