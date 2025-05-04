@@ -1,5 +1,6 @@
 #include "gameobject.h"
 #include "musicplayer.h"
+#include "otheritems.h"
 
 
 GameObject::GameObject(QGraphicsItem *parent):QGraphicsPixmapItem{parent}{}
@@ -93,15 +94,10 @@ void HexBtn::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 
 
-
 FunctionBtn::FunctionBtn(QPixmap pixmap, QGraphicsItem *parent):
     GameBtn{pixmap,parent}
 {}
 
-FunctionBtn::~FunctionBtn()
-{
-    qDebug() << "funcbtn delete!";
-}
 
 void FunctionBtn::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
@@ -141,7 +137,7 @@ void LevelSelectBlock::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
 {
     QGraphicsColorizeEffect* fx = new QGraphicsColorizeEffect(this);
     fx->setColor(Qt::black);
-    fx->setStrength(0.5);
+    fx->setStrength(0.8);
     setGraphicsEffect(fx);
 }
 
@@ -167,6 +163,30 @@ void LevelSelectBlock::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 
 
+
+TranslateIcons::TranslateIcons(QPixmap pixmap, Type t,QGraphicsItem *parent):
+    GameObject(pixmap,parent),
+    type(t)
+{
+    goldRect = new QGraphicsRectItem(boundingRect(),this);
+    goldRect->setPen(QPen(QColor(255,215,0),2));
+    goldRect->hide();
+}
+
+void TranslateIcons::makeGold()
+{
+    goldRect->show();
+}
+
+void TranslateIcons::removeGold()
+{
+    goldRect->hide();
+}
+
+void TranslateIcons::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    emit selected(type);
+}
 
 
 

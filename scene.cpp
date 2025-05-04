@@ -145,7 +145,9 @@ LoadScene::LoadScene(QObject *parent):
 
 //游戏内关卡场景
 LevelScene::LevelScene(QObject *parent)
-    :Scene{parent}
+    :Scene{parent},
+    hasSelectBlocks(false),
+    curTransType(TranslateIcons::NONE)
 {
     QGraphicsPixmapItem * bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/ingame_background1.png"));
     addItem(bg);
@@ -153,6 +155,8 @@ LevelScene::LevelScene(QObject *parent)
     //functional btns
     settingBtn = new FunctionBtn(QPixmap(":/item/src/item/settingIcon.png"));
     rankBtn = new FunctionBtn(QPixmap(":/item/src/item/rankIcon.png"));
+    settingBtn->setOpacity(0.5);
+    rankBtn->setOpacity(0.5);
 
     /* developing
      *
@@ -165,28 +169,40 @@ LevelScene::LevelScene(QObject *parent)
 
     //功能按键
     settingBtn->setPos(Settings::functionBtnInterval,
-                       Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
+                       Settings::screenHeight - settingBtn->boundingRect().height() - 5);
 
-    rankBtn->setPos(2*Settings::functionBtnInterval + settingBtn->sceneBoundingRect().width(),
-                    Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
+    rankBtn->setPos(2*Settings::functionBtnInterval + settingBtn->boundingRect().width(),
+                    Settings::screenHeight - settingBtn->boundingRect().height() - 5);
 
     addItem(settingBtn);
     addItem(rankBtn);
 
 
-    //title & font
-    title = new QGraphicsTextItem;
+    //加进菜单栏
+    sideBar = new MySideBar();
+    sideBar->setZValue(200);
+    sideBar->setPos(Settings::screenWidth - sideBar->btn->boundingRect().width(),0);
 
+    addItem(sideBar);
+    connect(sideBar,&MySideBar::SelectTransType,this,&LevelScene::changeTransType);
+
+
+    //title
+    title = new QGraphicsTextItem;
+    title->document()->setDefaultTextOption(QTextOption(Qt::AlignCenter));
+
+    //font
     int fontId = QFontDatabase::addApplicationFont(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf");
     QString fontFamily = QFontDatabase::applicationFontFamilies(fontId).at(0);
     QFont font(fontFamily,25);
     title->setFont(font);
     title->setDefaultTextColor(Qt::white);
-    title->setPos((Settings::screenWidth - title->sceneBoundingRect().width())/2,
-                  Settings::levelSceneTiTleY);
-    addItem(title);
+    title->setPos(10,10);
 
+
+    addItem(title);
 }
+
 
 void LevelScene::loadLevel(QString filepath)
 {
@@ -227,8 +243,6 @@ void LevelScene::loadLevel(QString filepath)
                 rows = 0;
                 cols = 0;
             }
-
-
         }
 
         //模式
@@ -236,6 +250,7 @@ void LevelScene::loadLevel(QString filepath)
             QString t = strList[line].remove("mode=");
             if(t == "classic") mode = CLASSIC;
             else if(t == "hex") mode = HEX;
+            sideBar->setGameMode(mode);
         }
 
         //contents内容
@@ -254,6 +269,21 @@ void LevelScene::loadLevel(QString filepath)
     double Width = rows * Settings::textBlockSize;
     double Height = cols * Settings::textBlockSize;
 
+    /*
+     * 置中排版：
+     * double Width = rows * Settings::textBlockSize;
+     * double Height = cols * Settings::textBlockSize;
+     * double posx = (Settings::screenWidth - Width)/2 + x*Settings::textBlockSize;
+     * double posy = (Settings::screenHeight - Height)/2 + y*Settings::textBlockSize;
+     *
+     *
+     * 左上角排版：
+     * double startX = Settings::textBlockSize;
+     * double startY = startX;
+     * double posx = startX + x*Settings::textBlockSize;
+     * double posy = startY + y*Settings::textBlockSize;
+    */
+
     for (int y = 0; y < cols; ++y) {
         for (int x = 0; x < rows; ++x) {
 
@@ -266,13 +296,18 @@ void LevelScene::loadLevel(QString filepath)
 
             qDebug() << "testdebug(block setpos and word)";
 
-            //排版置中
             double posx = (Settings::screenWidth - Width)/2 + x*Settings::textBlockSize;
             double posy = (Settings::screenHeight - Height)/2 + y*Settings::textBlockSize;
             block->setPos(posx,posy);
 
             textBlocks.append(block);
             addItem(block);
+
+            //链接
+            connect(block,&TextBlock::clicked,[this](TextBlock* t){
+                hasSelectBlocks ? switchBlocks(t) : selectBlocks(t);
+            });
+            sideBar->setZValue(block->zValue() + 1);
         }
     }
 
@@ -293,7 +328,143 @@ void LevelScene::release()
     textBlocks.clear();
     qDebug() << "release success.";
 
+    curTransType = TranslateIcons::NONE;
+
 }
+
+
+
+void LevelScene::changeTransType(TranslateIcons::Type type)
+{
+    if(curTransType != type){
+        curTransType = type;
+        qDebug() << "currentType:" << curTransType;
+    }
+    cancelSelect();
+
+}
+
+void LevelScene::selectBlocks(TextBlock* target)
+{
+
+    selectedBlocks.clear();
+
+    switch(curTransType){
+
+    case TranslateIcons::ROWS:
+        //row select
+        rowSelect(target);
+        break;
+    case TranslateIcons::COLS:
+        //col select
+        colSelect(target);
+        break;
+    case TranslateIcons::CROSS:
+        //cross select
+        crossSelect(target);
+        break;
+    case TranslateIcons::HEXLINE:
+        break;
+    case TranslateIcons::HEX:
+        break;
+    }
+
+    if(selectedBlocks.size() > 0){
+        hasSelectBlocks = true;
+    }
+}
+
+
+void LevelScene::rowSelect(TextBlock * target)
+{
+    for (TextBlock* t : textBlocks) {
+        if(t->getXY().y() == target->getXY().y()){
+            t->setTarget(true);
+            selectedBlocks.push_back(t);
+        }
+    }
+}
+
+void LevelScene::colSelect(TextBlock *target)
+{
+    for (TextBlock* t : textBlocks) {
+        if(t->getXY().x() == target->getXY().x()){
+            t->setTarget(true);
+            selectedBlocks.push_back(t);
+        }
+    }
+}
+
+void LevelScene::crossSelect(TextBlock *target)
+{
+    //xy 不能为边缘地区
+    if(target->getXY().x() == 0 || target->getXY().x() == cols-1
+        || target->getXY().y() == 0 || target->getXY().y() == rows-1)
+    {
+        qDebug() << "无效选取";
+        return;
+    }
+
+    for (TextBlock* t : textBlocks) {
+        //x差值1 或 y差值1
+        if((t->getXY() - target->getXY()).manhattanLength() <= 1){
+            t->setTarget(true);
+            selectedBlocks.push_back(t);
+        }
+    }
+}
+
+void LevelScene::cancelSelect()
+{
+    hasSelectBlocks = false;
+    for (TextBlock* t : textBlocks) {
+        t->setTarget(false);
+    }
+    selectedBlocks.clear();
+}
+
+
+
+void LevelScene::switchBlocks(TextBlock*)
+{
+    switch(curTransType){
+
+    case TranslateIcons::ROWS:
+        rowSwitch();
+        break;
+    case TranslateIcons::COLS:
+        colSwitch();
+        break;
+    case TranslateIcons::CROSS:
+        crossSwitch();
+        break;
+    case TranslateIcons::HEXLINE:
+        break;
+    case TranslateIcons::HEX:
+        break;
+    }
+
+    cancelSelect();
+}
+
+void LevelScene::rowSwitch()
+{
+
+}
+
+void LevelScene::colSwitch()
+{
+
+}
+
+void LevelScene::crossSwitch()
+{
+
+}
+
+
+
+
 
 
 

@@ -17,6 +17,8 @@ public:
     static QPropertyAnimation * TempPagein(QGraphicsView* bgView,QGraphicsView* tempView);
     static QPropertyAnimation * TempPageout(QGraphicsView* bgView,QGraphicsView* tempView);
 
+    //打开/关闭sidebar
+    static QParallelAnimationGroup* sideBarAnime(SideBar* sideBar,bool toOpen);
 
 
     static QPropertyAnimation* MakeAnime(QObject* obj,QByteArray property,int time,QVariant sval,QVariant eval);

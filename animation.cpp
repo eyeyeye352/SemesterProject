@@ -9,6 +9,8 @@ QSequentialAnimationGroup* Animation::changeScene(Scene *origin, Scene *dest,QGr
     //先用黑布盖住
     BlackOverlay* black = new BlackOverlay;
     LoadScene* loadScene = new LoadScene;
+    black->setZValue(999);
+
     origin->addItem(black);
 
     QSequentialAnimationGroup* anime = new QSequentialAnimationGroup;
@@ -52,6 +54,7 @@ QPropertyAnimation * Animation::TempPagein(QGraphicsView *bgView, QGraphicsView 
     BlackOverlay* black = new BlackOverlay;
     black->setData(0,"tempBlackOverlay");
     black->setOpacity(0.5);
+    black->setZValue(999);
     bgView->scene()->addItem(black);
 
     QPropertyAnimation* anime = Animation::MakeAnime(tempView,"pos",500,
@@ -79,6 +82,34 @@ QPropertyAnimation * Animation::TempPageout(QGraphicsView *bgView, QGraphicsView
     anime->setEasingCurve(QEasingCurve::InBack);
     return anime;
 }
+
+
+
+QParallelAnimationGroup *Animation::sideBarAnime(SideBar *sideBar, bool toOpen)
+{
+    QParallelAnimationGroup * anime = new QParallelAnimationGroup;
+
+    //打开
+    if(toOpen){
+        anime->addAnimation(Animation::MakeAnime(sideBar,"pos",250,
+                                     sideBar->pos(),
+                                     sideBar->pos() + QPointF(-Settings::sideBarWidth,0)));
+    }
+    //关闭
+    else{
+        anime->addAnimation(Animation::MakeAnime(sideBar,"pos",250,
+                                                 sideBar->pos(),
+                                                 sideBar->pos() + QPointF(Settings::sideBarWidth,0)));
+    }
+
+    anime->addAnimation(Animation::MakeAnime(sideBar->btn,"rotation",250,
+                                             sideBar->btn->rotation(),
+                                             sideBar->btn->rotation()+180));
+
+
+    return anime;
+}
+
 
 
 

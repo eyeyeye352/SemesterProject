@@ -5,8 +5,9 @@
 Gamesys::Gamesys(QWidget *parent)
     : QWidget(parent)
 {
-    //窗口大小
+    //窗口设置
     setFixedSize(Settings::screenWidth,Settings::screenHeight);
+    setWindowIcon(QIcon(Settings::gameIconPath));
 
     //scene and view
     startscene = new StartScene(this);

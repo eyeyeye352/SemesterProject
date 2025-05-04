@@ -26,6 +26,13 @@ MusicPlayer::MusicPlayer() {
     o2->setVolume(Settings::soundVol);
     o3->setVolume(Settings::soundVol);
 
+    QObject::connect(bgm,&QMediaPlayer::positionChanged,[this](int pos){
+        if(pos == 0){
+            bgm->setPosition(0);
+            bgm->play();
+        }
+    });
+
     /* debug
      *
      * qDebug() << "musicvol: " << o1->volume() << "expect: " << Settings::musicVol;
@@ -41,9 +48,7 @@ MusicPlayer::~MusicPlayer()
 
 void MusicPlayer::startBGM()
 {
-    bgm->setLoops(QMediaPlayer::Infinite);
     bgm->play();
-
     // qDebug() << "bgm start playing. loop:" << bgm->loops() << " expect:" << QMediaPlayer::Infinite;
 }
 
@@ -85,7 +90,6 @@ void MusicPlayer::changeBgm(QUrl url)
 
     QObject::connect(anime->animationAt(0),&QPropertyAnimation::finished,[this,url]{
         bgm->setSource(url);
-        bgm->setLoops(QMediaPlayer::Infinite);
     });
     QObject::connect(anime->animationAt(1),&QPropertyAnimation::finished,[this,url]{
         bgm->play();

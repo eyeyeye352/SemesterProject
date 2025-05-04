@@ -1,4 +1,5 @@
 #include "otheritems.h"
+#include "animation.h"
 
 
 DragableObj::DragableObj(QPixmap pixmap, QGraphicsItem *parent)
@@ -146,3 +147,7 @@ QRectF ValSets::boundingRect() const
                 valText->boundingRect().height());
     return rect;
 }
+
+
+
+

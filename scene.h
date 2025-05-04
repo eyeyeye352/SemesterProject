@@ -6,6 +6,7 @@
 #include "gameobject.h"
 #include "textblock.h"
 #include "otheritems.h"
+#include "gamesidebar.h"
 
 class Scene : public QGraphicsScene
 {
@@ -51,6 +52,9 @@ public slots:
 
 
 class LevelScene : public Scene{
+
+    Q_OBJECT
+
 public:
     LevelScene(QObject* parent = nullptr);
 
@@ -63,6 +67,24 @@ public:
     //优化内存释放控件
     void release();
 
+    //核心玩法：textBLOCKS的选择/交换
+    void rowSelect(TextBlock*);
+    void colSelect(TextBlock*);
+    void crossSelect(TextBlock*);
+    void cancelSelect();
+    QList<TextBlock*> selectedBlocks;
+
+    void rowSwitch();
+    void colSwitch();
+    void crossSwitch();
+
+public slots:
+    void changeTransType(TranslateIcons::Type);
+
+    //选中blocks/交换blocks
+    void selectBlocks(TextBlock*);
+    void switchBlocks(TextBlock*);
+
 private:
 
     //关卡内容
@@ -74,6 +96,12 @@ private:
 
     //方块们（小矩形或六边形）
     QList<TextBlock*> textBlocks;
+
+    //根据当前是否有选中的block执行select或switch
+    bool hasSelectBlocks;
+
+    TranslateIcons::Type curTransType;
+    MySideBar* sideBar;
 
 };
 

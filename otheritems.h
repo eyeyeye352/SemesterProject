@@ -64,4 +64,12 @@ private:
     double val;
 };
 
+
+
+
+
+
+
+
+
 #endif // OTHERITEMS_H

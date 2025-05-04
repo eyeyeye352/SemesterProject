@@ -4,8 +4,6 @@
 #include "settings.h"
 
 
-
-
 class GameObject : public QObject, public QGraphicsPixmapItem
 {
     Q_OBJECT
@@ -81,10 +79,11 @@ signals:
 
 class FunctionBtn : public GameBtn
 {
+    Q_OBJECT
+    Q_PROPERTY(qreal rotation READ rotation WRITE setRotation)
 
 public:
     FunctionBtn(QPixmap pixmap,QGraphicsItem *parent = nullptr);
-    ~FunctionBtn();
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
@@ -100,8 +99,6 @@ class LevelSelectBlock :  public GameBtn{
 public:
 
     LevelSelectBlock(int l,QGraphicsItem *parent = nullptr);
-
-    //载入文件记录关卡信息
 
     void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
     void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
@@ -119,7 +116,32 @@ private:
 };
 
 
+class TranslateIcons : public GameObject{
 
+    Q_OBJECT
+
+public:
+
+    enum Type{
+        NONE,
+        ROWS,
+        COLS,
+        CROSS,
+        HEXLINE,
+        HEX
+    };
+
+    TranslateIcons(QPixmap pixmap,Type type,QGraphicsItem *parent = nullptr);
+    void makeGold();
+    void removeGold();
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+signals:
+    void selected(Type);
+private:
+    Type type;
+    QGraphicsRectItem* goldRect;
+};
 
 
 

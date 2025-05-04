@@ -13,12 +13,31 @@ public:
     ~TextBlock();
 
     void setWord(QString newWord);
+    QString Word();
     void setxy(QPoint);
 
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+
+    bool isTarget();
+    void setTarget(bool);
+    QPoint getXY();
+
+signals:
+    void clicked(TextBlock*);
 private:
 
     QPoint xy;
     QGraphicsTextItem* word;
+
+    //点击事件标记
+    bool isClicked;
+    //根据变换模式，被选中标记(以及金色框框)
+    bool target;
+    QGraphicsRectItem* goldRect;
+
 };
 
 

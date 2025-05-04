@@ -28,6 +28,11 @@
 #include <QTextCharFormat>
 #include <QTextFormat>
 #include <QTextCursor>
+#include <QTextDocument>
+#include <QTextBlockFormat>
+#include <QTextFrame>
+
+class SideBar;
 
 enum Mode{
     CLASSIC,
@@ -41,6 +46,7 @@ public:
 
     static int screenWidth;
     static int screenHeight;
+    static QString gameIconPath;
 
     static double backgroundMoveSpeed;
     static int backgroundUpdateInterval;
@@ -74,6 +80,10 @@ public:
     //设置页面大小
     static QPointF settingPage_MusicValSet;
     static QPointF settingPage_SoundValSet;
+
+    //游戏内--变换模式选择菜单栏
+    static int sideBarWidth;
+    static int translateIconInterval;
 };
 
 #endif // SETTINGS_H
