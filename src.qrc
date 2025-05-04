@@ -9,6 +9,8 @@
     <qresource prefix="/audio">
         <file>src/sound/btnHoverSound.mp3</file>
         <file>src/sound/btnclick.mp3</file>
+        <file>src/sound/finishSwitchBlock.mp3</file>
+        <file>src/sound/switchblockFail.mp3</file>
     </qresource>
     <qresource prefix="/item">
         <file>src/item/hexagon.png</file>
@@ -32,6 +34,8 @@
         <file>src/item/translatesIcon/crossTranslate.png</file>
         <file>src/item/translatesIcon/rowTranslate.png</file>
         <file>src/item/sideBarBtn.png</file>
+        <file>src/item/saveIcon.png</file>
+        <file>src/item/tipIcon.png</file>
     </qresource>
     <qresource prefix="/bgm">
         <file>src/bgm/startSceneBGM.mp3</file>

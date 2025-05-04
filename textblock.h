@@ -12,6 +12,8 @@ public:
     TextBlock(QPoint xypos = {0,0},QString word = "",QGraphicsItem *parent = nullptr);
     ~TextBlock();
 
+    void reset();
+
     void setWord(QString newWord);
     QString Word();
     void setxy(QPoint);
@@ -21,9 +23,12 @@ public:
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
-    bool isTarget();
-    void setTarget(bool);
+    void showGoldRect();
+    void hideGoldRect();
     QPoint getXY();
+
+    //static函数，交换两个方块的文字
+    static void switchWord(TextBlock* t1,TextBlock* t2);
 
 signals:
     void clicked(TextBlock*);
@@ -34,8 +39,7 @@ private:
 
     //点击事件标记
     bool isClicked;
-    //根据变换模式，被选中标记(以及金色框框)
-    bool target;
+    //根据变换模式，被选中标记(金色框框)
     QGraphicsRectItem* goldRect;
 
 };

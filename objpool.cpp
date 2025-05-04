@@ -31,8 +31,10 @@ TextBlock *objPool::getTextBlock()
 
 }
 
-void objPool::recycle(TextBlock * tb)
+void objPool::recycle(TextBlock * t)
 {
-    textblockPool.append(tb);
+    textblockPool.append(t);
+    t->reset();
+
     //qDebug() << "recycle success";
 }

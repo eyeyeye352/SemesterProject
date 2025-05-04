@@ -13,6 +13,9 @@ class Scene : public QGraphicsScene
 
 public:
     Scene(QObject *parent = nullptr);
+
+protected:
+    double maxZvalue();
 };
 
 
@@ -59,31 +62,41 @@ public:
     LevelScene(QObject* parent = nullptr);
 
     //设置、排行查看、存档按钮
-    FunctionBtn *settingBtn, *rankBtn, *saveBtn;
+    FunctionBtn *settingBtn, *rankBtn, *saveBtn ,*tipBtn;
 
     //载入关卡内容并渲染
     void loadLevel(QString filepath);
 
-    //优化内存释放控件
-    void release();
+    //重置关卡
+    void reset();
 
-    //核心玩法：textBLOCKS的选择/交换
+    //核心玩法：选中blocks/交换blocks
+    void selectBlocks(TextBlock*);
+    void switchBlocks(TextBlock*);
+
+    //细项
     void rowSelect(TextBlock*);
     void colSelect(TextBlock*);
     void crossSelect(TextBlock*);
     void cancelSelect();
     QList<TextBlock*> selectedBlocks;
+    //十字变换专用容器
+    QMap<QString,TextBlock*> crossTransMap;
 
-    void rowSwitch();
-    void colSwitch();
-    void crossSwitch();
+    void rowSwitch(TextBlock*);
+    void colSwitch(TextBlock*);
+    void crossSwitch(TextBlock*);
+
+    //设置游戏模式，（同时调整sideBar为对应的模式）
+    void setGameMode(Mode);
+
+
 
 public slots:
+    //更换方块选取/switch方式
     void changeTransType(TranslateIcons::Type);
 
-    //选中blocks/交换blocks
-    void selectBlocks(TextBlock*);
-    void switchBlocks(TextBlock*);
+
 
 private:
 
@@ -92,6 +105,9 @@ private:
     Mode mode;
     int rows,cols;
     QString contents;
+
+    //tips文字
+    QGraphicsTextItem* tips;
 
 
     //方块们（小矩形或六边形）

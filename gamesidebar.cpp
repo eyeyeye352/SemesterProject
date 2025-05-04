@@ -90,9 +90,11 @@ void MySideBar::setGameMode(Mode m)
 {
     gameMode = m;
     for (TranslateIcons* t : hexIcons) {
+        t->removeGold();
         gameMode == CLASSIC ? t->hide() : t->show();
     }
     for (TranslateIcons* t : classicIcons) {
+        t->removeGold();
         gameMode == HEX ? t->hide() : t->show();
     }
 

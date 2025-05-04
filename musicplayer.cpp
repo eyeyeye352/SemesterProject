@@ -9,29 +9,34 @@ MusicPlayer::MusicPlayer() {
     bgm = new QMediaPlayer;
     btnsound = new QMediaPlayer;
     clicksound = new QMediaPlayer;
+    successBlockSound = new QMediaPlayer;
+    failBlockSound = new QMediaPlayer;
 
-    QAudioOutput *o1 = new QAudioOutput(bgm);
-    QAudioOutput *o2 = new QAudioOutput(btnsound);
-    QAudioOutput *o3 = new QAudioOutput(clicksound);
+    QAudioOutput *o1 = new QAudioOutput;
+    QAudioOutput *o2 = new QAudioOutput;
+    QAudioOutput *o3 = new QAudioOutput;
+    QAudioOutput *o4 = new QAudioOutput;
+    QAudioOutput *o5 = new QAudioOutput;
 
     bgm->setAudioOutput(o1);
     btnsound->setAudioOutput(o2);
     clicksound->setAudioOutput(o3);
+    successBlockSound->setAudioOutput(o4);
+    failBlockSound->setAudioOutput(o5);
 
     bgm->setSource(QUrl("qrc:/bgm/src/bgm/startSceneBGM.mp3"));
     btnsound->setSource(QUrl("qrc:/audio/src/sound/btnHoverSound.mp3"));
     clicksound->setSource(QUrl("qrc:/audio/src/sound/btnclick.mp3"));
+    successBlockSound->setSource(QUrl("qrc:/audio/src/sound/finishSwitchBlock.mp3"));
+    failBlockSound->setSource(QUrl("qrc:/audio/src/sound/switchblockFail.mp3"));
 
     o1->setVolume(Settings::musicVol);
     o2->setVolume(Settings::soundVol);
     o3->setVolume(Settings::soundVol);
+    o4->setVolume(Settings::soundVol);
+    o5->setVolume(Settings::soundVol);
 
-    QObject::connect(bgm,&QMediaPlayer::positionChanged,[this](int pos){
-        if(pos == 0){
-            bgm->setPosition(0);
-            bgm->play();
-        }
-    });
+
 
     /* debug
      *
@@ -41,13 +46,11 @@ MusicPlayer::MusicPlayer() {
 }
 
 MusicPlayer::~MusicPlayer()
-{
-    delete bgm;
-    delete btnsound;
-}
+{}
 
 void MusicPlayer::startBGM()
 {
+    bgm->setLoops(QMediaPlayer::Infinite);
     bgm->play();
     // qDebug() << "bgm start playing. loop:" << bgm->loops() << " expect:" << QMediaPlayer::Infinite;
 }
@@ -64,6 +67,17 @@ void MusicPlayer::clickSound()
     clicksound->play();
 }
 
+void MusicPlayer::playBlockSound(bool success)
+{
+    if(success) {
+        successBlockSound->setPosition(0);
+        successBlockSound->play();
+    }else{
+        failBlockSound->setPosition(0);
+        failBlockSound->play();
+    }
+}
+
 void MusicPlayer::setBgmVol(double vol)
 {
     bgm->audioOutput()->setVolume(vol);
@@ -75,6 +89,8 @@ void MusicPlayer::setSoundVol(double vol)
 {
     btnsound->audioOutput()->setVolume(vol);
     clicksound->audioOutput()->setVolume(vol);
+    successBlockSound->audioOutput()->setVolume(vol);
+    failBlockSound->audioOutput()->setVolume(vol);
 
     // qDebug() << "set sound volume to:" << vol;
 }
@@ -92,6 +108,7 @@ void MusicPlayer::changeBgm(QUrl url)
         bgm->setSource(url);
     });
     QObject::connect(anime->animationAt(1),&QPropertyAnimation::finished,[this,url]{
+        bgm->setLoops(QMediaPlayer::Infinite);
         bgm->play();
     });
 

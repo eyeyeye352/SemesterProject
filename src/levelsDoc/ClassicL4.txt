@@ -1,5 +1,5 @@
 title=千秋叹
-difficulty=7,8
+difficulty=8,7
 mode=classic
 content=
 鸿蒙初辟幻尘烟

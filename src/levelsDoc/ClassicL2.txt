@@ -1,5 +1,5 @@
 title=月夜
-difficulty=5,4
+difficulty=4,5
 mode=classic
 content=
 夜静月如霜

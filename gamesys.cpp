@@ -45,7 +45,7 @@ Gamesys::Gamesys(QWidget *parent)
     connect(startscene->settingBtn,&GameBtn::clicked,this,&Gamesys::openSetting);
     connect(startscene->rankBtn,&GameBtn::clicked,this,&Gamesys::checkRank);
     connect(startscene->createModeBtn,&GameBtn::clicked,this,&Gamesys::goCreateMode);
-    connect(startscene->backBtn,&GameBtn::clicked,this,&Gamesys::backToStartScene);
+    connect(startscene->backBtn,&GameBtn::clicked,this,&Gamesys::backModeSelection);
 
     for (int n = 0; n < startscene->levels.size(); ++n) {
         connect(startscene->levels[n],&LevelSelectBlock::selected,this,&Gamesys::startGame);
@@ -54,6 +54,8 @@ Gamesys::Gamesys(QWidget *parent)
     //connections(levelScene)
     connect(levelscene->settingBtn,&GameBtn::clicked,this,&Gamesys::openSetting);
     connect(levelscene->rankBtn,&GameBtn::clicked,this,&Gamesys::checkRank);
+    connect(levelscene->saveBtn,&GameBtn::clicked,this,&Gamesys::openSaveAndLoad);
+    connect(levelscene->tipBtn,&GameBtn::clicked,this,&Gamesys::openTips);
 
     //connection(settingpage)
     connect(settingPage,&SettingPage::backHome,this,&Gamesys::backHome);
@@ -67,7 +69,6 @@ Gamesys::~Gamesys()
 {
 
     MusicPlayer::delPlayer();
-    levelscene->release();
     objPool::delinstance();
 }
 
@@ -80,7 +81,7 @@ void Gamesys::goLevelSelection(Mode mode)
 }
 
 
-void Gamesys::backToStartScene()
+void Gamesys::backModeSelection()
 {
     Animation::backModeSelection(startscene);
 }
@@ -120,11 +121,31 @@ void Gamesys::backHome()
             Animation::changeScene(levelscene,startscene,view,1500)->start(QAbstractAnimation::DeleteWhenStopped);
             MusicPlayer::getMPlayer()->changeBgm(QUrl("qrc:/bgm/src/bgm/startSceneBGM.mp3"));
             tempview->setScene(nullptr);
-            levelscene->release();
+            levelscene->reset();
         });
 
         anime->start(QAbstractAnimation::DeleteWhenStopped);
     }
+}
+
+void Gamesys::openSaveAndLoad()
+{
+
+}
+
+void Gamesys::closeSaveAndLoad()
+{
+
+}
+
+void Gamesys::openTips()
+{
+
+}
+
+void Gamesys::closeTips()
+{
+
 }
 
 
@@ -153,13 +174,11 @@ void Gamesys::startGame(int levelNum)
     }
 
 
-
     //切换音乐和scene
     MusicPlayer::getMPlayer()->changeBgm(QUrl("qrc:/bgm/src/bgm/ingameBgm.mp3"));
     QSequentialAnimationGroup* anime = Animation::changeScene(startscene,levelscene,view,3000);
     connect(anime->animationAt(1),&QPropertyAnimation::finished,[this,filepath]{
         //动画暂停时加载文件
-        levelscene->release();
         levelscene->loadLevel(filepath);
     });
     anime->start(QAbstractAnimation::DeleteWhenStopped);

@@ -29,6 +29,8 @@ public:
     void startBGM();
     void startBtnSound();
     void clickSound();
+    void playBlockSound(bool success);
+
     void setBgmVol(double vol);
     void setSoundVol(double vol);
 
@@ -37,6 +39,8 @@ public:
     QMediaPlayer* bgm;
     QMediaPlayer* btnsound;
     QMediaPlayer* clicksound;
+    QMediaPlayer* successBlockSound;
+    QMediaPlayer* failBlockSound;
 };
 
 #endif // MUSICPLAYER_H

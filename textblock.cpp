@@ -4,8 +4,7 @@
 TextBlock::TextBlock(QPoint xypos, QString w, QGraphicsItem *parent)
     :GameObject(parent),
     xy(xypos),
-    isClicked(false),
-    target(false)
+    isClicked(false)
 {
     setAcceptHoverEvents(true);
 
@@ -33,6 +32,13 @@ TextBlock::TextBlock(QPoint xypos, QString w, QGraphicsItem *parent)
 TextBlock::~TextBlock()
 {
     qDebug() << "textblock:" << word->toPlainText() << "has been delete!";
+}
+
+void TextBlock::reset()
+{
+    word->setPlainText("");
+    isClicked = false;
+    goldRect->hide();
 }
 
 void TextBlock::setWord(QString newWord)
@@ -72,19 +78,31 @@ void TextBlock::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
 }
 
-bool TextBlock::isTarget()
+void TextBlock::showGoldRect()
 {
-    return target;
+    goldRect->show();
+    qDebug() << Word() << "is selected";
 }
 
-void TextBlock::setTarget(bool b)
+void TextBlock::hideGoldRect()
 {
-    target = b;
-    target ? goldRect->show() : goldRect->hide();
-    if(target) qDebug() << Word() << "is selected";
+    goldRect->hide();
+    qDebug() << Word() << "is Unselected";
 }
+
 
 QPoint TextBlock::getXY()
 {
     return xy;
+}
+
+void TextBlock::switchWord(TextBlock *t1, TextBlock *t2)
+{
+    QString temp = t1->Word();
+    t1->setWord(t2->Word());
+    t2->setWord(temp);
+
+    qDebug() << t1->Word() << "与" << t2->Word() << " 交换了。";
+
+
 }

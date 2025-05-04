@@ -1,5 +1,5 @@
 title=春景
-difficulty=5,4
+difficulty=4,5
 mode=classic
 content=
 春风拂翠枝
