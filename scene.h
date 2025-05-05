@@ -58,6 +58,7 @@ public slots:
 class LevelScene : public Scene{
 
     Q_OBJECT
+    friend class Gamesys;
 
 public:
     LevelScene(QObject* parent = nullptr);
@@ -65,64 +66,29 @@ public:
     //设置、排行查看、存档按钮
     FunctionBtn *settingBtn, *rankBtn, *saveBtn ,*tipBtn ,*undoBtn ,*doBtn;
 
-    //载入关卡内容并渲染
-    void loadLevel(QString filepath);
+    //加入textblock
+    void addTextBlock(TextBlock* t,int rows,int cols);
 
-    //重置关卡
-    void reset();
+    //gamesys设置标题并排版
+    void setTitle(QString);
 
-    //核心玩法：选中blocks/交换blocks
-    void selectBlocks(TextBlock*);
-    void switchBlocks(TextBlock*);
-
-    //细项
-    void rowSelect(TextBlock*);
-    void colSelect(TextBlock*);
-    void crossSelect(TextBlock*);
-    void cancelSelect();
-    QList<TextBlock*> selectedBlocks;
-    //十字变换专用容器
-    QMap<QString,TextBlock*> crossTransMap;
-
-    void rowSwitch(TextBlock*);
-    void colSwitch(TextBlock*);
-    void crossSwitch(TextBlock*);
-
-    //设置游戏模式，（调整sideBar为对应的模式）
+    //gamesys设置游戏模式，（调整sideBar为对应的模式）
     void setGameMode(Mode);
 
-    QString getLevelContent();
-    int getCols();
-    int getRows();
+    //设置步数显示
+    void setStep(int);
 
 
+signals:
 
-public slots:
-    //更换方块选取/switch方式
-    void changeTransType(TranslateIcons::Type);
-
+    void clickBg();
 
 private:
 
-    //关卡内容
     QGraphicsTextItem * title;
-    Mode mode;
-    int rows,cols;
+    QGraphicsTextItem * stepText;
 
-    //内容，同时作为解答
-    QString contents;
-
-    //方块们（小矩形或六边形）
-    QList<TextBlock*> textBlocks;
-
-    //根据当前是否有选中的block执行select或switch
-    bool hasSelectBlocks;
-
-    TranslateIcons::Type curTransType;
     MySideBar* sideBar;
-
-    //gamerecords
-    QList<GameRecord*> gameRecords;
 
 };
 
@@ -188,7 +154,30 @@ private:
 
 class RankPage : public Scene{};
 class SavePage : public Scene{};
-class CompletePage : public Scene{};
+
+
+
+//游戏通关场景
+class CompletePage : public Scene{
+
+    Q_OBJECT
+public:
+    CompletePage(QObject *parent = nullptr);
+
+    void setcontents(int step,int score);
+
+signals:
+
+    void backHome();
+
+
+private:
+    QGraphicsPixmapItem* bg;
+    QGraphicsTextItem * stepText ,*score;
+    FunctionBtn *homeBtn;
+
+
+};
 
 
 

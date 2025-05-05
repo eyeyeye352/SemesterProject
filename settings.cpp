@@ -32,8 +32,13 @@ int Settings::functionBtnInterval = 5;
 
 int Settings::loadingTextX = 10;
 
-QPointF Settings::settingPage_MusicValSet = {150,170};
-QPointF Settings::settingPage_SoundValSet = {150,280};
+QPointF Settings::settingPage_MusicValSetPos = {150,170};
+QPointF Settings::settingPage_SoundValSetPos = {150,280};
 
 int Settings::sideBarWidth = 200;
 int Settings::translateIconInterval = 20;
+
+QPointF Settings::levelscene_stepTextPos = {10,10};
+
+QPointF Settings::completeScene_stepTextPos = {20,150};
+QPointF Settings::completeScene_scorePos = {20,250};

@@ -31,6 +31,9 @@
 #include <QTextDocument>
 #include <QTextBlockFormat>
 #include <QTextFrame>
+#include <QRandomGenerator>
+#include <QStack>
+#include <QMessageBox>
 
 class SideBar;
 
@@ -78,12 +81,18 @@ public:
     static double textBlockSize;
 
     //设置页面大小
-    static QPointF settingPage_MusicValSet;
-    static QPointF settingPage_SoundValSet;
+    static QPointF settingPage_MusicValSetPos;
+    static QPointF settingPage_SoundValSetPos;
 
     //游戏内--变换模式选择菜单栏
     static int sideBarWidth;
     static int translateIconInterval;
+
+    //levelscene stepText位置
+    static QPointF levelscene_stepTextPos;
+
+    static QPointF completeScene_stepTextPos;
+    static QPointF completeScene_scorePos;
 };
 
 #endif // SETTINGS_H

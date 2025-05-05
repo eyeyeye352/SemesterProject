@@ -3,6 +3,7 @@
 
 #include "gameobject.h"
 #include "settings.h"
+#include "gamerecord.h"
 
 //可拖动的图形
 class DragableObj : public GameObject{
@@ -62,6 +63,23 @@ signals:
 
 private:
     double val;
+};
+
+
+
+//自己写的优化过的GameRecordList
+struct GameRecordList{
+
+    void append(GameRecord r,bool optimize);
+    GameRecord pop();
+    int size();
+    bool isEmpty();
+    void clear();
+
+    GameRecord& operator[](int n);
+
+private:
+    QStack<GameRecord> rList;
 };
 
 

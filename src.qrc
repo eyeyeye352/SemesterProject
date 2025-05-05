@@ -6,6 +6,7 @@
         <file>src/background/BlackOverLay.png</file>
         <file>src/background/settingPage.png</file>
         <file>src/background/tipPage.png</file>
+        <file>src/background/completePage.png</file>
     </qresource>
     <qresource prefix="/audio">
         <file>src/sound/btnHoverSound.mp3</file>

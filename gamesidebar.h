@@ -16,6 +16,7 @@ public:
     FunctionBtn* btn;
     virtual QRectF boundingRect() const override;
 
+
 public slots:
     void openOrCloseSideBar();
 

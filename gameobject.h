@@ -14,6 +14,11 @@ public:
     GameObject(QGraphicsItem *parent = nullptr);
     GameObject(QPixmap pixmap,QGraphicsItem *parent = nullptr);
 
+    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+
+signals:
+    void clicked();
+
 };
 
 

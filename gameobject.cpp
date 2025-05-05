@@ -9,6 +9,11 @@ GameObject::GameObject(QPixmap pixmap, QGraphicsItem *parent)
     :QGraphicsPixmapItem{pixmap,parent}
 {}
 
+void GameObject::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    emit clicked();
+}
+
 
 //按键可接受hover事件。
 GameBtn::GameBtn(QPixmap pixmap, QGraphicsItem *parent)

@@ -5,8 +5,8 @@ objPool::objPool() {
     //120个
     for (int n = 0; n < 120; ++n) {
         textblockPool.append(new TextBlock);
-        qDebug() << "崩溃点？" << n;
     }
+    qDebug() << "对象池textblocks数量：" << textblockPool.size();
 }
 
 objPool::~objPool()
@@ -14,7 +14,6 @@ objPool::~objPool()
     for (int n = 0; n < textblockPool.size(); ++n) {
         delete textblockPool[n];
     }
-    textblockPool.clear();
 }
 
 TextBlock *objPool::getTextBlock()
