@@ -141,10 +141,10 @@ void Gamesys::backHome()
     //关闭tempview动画结束后，返回首页
     else if(view->scene() == levelscene){
 
-        for (int n = 0 ; n < textBlocks.size() ; ++n) {
-            objPool::getinstance()->recycle(textBlocks[n]);
-            levelscene->removeItem(textBlocks[n]);
-        }
+        // for (int n = 0 ; n < textBlocks.size() ; ++n) {
+        //     objPool::getinstance()->recycle(textBlocks[n]);
+        //     levelscene->removeItem(textBlocks[n]);
+        // }
 
         QPropertyAnimation* anime = Animation::TempPageout(view,tempview);
 
@@ -286,22 +286,26 @@ void Gamesys::loadGame(int levelNum)
     }
 
     qDebug() << "loading finish.";
+    for (TextBlock* t : textBlocks) {
+        qDebug() << t->Word() << "has loaded in" << t->getXY();
+    }
 
     file.close();
     tipPage->setAnswer(contents,cols);
 
     //洗牌
-    shuffleLevel(levelNum);
+    curLevelNum = levelNum;
+    shuffleLevel();
 
 }
 
 
 
 //载入关卡时的洗牌算法,成功变换时添加进systrans记录表
-void Gamesys::shuffleLevel(int levelNum)
+void Gamesys::shuffleLevel()
 {
-    //变换次数
-    int transtimes = levelNum*5;
+    //变换次数随关卡数字提升
+    int transtimes = curLevelNum*5;
 
 
     //变换模式列表
@@ -319,27 +323,29 @@ void Gamesys::shuffleLevel(int levelNum)
     //变换直到sysrecord有效记录次数达到指定次数
     while(sysRecord.size() < transtimes){
 
-        int num;
+        int index;
         //随机选一种变换方式（classic关卡为1，3时不进行十字变换）
-        if(currentMode == CLASSIC && (levelNum == 1 || levelNum == 3)){
-            num = QRandomGenerator::global()->bounded(0,2);
+        if(currentMode == CLASSIC && (curLevelNum == 1 || curLevelNum == 3)){
+            index = QRandomGenerator::global()->bounded(0,2);
         }
         else if(currentMode == CLASSIC){
-            num = QRandomGenerator::global()->bounded(0,3);
+            index = QRandomGenerator::global()->bounded(0,3);
         }
-
         //hex模式
         else if(currentMode == HEX){
-            num = QRandomGenerator::global()->bounded(3,5);
+            index = QRandomGenerator::global()->bounded(3,5);
             //先退出，还未开发
             break;
         }
 
+        //qDebug() << "洗牌模式：" << index;
+
 
         //随机选两个textblock
-        TextBlock* start , *dest;
+        TextBlock* start = nullptr , *dest = nullptr;
 
-        switch(types[num]){
+        switch(types[index]){
+
         case TranslateIcons::ROWS:
 
             //优化：确保变换不在同一行
@@ -372,9 +378,9 @@ void Gamesys::shuffleLevel(int levelNum)
         }
 
         //操作记录进sysRecord中
-        bool success = selectAndSwitch(types[num],start,dest);
+        bool success = selectAndSwitch(types[index],start,dest);
         if(success){
-            sysRecord.append(GameRecord(types[num],start->getXY(),dest->getXY()),true);
+            sysRecord.append(GameRecord(types[index],start->getXY(),dest->getXY()),true);
         }
     }
 
@@ -421,11 +427,16 @@ TextBlock* Gamesys::getRandBlock()
     int rx = QRandomGenerator::global()->bounded(0,cols);
     int ry = QRandomGenerator::global()->bounded(0,rows);
 
+    //qDebug() << "rx ry" << rx << ry;
+
     for (TextBlock* t : textBlocks) {
+
         if(t->getXY() == QPoint(rx,ry)){
             return t;
         }
     }
+
+    qDebug() << "nullptr error";
     return nullptr;
 }
 
@@ -440,6 +451,7 @@ TextBlock* Gamesys::getRandBlockInCross()
             return t;
         }
     }
+    qDebug() << "nullptr error";
     return nullptr;
 }
 
@@ -791,14 +803,14 @@ void Gamesys::addRecord(GameRecord record)
 
 void Gamesys::checkIfComplete()
 {
-    QString temp("");
+    QString t("");
     for (int y = 0; y < rows; ++y) {
         for (int x = 0; x < cols; ++x) {
-            temp.append(textBlocks[x + y*cols]->Word());
+            t.append(textBlocks[x + y*cols]->Word());
         }
     }
 
-    if(temp == contents){
+    if(t == contents){
         completeGame();
     }
 }

@@ -92,7 +92,6 @@ public:
     static QPointF levelscene_stepTextPos;
 
     static QPointF completeScene_stepTextPos;
-    static QPointF completeScene_scorePos;
 };
 
 #endif // SETTINGS_H

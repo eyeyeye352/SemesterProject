@@ -9,7 +9,7 @@ class TextBlock : public GameObject
 {
     Q_OBJECT
 public:
-    TextBlock(QPoint xypos = {0,0},QString word = "",QGraphicsItem *parent = nullptr);
+    TextBlock(QPoint xypos,QString word,QGraphicsItem *parent);
     ~TextBlock();
 
     void reset();
@@ -37,8 +37,6 @@ private:
     QPoint xy;
     QGraphicsTextItem* word;
 
-    //点击事件标记
-    bool isClicked;
     //根据变换模式，被选中标记(金色框框)
     QGraphicsRectItem* goldRect;
 

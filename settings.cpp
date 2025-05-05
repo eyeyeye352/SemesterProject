@@ -41,4 +41,3 @@ int Settings::translateIconInterval = 20;
 QPointF Settings::levelscene_stepTextPos = {10,10};
 
 QPointF Settings::completeScene_stepTextPos = {20,150};
-QPointF Settings::completeScene_scorePos = {20,250};

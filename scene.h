@@ -153,7 +153,28 @@ private:
 
 
 class RankPage : public Scene{};
-class SavePage : public Scene{};
+
+
+
+
+
+class SavePage : public Scene{
+    Q_OBJECT
+
+public:
+    SavePage(QObject *parent = nullptr);
+
+    void setInfo(QString t);
+
+signals:
+    void checkLoadInfo(int slotNum);
+    void backToLoadSelect();
+
+    FunctionBtn *slot1,*slot2,*slot3,*slot4;
+    FunctionBtn *backBtn;
+    QGraphicsPixmapItem* largeImg,*bg;
+    QGraphicsTextItem* info;
+};
 
 
 
@@ -164,7 +185,7 @@ class CompletePage : public Scene{
 public:
     CompletePage(QObject *parent = nullptr);
 
-    void setcontents(int step,int score);
+    void setcontents(int step);
 
 signals:
 
@@ -173,7 +194,7 @@ signals:
 
 private:
     QGraphicsPixmapItem* bg;
-    QGraphicsTextItem * stepText ,*score;
+    QGraphicsTextItem * stepText;
     FunctionBtn *homeBtn;
 
 

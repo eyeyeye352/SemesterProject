@@ -374,17 +374,12 @@ CompletePage::CompletePage(QObject *parent)
     stepText = new QGraphicsTextItem(bg);
     stepText->setPos(Settings::completeScene_stepTextPos);
 
-    score = new QGraphicsTextItem(bg);
-    score->setPos(Settings::completeScene_scorePos);
-
     //font
     int fontId = QFontDatabase::addApplicationFont(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf");
     QString fontFamily = QFontDatabase::applicationFontFamilies(fontId).at(0);
-    QFont font(fontFamily,18);
+    QFont font(fontFamily,20);
     stepText->setFont(font);
     stepText->setDefaultTextColor(Qt::white);
-    score->setFont(font);
-    score->setDefaultTextColor(Qt::white);
 
     homeBtn = new FunctionBtn(QPixmap(":/item/src/item/backHomeBtn.png"),bg);
     homeBtn->setPos((bg->boundingRect().width() - homeBtn->boundingRect().width())/2,
@@ -394,8 +389,50 @@ CompletePage::CompletePage(QObject *parent)
 
 }
 
-void CompletePage::setcontents(int step, int sc)
+void CompletePage::setcontents(int step)
 {
     stepText->setPlainText(QString("Using step:        %1").arg(QString::number(step)));
-    score->setPlainText(QString("Total score:        %1").arg(QString::number(sc)));
+}
+
+SavePage::SavePage(QObject *parent):
+    Scene(parent)
+{
+    bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/savePage.png"));
+    bg->setPos((Settings::screenWidth - bg->boundingRect().width())/2,
+               (Settings::screenHeight - bg->boundingRect().height())/2);
+    addItem(bg);
+
+    slot1 = new FunctionBtn(QPixmap(""),bg);
+    slot2 = new FunctionBtn(QPixmap(""),bg);
+    slot3 = new FunctionBtn(QPixmap(""),bg);
+    slot4 = new FunctionBtn(QPixmap(""),bg);
+
+    slot1->setPos(20,100);
+    slot2->setPos(250,100);
+    slot3->setPos(20,300);
+    slot4->setPos(350,300);
+
+    connect(slot1,&GameBtn::clicked,[this]{ emit checkLoadInfo(1);});
+    connect(slot2,&GameBtn::clicked,[this]{ emit checkLoadInfo(2);});
+    connect(slot3,&GameBtn::clicked,[this]{ emit checkLoadInfo(3);});
+    connect(slot4,&GameBtn::clicked,[this]{ emit checkLoadInfo(4);});
+
+    backBtn = new FunctionBtn(QPixmap(":/item/src/item/closeSettingBtn.png"),bg);
+    backBtn->setPos(10,10);
+    connect(backBtn,&GameBtn::clicked,[this]{ emit backToLoadSelect(); });
+
+    largeImg = new QGraphicsPixmapItem(QPixmap(""),bg);
+    info = new QGraphicsTextItem("load info:...",bg);
+
+    //font
+    int fontId = QFontDatabase::addApplicationFont(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf");
+    QString fontFamily = QFontDatabase::applicationFontFamilies(fontId).at(0);
+    QFont font(fontFamily,20);
+    info->setFont(font);
+    info->setDefaultTextColor(Qt::white);
+}
+
+void SavePage::setInfo(QString t)
+{
+
 }

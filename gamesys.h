@@ -85,8 +85,8 @@ public slots:
 
 public:
 
-    //洗牌出题，levelNum决定难度
-    void shuffleLevel(int levelNum);
+    //洗牌出题
+    void shuffleLevel();
 
     //指定模式+选取+变换一起，用于开场洗牌/do/undo,返回值表示是否变换成功。
     bool selectAndSwitch(TranslateIcons::Type type,TextBlock* start,TextBlock* dest);
@@ -142,6 +142,9 @@ private:
 
     //玩家使用的步数
     int useStep;
+
+    //玩家当前进行的关卡
+    int curLevelNum;
 
 };
 
