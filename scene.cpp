@@ -1,5 +1,6 @@
 #include "scene.h"
 #include "objpool.h"
+#include "myalgorithms.h"
 
 
 Scene::Scene(QObject *parent)
@@ -330,11 +331,7 @@ TipPage::TipPage(QObject *parent):
 
     answer = new QGraphicsTextItem(bg);
     //font
-    int fontId = QFontDatabase::addApplicationFont(":/fonts/src/fonts/tipPageTextFont.ttf");
-    QString fontFamily = QFontDatabase::applicationFontFamilies(fontId).at(0);
-    QFont font(fontFamily,17);
-    answer->setFont(font);
-    answer->setDefaultTextColor(Qt::white);
+    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/tipPageTextFont.ttf",answer,Qt::white,16);
 
     //btn
     closeTipBtn = new FunctionBtn(QPixmap(":/item/src/item/closeSettingBtn.png"),bg);
@@ -394,6 +391,10 @@ void CompletePage::setcontents(int step)
     stepText->setPlainText(QString("Using step:        %1").arg(QString::number(step)));
 }
 
+
+
+
+
 SavePage::SavePage(QObject *parent):
     Scene(parent)
 {
@@ -402,37 +403,34 @@ SavePage::SavePage(QObject *parent):
                (Settings::screenHeight - bg->boundingRect().height())/2);
     addItem(bg);
 
-    slot1 = new FunctionBtn(QPixmap(""),bg);
-    slot2 = new FunctionBtn(QPixmap(""),bg);
-    slot3 = new FunctionBtn(QPixmap(""),bg);
-    slot4 = new FunctionBtn(QPixmap(""),bg);
+    s1 = new SaveSlot(bg);
+    s2 = new SaveSlot(bg);
+    s3 = new SaveSlot(bg);
+    s4 = new SaveSlot(bg);
 
-    slot1->setPos(20,100);
-    slot2->setPos(250,100);
-    slot3->setPos(20,300);
-    slot4->setPos(350,300);
+    s1->setRect(50,100,150,100);
+    s2->setRect(250,100,150,100);
+    s3->setRect(50,250,150,100);
+    s4->setRect(250,250,150,100);
 
-    connect(slot1,&GameBtn::clicked,[this]{ emit checkLoadInfo(1);});
-    connect(slot2,&GameBtn::clicked,[this]{ emit checkLoadInfo(2);});
-    connect(slot3,&GameBtn::clicked,[this]{ emit checkLoadInfo(3);});
-    connect(slot4,&GameBtn::clicked,[this]{ emit checkLoadInfo(4);});
+    connect(s1,&SaveSlot::clicked,[this]{ goLoading(1);});
+    connect(s2,&SaveSlot::clicked,[this]{ goLoading(2);});
+    connect(s3,&SaveSlot::clicked,[this]{ goLoading(3);});
+    connect(s4,&SaveSlot::clicked,[this]{ goLoading(4);});
 
-    backBtn = new FunctionBtn(QPixmap(":/item/src/item/closeSettingBtn.png"),bg);
-    backBtn->setPos(10,10);
-    connect(backBtn,&GameBtn::clicked,[this]{ emit backToLoadSelect(); });
+    back = new TempPageBtn(bg);
+    save = new TempPageBtn(bg);
+    load = new TempPageBtn(bg);
+    back->setText("Back");
+    save->setText("Save");
+    load->setText("Load");
 
-    largeImg = new QGraphicsPixmapItem(QPixmap(""),bg);
-    info = new QGraphicsTextItem("load info:...",bg);
-
-    //font
-    int fontId = QFontDatabase::addApplicationFont(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf");
-    QString fontFamily = QFontDatabase::applicationFontFamilies(fontId).at(0);
-    QFont font(fontFamily,20);
-    info->setFont(font);
-    info->setDefaultTextColor(Qt::white);
-}
-
-void SavePage::setInfo(QString t)
-{
+    back->setPos(bg->boundingRect().right() + 5, 50);
+    save->setPos(bg->boundingRect().right() + 5, back->boundingRect().height() + 60);
+    load->setPos(bg->boundingRect().right() + 5, 2*back->boundingRect().height() + 70);
 
 }
+
+
+
+

@@ -27,16 +27,15 @@ public slots:
 
     //打开，关闭设置
     void openSetting();
-    void closeSetting();
     void backHome();
 
     //save
     void openSavePage();
-    void closeSavePage();
+
+    void closeTempPage();
 
     //tips
     void openTips();
-    void closeTips();
 
     //rank
     void checkRank();

@@ -41,6 +41,7 @@
         <file>src/item/tipIcon.png</file>
         <file>src/item/doIcon.png</file>
         <file>src/item/undoIcon.png</file>
+        <file>src/item/tempPageBtn.png</file>
     </qresource>
     <qresource prefix="/bgm">
         <file>src/bgm/startSceneBGM.mp3</file>
@@ -68,5 +69,11 @@
     <qresource prefix="/icons">
         <file>src/icon/gameIcon.ico</file>
         <file>src/icon/icon.png</file>
+    </qresource>
+    <qresource prefix="/save">
+        <file>src/save/s1.txt</file>
+        <file>src/save/s2.txt</file>
+        <file>src/save/s3.txt</file>
+        <file>src/save/s4.txt</file>
     </qresource>
 </RCC>

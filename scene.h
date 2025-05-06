@@ -159,21 +159,33 @@ class RankPage : public Scene{};
 
 
 class SavePage : public Scene{
+
     Q_OBJECT
+    friend class Gamesys;
 
 public:
     SavePage(QObject *parent = nullptr);
 
-    void setInfo(QString t);
+
 
 signals:
-    void checkLoadInfo(int slotNum);
-    void backToLoadSelect();
 
-    FunctionBtn *slot1,*slot2,*slot3,*slot4;
-    FunctionBtn *backBtn;
-    QGraphicsPixmapItem* largeImg,*bg;
-    QGraphicsTextItem* info;
+    void closePage();
+    //save功能先等等
+    void goLoading(int slotNum);
+
+public slots:
+
+    //根据玩家选择槽位加载对应文件，获取该存档的详细信息
+
+
+private:
+
+    //四个槽位
+    SaveSlot *s1,*s2,*s3,*s4;
+    TempPageBtn *back,*save,*load;
+
+    QGraphicsPixmapItem *bg;
 };
 
 

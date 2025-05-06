@@ -31,6 +31,7 @@ Gamesys::Gamesys(QWidget *parent)
     settingPage = new SettingPage(this);
     tipPage = new TipPage(this);
     completePage = new CompletePage(this);
+    savePage = new SavePage(this);
 
 
     //timers
@@ -48,6 +49,7 @@ Gamesys::Gamesys(QWidget *parent)
     connect(startscene->rankBtn,&GameBtn::clicked,this,&Gamesys::checkRank);
     connect(startscene->createModeBtn,&GameBtn::clicked,this,&Gamesys::goCreateMode);
     connect(startscene->backBtn,&GameBtn::clicked,this,&Gamesys::backModeSelection);
+    connect(startscene->saveBtn,&GameBtn::clicked,this,&Gamesys::openSavePage);
 
     for (int n = 0; n < startscene->levels.size(); ++n) {
         connect(startscene->levels[n],&LevelSelectBlock::selected,this,&Gamesys::loadGameAnime);
@@ -63,16 +65,12 @@ Gamesys::Gamesys(QWidget *parent)
     connect(levelscene->sideBar,&MySideBar::SelectTransType,this,&Gamesys::changeTransType);
     connect(levelscene,&LevelScene::clickBg,this,&Gamesys::cancelSelect);
 
-    //connection(settingpage)
+    //connection(otherpage)
     connect(settingPage,&SettingPage::backHome,this,&Gamesys::backHome);
-    connect(settingPage,&SettingPage::closeSetting,this,&Gamesys::closeSetting);
-
-    //connection(tipPage)
-    connect(tipPage,&TipPage::closeTip,this,&Gamesys::closeTips);
-
-    //connection(completePage)
+    connect(settingPage,&SettingPage::closeSetting,this,&Gamesys::closeTempPage);
+    connect(tipPage,&TipPage::closeTip,this,&Gamesys::closeTempPage);
     connect(completePage,&CompletePage::backHome,this,&Gamesys::backHome);
-
+    connect(savePage->back,&TempPageBtn::clicked,this,&Gamesys::closeTempPage);
 
 
 }
@@ -105,29 +103,11 @@ void Gamesys::openSetting()
     tempview->setScene(settingPage);
     Animation::TempPagein(view,tempview)->start(QAbstractAnimation::DeleteWhenStopped);
 }
-void Gamesys::closeSetting()
-{
-    QPropertyAnimation* anime = Animation::TempPageout(view,tempview);
-    anime->start(QAbstractAnimation::DeleteWhenStopped);
 
-    connect(anime,&QPropertyAnimation::finished,[this]{
-        tempview->setScene(nullptr);
-    });
-
-}
 void Gamesys::openTips()
 {
     tempview->setScene(tipPage);
     Animation::TempPagein(view,tempview)->start(QAbstractAnimation::DeleteWhenStopped);
-}
-void Gamesys::closeTips()
-{
-    QPropertyAnimation* anime = Animation::TempPageout(view,tempview);
-    anime->start(QAbstractAnimation::DeleteWhenStopped);
-
-    connect(anime,&QPropertyAnimation::finished,[this]{
-        tempview->setScene(nullptr);
-    });
 }
 
 //设置页面返回首页
@@ -135,7 +115,7 @@ void Gamesys::backHome()
 {
 
     if(view->scene() == startscene){
-        closeSetting();
+        closeTempPage();
     }
 
     //关闭tempview动画结束后，返回首页
@@ -161,11 +141,18 @@ void Gamesys::backHome()
 
 void Gamesys::openSavePage()
 {
-
+    tempview->setScene(savePage);
+    Animation::TempPagein(view,tempview)->start(QAbstractAnimation::DeleteWhenStopped);
 }
-void Gamesys::closeSavePage()
-{
 
+void Gamesys::closeTempPage()
+{
+    QPropertyAnimation* anime = Animation::TempPageout(view,tempview);
+    anime->start(QAbstractAnimation::DeleteWhenStopped);
+
+    connect(anime,&QPropertyAnimation::finished,[this]{
+        tempview->setScene(nullptr);
+    });
 }
 
 
@@ -819,7 +806,7 @@ void Gamesys::checkIfComplete()
 void Gamesys::completeGame()
 {
     //得分 = 100 - 系统变换次数与使用步数之差。（暂定）
-    completePage->setcontents(useStep,100 - abs(useStep - sysRecord.size()));
+    completePage->setcontents(useStep);
     tempview->setScene(completePage);
     Animation::TempPagein(view,tempview)->start(QAbstractAnimation::DeleteWhenStopped);
 }

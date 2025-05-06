@@ -1,0 +1,4 @@
+savetime=
+mode=
+levelnum=
+gamerecords=

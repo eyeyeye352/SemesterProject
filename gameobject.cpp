@@ -1,6 +1,9 @@
 #include "gameobject.h"
 #include "musicplayer.h"
 #include "otheritems.h"
+#include "myalgorithms.h"
+
+
 
 
 GameObject::GameObject(QGraphicsItem *parent):QGraphicsPixmapItem{parent}{}
@@ -197,3 +200,63 @@ void TranslateIcons::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 
 
+
+SaveSlot::SaveSlot(QGraphicsItem *parent):
+    QGraphicsRectItem(parent)
+{
+    setPen(QPen(Qt::black,5));
+    setBrush(QColor(0,150,0));
+
+    saveTime = new QGraphicsTextItem(this);
+    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf",saveTime,Qt::white,15);
+
+}
+
+
+void SaveSlot::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    setTransformOriginPoint(boundingRect().center());
+    setScale(0.9);
+}
+
+void SaveSlot::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+    setScale(1);
+    setTransformOriginPoint(0,0);
+    emit clicked();
+}
+
+
+void SaveSlot::setSaveTime(QString time)
+{
+    saveTime->setPlainText(time);
+    saveTime->setPos((boundingRect().width() - saveTime->boundingRect().width())/2,
+                 (boundingRect().height() - saveTime->boundingRect().height())/2);
+}
+
+
+TempPageBtn::TempPageBtn(QGraphicsItem *parent):
+    GameBtn(QPixmap(":/item/src/item/tempPageBtn.png"),parent)
+{
+    text = new QGraphicsTextItem(this);
+    //font
+    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf",text,Qt::white,15);
+}
+
+void TempPageBtn::setText(QString t)
+{
+    text->setPlainText(t);
+    text->setPos((boundingRect().width() - text->boundingRect().width())/2,
+                 (boundingRect().height() - text->boundingRect().height())/2);
+}
+
+void TempPageBtn::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    resizing(0.9);
+}
+
+void TempPageBtn::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+    resizing(1);
+    emit clicked();
+}

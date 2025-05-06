@@ -151,6 +151,46 @@ private:
 
 
 
+//标准的temppage中的按钮
+class TempPageBtn : public GameBtn{
+
+    Q_OBJECT
+
+public:
+    TempPageBtn(QGraphicsItem* parent);
+    void setText(QString t);
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+
+private:
+
+    QGraphicsTextItem* text;
+};
+
+
+
+//savePage 的 slots按钮
+//由slot储存并加载
+class SaveSlot : public QObject , public QGraphicsRectItem {
+
+    Q_OBJECT
+public:
+    SaveSlot(QGraphicsItem* parent);
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+
+    void setSaveTime(QString);
+signals:
+    void clicked();
+
+private:
+
+    QGraphicsTextItem* saveTime;
+};
+
+
 
 
 #endif // GAMEOBJECT_H
