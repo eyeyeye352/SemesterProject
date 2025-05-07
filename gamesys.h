@@ -25,30 +25,27 @@ public slots:
     //返回模式选择页面
     void backModeSelection();
 
-    //打开，关闭设置
-    void openSetting();
-    void backHome();
-
-    //save
+    //打开，关闭temppage
+    void openSettingPage();
     void openSavePage();
+    void openTipPage();
+    void openRankPage();
+    void completeGame();
 
+    void goHome();
     void closeTempPage();
 
-    //tips
-    void openTips();
-
-    //rank
-    void checkRank();
 
     //creation mode
     void goCreateMode();
 
     //选择关卡后进入游戏场景(先动画，动画到一半开始加载),参数为第几关
     void loadGameAnime(int levelNum);
-    void loadGame(int levelNum);
+    void loadGame(int levelNum,bool shuffled);
 
-    //游戏通关
-    void completeGame();
+    //（开始前加载load信息）加载详细slot资料
+    void initSLSlot();
+    void loadSLGame(int slotNum);
 
 
 
@@ -88,7 +85,7 @@ public:
     void shuffleLevel();
 
     //指定模式+选取+变换一起，用于开场洗牌/do/undo,返回值表示是否变换成功。
-    bool selectAndSwitch(TranslateIcons::Type type,TextBlock* start,TextBlock* dest);
+    bool selectAndSwitch(int type,TextBlock* start,TextBlock* dest);
 
     //用户每次操作后，添加记录
     void addRecord(GameRecord record);
@@ -112,6 +109,7 @@ public:
     //返回随机一个textBlock/随机一个不在边缘地带的Block
     TextBlock* getRandBlock();
     TextBlock* getRandBlockInCross();
+    TextBlock* findBlockAt(QPoint target);
 
 
 private:

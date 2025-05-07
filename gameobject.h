@@ -2,6 +2,7 @@
 #define GAMEOBJECT_H
 
 #include "settings.h"
+#include "gamerecord.h"
 
 
 class GameObject : public QObject, public QGraphicsPixmapItem
@@ -171,23 +172,33 @@ private:
 
 
 //savePage 的 slots按钮
-//由slot储存并加载
+//由slot储存信息
 class SaveSlot : public QObject , public QGraphicsRectItem {
 
     Q_OBJECT
 public:
-    SaveSlot(QGraphicsItem* parent);
+    SaveSlot(QGraphicsItem* parent = nullptr);
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
-    void setSaveTime(QString);
+    //此处加载存档信息
+    void init(QString filepath);
+
+    //输出信息
+    void info();
+
+
 signals:
     void clicked();
 
 private:
 
-    QGraphicsTextItem* saveTime;
+    QGraphicsTextItem* text;
+    QString savetime;
+    int levelNum,gameMode;
+    QList<GameRecord> sysR,playerR;
+
 };
 
 

@@ -108,30 +108,46 @@ private:
 
 
 
+//设置、排行、提示等页面的基类
+class TempPage : public Scene{
 
-class SettingPage : public Scene
+    Q_OBJECT
+public:
+    TempPage(QPixmap img,QObject *parent);
+
+    TempPageBtn* addBtn(QString text);
+
+signals:
+    //关闭页面信号，一般在back按钮被点击时发出，请求gamesys关闭该场景。
+    void closePage();
+
+protected:
+    QGraphicsPixmapItem* bg;
+    QList<TempPageBtn*> btns;
+};
+
+
+
+
+class SettingPage : public TempPage
 {
     Q_OBJECT
 public:
     SettingPage(QObject *parent = nullptr);
 
-
 signals:
-    void backHome();
-    void closeSetting();
-
+    void goHome();
 
 private:
     ValSets *musicSli;
     ValSets *soundSli;
-    FunctionBtn *backHomeBtn;
-    FunctionBtn *closeSettingBtn;
-    QGraphicsPixmapItem* bg;
+    QPointer<TempPageBtn> homeBtn;
+    QPointer<TempPageBtn> backBtn;
 };
 
 
 
-class TipPage : public Scene
+class TipPage : public TempPage
 {
     Q_OBJECT
 
@@ -140,49 +156,42 @@ public:
 
     void setAnswer(QString text,int cols);
 
-signals:
-    void closeTip();
-
 private:
-    QGraphicsPixmapItem* bg;
     QGraphicsTextItem* answer;
-    FunctionBtn *closeTipBtn;
+    QPointer<TempPageBtn> backBtn;
 };
 
 
 
 
-class RankPage : public Scene{};
-
-
-
-
-
-class SavePage : public Scene{
+class RankPage : public TempPage{
 
     Q_OBJECT
-    friend class Gamesys;
+public:
+
+    RankPage(QObject* parent);
+};
+
+
+
+
+
+class SavePage : public TempPage{
+
+    Q_OBJECT
 
 public:
     SavePage(QObject *parent = nullptr);
 
-
+    QList<SaveSlot*>& getSlots();
 
 signals:
-
-    void closePage();
-    //save功能先等等
-    void goLoading(int slotNum);
-
-public slots:
-
-    //根据玩家选择槽位加载对应文件，获取该存档的详细信息
-
+    void slotSelected(int slotNum);
 
 private:
 
     //四个槽位
-    SaveSlot *s1,*s2,*s3,*s4;
+    QList<SaveSlot*> SLslots;
     TempPageBtn *back,*save,*load;
 
     QGraphicsPixmapItem *bg;
@@ -191,24 +200,21 @@ private:
 
 
 //游戏通关场景
-class CompletePage : public Scene{
+class CompletePage : public TempPage{
 
     Q_OBJECT
 public:
     CompletePage(QObject *parent = nullptr);
 
-    void setcontents(int step);
+    void showUseStep(int step);
 
 signals:
-
-    void backHome();
+    void goHome();
 
 
 private:
-    QGraphicsPixmapItem* bg;
     QGraphicsTextItem * stepText;
-    FunctionBtn *homeBtn;
-
+    QPointer<TempPageBtn> homeBtn;
 
 };
 

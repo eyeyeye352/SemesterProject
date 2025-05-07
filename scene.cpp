@@ -273,18 +273,31 @@ void LevelScene::setStep(int step)
 
 
 
+TempPage::TempPage(QPixmap img, QObject *parent):
+    Scene(parent)
+{
+    bg = new QGraphicsPixmapItem(img);
+    bg->setPos((Settings::screenWidth - bg->boundingRect().width())/2,
+               (Settings::screenHeight - bg->boundingRect().height())/2);
+    addItem(bg);
+
+}
+
+TempPageBtn* TempPage::addBtn(QString text)
+{
+    TempPageBtn* btn = new TempPageBtn(bg);
+    btn->setText(text);
+    btns.append(btn);
+    btn->setPos(bg->boundingRect().right(), 10 + 60*(btns.size()-1));
+    return btn;
+}
+
 
 
 
 SettingPage::SettingPage(QObject *parent)
-    :Scene{parent}
+    :TempPage{QPixmap(":/background/src/background/settingPage.png"),parent}
 {
-
-    bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/settingPage.png"));
-    addItem(bg);
-
-    bg->setPos((Settings::screenWidth - bg->boundingRect().width())/2,
-               (Settings::screenHeight - bg->boundingRect().height())/2);
 
     //Valsets
     musicSli = new ValSets(bg);
@@ -304,44 +317,31 @@ SettingPage::SettingPage(QObject *parent)
 
 
     //btn
-    backHomeBtn = new FunctionBtn(QPixmap(":/item/src/item/backHomeBtn.png"),bg);
-    closeSettingBtn = new FunctionBtn(QPixmap(":/item/src/item/closeSettingBtn.png"),bg);
+    backBtn = addBtn("Back");
+    homeBtn = addBtn("Home");
 
-
-    backHomeBtn->setPos((bg->boundingRect().width() - backHomeBtn->boundingRect().width())/2,
-                        bg->boundingRect().height() - backHomeBtn->boundingRect().height() - 25);
-
-    closeSettingBtn->setPos({25,25});
-
-
-    QObject::connect(backHomeBtn,&GameBtn::clicked,[this]{ emit backHome();});
-    QObject::connect(closeSettingBtn,&GameBtn::clicked,[this]{ emit closeSetting(); });
+    QObject::connect(backBtn,&GameBtn::clicked,[this]{ emit closePage();});
+    QObject::connect(homeBtn,&GameBtn::clicked,[this]{ emit goHome(); });
 
 }
 
 
 TipPage::TipPage(QObject *parent):
-    Scene(parent)
+    TempPage(QPixmap(":/background/src/background/tipPage.png"),parent)
 {
-    bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/tipPage.png"));
-    addItem(bg);
-
-    bg->setPos((Settings::screenWidth - bg->boundingRect().width())/2,
-               (Settings::screenHeight - bg->boundingRect().height())/2);
 
     answer = new QGraphicsTextItem(bg);
-    //font
     MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/tipPageTextFont.ttf",answer,Qt::white,16);
 
     //btn
-    closeTipBtn = new FunctionBtn(QPixmap(":/item/src/item/closeSettingBtn.png"),bg);
-    closeTipBtn->setPos(25,25);
-    QObject::connect(closeTipBtn,&GameBtn::clicked,[this]{ emit closeTip(); });
+    backBtn = addBtn("Back");
+    QObject::connect(backBtn,&GameBtn::clicked,[this]{ emit closePage(); });
 
 }
 
 void TipPage::setAnswer(QString text,int cols)
 {
+    //text传入全文内容，此处根据cols数量进行换行处理。
     QString ansText;
     for (int n = 0; n < text.size(); ++n) {
         if(n % cols == 0 && n != 0){
@@ -361,32 +361,21 @@ void TipPage::setAnswer(QString text,int cols)
 
 
 
-CompletePage::CompletePage(QObject *parent)
+CompletePage::CompletePage(QObject *parent):
+    TempPage(QPixmap(":/background/src/background/completePage.png"),parent)
 {
-    bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/completePage.png"));
-    bg->setPos((Settings::screenWidth - bg->boundingRect().width())/2,
-               (Settings::screenHeight - bg->boundingRect().height())/2);
-    addItem(bg);
 
     stepText = new QGraphicsTextItem(bg);
+    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf",stepText,Qt::white,20);
     stepText->setPos(Settings::completeScene_stepTextPos);
 
-    //font
-    int fontId = QFontDatabase::addApplicationFont(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf");
-    QString fontFamily = QFontDatabase::applicationFontFamilies(fontId).at(0);
-    QFont font(fontFamily,20);
-    stepText->setFont(font);
-    stepText->setDefaultTextColor(Qt::white);
-
-    homeBtn = new FunctionBtn(QPixmap(":/item/src/item/backHomeBtn.png"),bg);
-    homeBtn->setPos((bg->boundingRect().width() - homeBtn->boundingRect().width())/2,
-                    bg->boundingRect().height() - homeBtn->boundingRect().height() - 25);
-    connect(homeBtn,&GameBtn::clicked,[this]{ emit backHome();  });
+    homeBtn = addBtn("Home");
+    connect(homeBtn,&GameBtn::clicked,[this]{ emit goHome();  });
 
 
 }
 
-void CompletePage::setcontents(int step)
+void CompletePage::showUseStep(int step)
 {
     stepText->setPlainText(QString("Using step:        %1").arg(QString::number(step)));
 }
@@ -396,41 +385,53 @@ void CompletePage::setcontents(int step)
 
 
 SavePage::SavePage(QObject *parent):
-    Scene(parent)
+    TempPage(QPixmap(":/background/src/background/savePage.png"),parent)
 {
-    bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/savePage.png"));
-    bg->setPos((Settings::screenWidth - bg->boundingRect().width())/2,
-               (Settings::screenHeight - bg->boundingRect().height())/2);
-    addItem(bg);
 
-    s1 = new SaveSlot(bg);
-    s2 = new SaveSlot(bg);
-    s3 = new SaveSlot(bg);
-    s4 = new SaveSlot(bg);
+    //设置bg为父item会出错，原因未知。
+    SaveSlot* s1 = new SaveSlot;
+    SaveSlot* s2 = new SaveSlot;
+    SaveSlot* s3 = new SaveSlot;
+    SaveSlot* s4 = new SaveSlot;
 
-    s1->setRect(50,100,150,100);
-    s2->setRect(250,100,150,100);
-    s3->setRect(50,250,150,100);
-    s4->setRect(250,250,150,100);
+    s1->setRect(220,200,200,150);
+    s2->setRect(480,200,200,150);
+    s3->setRect(220,400,200,150);
+    s4->setRect(480,400,200,150);
 
-    connect(s1,&SaveSlot::clicked,[this]{ goLoading(1);});
-    connect(s2,&SaveSlot::clicked,[this]{ goLoading(2);});
-    connect(s3,&SaveSlot::clicked,[this]{ goLoading(3);});
-    connect(s4,&SaveSlot::clicked,[this]{ goLoading(4);});
+    SLslots.append(s1);
+    SLslots.append(s2);
+    SLslots.append(s3);
+    SLslots.append(s4);
 
-    back = new TempPageBtn(bg);
-    save = new TempPageBtn(bg);
-    load = new TempPageBtn(bg);
-    back->setText("Back");
-    save->setText("Save");
-    load->setText("Load");
+    for (int n = 0; n < SLslots.size(); ++n) {
+        connect(SLslots[n],&SaveSlot::clicked,[this,n]{ emit slotSelected(n);});
+        addItem(SLslots[n]);
+    }
 
-    back->setPos(bg->boundingRect().right() + 5, 50);
-    save->setPos(bg->boundingRect().right() + 5, back->boundingRect().height() + 60);
-    load->setPos(bg->boundingRect().right() + 5, 2*back->boundingRect().height() + 70);
 
+    back = addBtn("Back");
+    save = addBtn("Save");
+    load = addBtn("Load");
+
+    connect(back,&GameBtn::clicked,[this]{ emit closePage();});
+
+}
+
+QList<SaveSlot*>& SavePage::getSlots()
+{
+    return SLslots;
 }
 
 
 
 
+
+
+
+
+RankPage::RankPage(QObject *parent):
+    TempPage(QPixmap(""),parent)
+{
+
+}

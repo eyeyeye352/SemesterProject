@@ -201,14 +201,16 @@ void TranslateIcons::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 
 
-SaveSlot::SaveSlot(QGraphicsItem *parent):
-    QGraphicsRectItem(parent)
+SaveSlot::SaveSlot(QGraphicsItem *parent)
+    :QGraphicsRectItem(parent)
 {
+
     setPen(QPen(Qt::black,5));
     setBrush(QColor(0,150,0));
 
-    saveTime = new QGraphicsTextItem(this);
-    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf",saveTime,Qt::white,15);
+    text = new QGraphicsTextItem(this);
+
+    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf",text,Qt::white,15);
 
 }
 
@@ -226,13 +228,82 @@ void SaveSlot::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     emit clicked();
 }
 
-
-void SaveSlot::setSaveTime(QString time)
+void SaveSlot::init(QString filepath)
 {
-    saveTime->setPlainText(time);
-    saveTime->setPos((boundingRect().width() - saveTime->boundingRect().width())/2,
-                 (boundingRect().height() - saveTime->boundingRect().height())/2);
+    QFile file(filepath);
+    file.open(QIODevice::ReadOnly);
+
+    QString whole = file.readAll();
+    QStringList lines = whole.split("\r\n");
+
+    for (int n = 0; n < lines.size(); ++n) {
+
+        //模式
+        if(lines[n].startsWith("mode=")){
+            gameMode = lines[n].remove("mode=").toInt();
+        }
+
+        //levelNum
+        if(lines[n].startsWith("levelnum=")){
+            levelNum = lines[n].remove("levelnum=").toInt();
+        }
+
+        //时间
+        if(lines[n].startsWith("savetime=")){
+            savetime = lines[n].remove("savetime=");
+            text->setPlainText(savetime);
+            text->setPos((boundingRect().width() - text->boundingRect().width())/2,
+                         (boundingRect().height() - text->boundingRect().height())/2);
+        }
+
+        //记录
+        if(lines[n].startsWith("gamerecords=")){
+
+            for (int recordN = n+1; recordN < lines.size(); ++recordN) {
+
+                //系统记录
+                if(lines[recordN].startsWith("sys:")){
+
+                    QStringList record = lines[recordN].remove("sys:").split(' ');
+
+                    int transType = record[0].toInt();
+                    QPoint start(record[1].toInt(),record[2].toInt());
+                    QPoint dest(record[3].toInt(),record[4].toInt());
+
+                    sysR.append(GameRecord(transType,start,dest));
+
+                }else if(lines[recordN].startsWith("player:")){
+
+                    QStringList record = lines[recordN].remove("player:").split(' ');
+
+                    int transType = record[0].toInt();
+                    QPoint start(record[1].toInt(),record[2].toInt());
+                    QPoint dest(record[3].toInt(),record[4].toInt());
+
+                    playerR.append(GameRecord(record[0].toInt(),start,dest));
+                }
+            }
+        }
+
+    }
 }
+
+void SaveSlot::info()
+{
+    qDebug() << savetime;
+    qDebug() << "mode:" << gameMode << "level:" << levelNum;
+
+    for (int n = 0; n < sysR.size(); ++n) {
+        sysR[n].info();
+    }
+    for (int n = 0; n < playerR.size(); ++n) {
+        playerR[n].info();
+    }
+}
+
+
+
+
 
 
 TempPageBtn::TempPageBtn(QGraphicsItem *parent):

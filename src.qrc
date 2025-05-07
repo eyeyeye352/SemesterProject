@@ -74,6 +74,6 @@
         <file>src/save/s1.txt</file>
         <file>src/save/s2.txt</file>
         <file>src/save/s3.txt</file>
-        <file>src/save/s4.txt</file>
+        <file>src/save/s0.txt</file>
     </qresource>
 </RCC>

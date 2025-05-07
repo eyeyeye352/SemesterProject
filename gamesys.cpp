@@ -32,6 +32,7 @@ Gamesys::Gamesys(QWidget *parent)
     tipPage = new TipPage(this);
     completePage = new CompletePage(this);
     savePage = new SavePage(this);
+    rankPage = new RankPage(this);
 
 
     //timers
@@ -45,8 +46,8 @@ Gamesys::Gamesys(QWidget *parent)
     //startScene connections
     connect(startscene->classicBtn,&ClassicBtn::clicked,this,&Gamesys::goLevelSelection);
     connect(startscene->hexBtn,&HexBtn::clicked,this,&Gamesys::goLevelSelection);
-    connect(startscene->settingBtn,&GameBtn::clicked,this,&Gamesys::openSetting);
-    connect(startscene->rankBtn,&GameBtn::clicked,this,&Gamesys::checkRank);
+    connect(startscene->settingBtn,&GameBtn::clicked,this,&Gamesys::openSettingPage);
+    connect(startscene->rankBtn,&GameBtn::clicked,this,&Gamesys::openRankPage);
     connect(startscene->createModeBtn,&GameBtn::clicked,this,&Gamesys::goCreateMode);
     connect(startscene->backBtn,&GameBtn::clicked,this,&Gamesys::backModeSelection);
     connect(startscene->saveBtn,&GameBtn::clicked,this,&Gamesys::openSavePage);
@@ -56,22 +57,27 @@ Gamesys::Gamesys(QWidget *parent)
     }
 
     //connections(levelScene)
-    connect(levelscene->settingBtn,&GameBtn::clicked,this,&Gamesys::openSetting);
-    connect(levelscene->rankBtn,&GameBtn::clicked,this,&Gamesys::checkRank);
+    connect(levelscene->settingBtn,&GameBtn::clicked,this,&Gamesys::openSettingPage);
+    connect(levelscene->rankBtn,&GameBtn::clicked,this,&Gamesys::openRankPage);
     connect(levelscene->saveBtn,&GameBtn::clicked,this,&Gamesys::openSavePage);
-    connect(levelscene->tipBtn,&GameBtn::clicked,this,&Gamesys::openTips);
+    connect(levelscene->tipBtn,&GameBtn::clicked,this,&Gamesys::openTipPage);
     connect(levelscene->undoBtn,&GameBtn::clicked,this,&Gamesys::UndoTrans);
     connect(levelscene->doBtn,&GameBtn::clicked,this,&Gamesys::DoTrans);
     connect(levelscene->sideBar,&MySideBar::SelectTransType,this,&Gamesys::changeTransType);
     connect(levelscene,&LevelScene::clickBg,this,&Gamesys::cancelSelect);
 
     //connection(otherpage)
-    connect(settingPage,&SettingPage::backHome,this,&Gamesys::backHome);
-    connect(settingPage,&SettingPage::closeSetting,this,&Gamesys::closeTempPage);
-    connect(tipPage,&TipPage::closeTip,this,&Gamesys::closeTempPage);
-    connect(completePage,&CompletePage::backHome,this,&Gamesys::backHome);
-    connect(savePage->back,&TempPageBtn::clicked,this,&Gamesys::closeTempPage);
+    connect(settingPage,&SettingPage::goHome,this,&Gamesys::goHome);
+    connect(settingPage,&TempPage::closePage,this,&Gamesys::closeTempPage);
 
+    connect(tipPage,&TempPage::closePage,this,&Gamesys::closeTempPage);
+
+    connect(completePage,&CompletePage::goHome,this,&Gamesys::goHome);
+
+    connect(savePage,&TempPage::closePage,this,&Gamesys::closeTempPage);
+    connect(savePage,&SavePage::slotSelected,this,&Gamesys::loadSLGame);
+
+    initSLSlot();
 
 }
 
@@ -98,20 +104,31 @@ void Gamesys::backModeSelection()
 
 
 //子功能页面 settingPage、tipPage、rankPage、savePage
-void Gamesys::openSetting()
+void Gamesys::openSettingPage()
 {
     tempview->setScene(settingPage);
     Animation::TempPagein(view,tempview)->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
-void Gamesys::openTips()
+void Gamesys::openTipPage()
 {
     tempview->setScene(tipPage);
     Animation::TempPagein(view,tempview)->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
+void Gamesys::openSavePage()
+{
+    tempview->setScene(savePage);
+    Animation::TempPagein(view,tempview)->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+void Gamesys::openRankPage()
+{
+
+}
+
 //设置页面返回首页
-void Gamesys::backHome()
+void Gamesys::goHome()
 {
 
     if(view->scene() == startscene){
@@ -139,11 +156,7 @@ void Gamesys::backHome()
     }
 }
 
-void Gamesys::openSavePage()
-{
-    tempview->setScene(savePage);
-    Animation::TempPagein(view,tempview)->start(QAbstractAnimation::DeleteWhenStopped);
-}
+
 
 void Gamesys::closeTempPage()
 {
@@ -158,10 +171,6 @@ void Gamesys::closeTempPage()
 
 
 
-void Gamesys::checkRank()
-{
-
-}
 
 void Gamesys::goCreateMode()
 {
@@ -176,13 +185,14 @@ void Gamesys::loadGameAnime(int levelNum)
     QSequentialAnimationGroup* anime = Animation::changeScene(startscene,levelscene,view,3000);
     connect(anime->animationAt(1),&QPropertyAnimation::finished,[this,levelNum]{
         //动画暂停时加载文件
-        loadGame(levelNum);
+        loadGame(levelNum,true);
     });
     anime->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
+
 //加载文件，渲染textblocks
-void Gamesys::loadGame(int levelNum)
+void Gamesys::loadGame(int levelNum,bool shuffled)
 {
 
     //根据模式选择关卡文件
@@ -280,10 +290,28 @@ void Gamesys::loadGame(int levelNum)
     file.close();
     tipPage->setAnswer(contents,cols);
 
-    //洗牌
     curLevelNum = levelNum;
-    shuffleLevel();
 
+    //洗牌
+    if(shuffled){
+        shuffleLevel();
+    }
+}
+
+
+//初始加载slot信息。
+void Gamesys::initSLSlot()
+{
+    for (int n = 0; n < savePage->getSlots().size(); ++n) {
+        QString filepath(":/save/src/save/s%1.txt");
+        savePage->getSlots()[n]->init(filepath.arg(QString::number(n)));
+    }
+}
+
+//有问题
+void Gamesys::loadSLGame(int slotNum)
+{
+    savePage->getSlots()[slotNum]->info();
 }
 
 
@@ -442,6 +470,19 @@ TextBlock* Gamesys::getRandBlockInCross()
     return nullptr;
 }
 
+//算法：返回位于目标位置的textblock
+TextBlock *Gamesys::findBlockAt(QPoint target)
+{
+    qDebug() << "findblock时有" << textBlocks.size() << "个方块";
+    for (int n = 0; n < textBlocks.size(); ++n) {
+        if(textBlocks[n]->getXY() == target){
+            return textBlocks[n];
+        }
+    }
+    qDebug() << "nullptr错误";
+    return nullptr;
+}
+
 
 //对接信号：sidebar的changetranstype
 void Gamesys::changeTransType(TranslateIcons::Type type)
@@ -452,7 +493,7 @@ void Gamesys::changeTransType(TranslateIcons::Type type)
 }
 
 //直接进行选择+变换，洗牌、undo/do使用。
-bool Gamesys::selectAndSwitch(TranslateIcons::Type type,TextBlock *start, TextBlock *dest)
+bool Gamesys::selectAndSwitch(int type,TextBlock *start, TextBlock *dest)
 {
     bool success = true;
     switch(type){
@@ -806,10 +847,12 @@ void Gamesys::checkIfComplete()
 void Gamesys::completeGame()
 {
     //得分 = 100 - 系统变换次数与使用步数之差。（暂定）
-    completePage->setcontents(useStep);
+    completePage->showUseStep(useStep);
     tempview->setScene(completePage);
     Animation::TempPagein(view,tempview)->start(QAbstractAnimation::DeleteWhenStopped);
 }
+
+
 
 
 

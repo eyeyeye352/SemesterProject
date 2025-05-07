@@ -1,15 +1,14 @@
 #ifndef GAMERECORD_H
 #define GAMERECORD_H
 
-#include "gameobject.h"
+#include "settings.h"
 
 //一条操作记录保存：使用的变换模式，选择位置，变换位置
 struct GameRecord
 {
-    GameRecord():
-        type(TranslateIcons::NONE),startXY(-1,-1),toXY(-1,-1){}
+    GameRecord() = default;
 
-    GameRecord(TranslateIcons::Type t,QPoint sXY,QPoint tXY):
+    GameRecord(int t,QPoint sXY,QPoint tXY):
         type(t),startXY(sXY),toXY(tXY)
     {}
 
@@ -17,7 +16,7 @@ struct GameRecord
         qDebug() << "record type: " << type << "from" << startXY << "to" << toXY;
     }
 
-    TranslateIcons::Type type;
+    int type;
     QPoint startXY;
     QPoint toXY;
 
