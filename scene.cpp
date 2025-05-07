@@ -273,22 +273,21 @@ void LevelScene::setStep(int step)
 
 
 
-TempPage::TempPage(QPixmap img, QObject *parent):
+TempPage::TempPage(QObject *parent):
     Scene(parent)
-{
-    bg = new QGraphicsPixmapItem(img);
-    bg->setPos((Settings::screenWidth - bg->boundingRect().width())/2,
-               (Settings::screenHeight - bg->boundingRect().height())/2);
-    addItem(bg);
+{}
 
-}
-
-TempPageBtn* TempPage::addBtn(QString text)
+TempPageBtn* TempPage::addBtn(QString text,QGraphicsItem* btnParent)
 {
-    TempPageBtn* btn = new TempPageBtn(bg);
+    TempPageBtn* btn = new TempPageBtn(btnParent);
     btn->setText(text);
     btns.append(btn);
-    btn->setPos(bg->boundingRect().right(), 10 + 60*(btns.size()-1));
+
+    //默认将btn放在父item的右侧，从上而下
+    if(btnParent != nullptr){
+        btn->setPos(btnParent->boundingRect().right(), 10 + 60*(btns.size()-1));
+    }
+
     return btn;
 }
 
@@ -296,8 +295,13 @@ TempPageBtn* TempPage::addBtn(QString text)
 
 
 SettingPage::SettingPage(QObject *parent)
-    :TempPage{QPixmap(":/background/src/background/settingPage.png"),parent}
+    :TempPage{parent}
 {
+
+    bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/settingPage.png"));
+    bg->setPos((Settings::screenWidth - bg->boundingRect().width())/2,
+               (Settings::screenHeight - bg->boundingRect().height())/2);
+    addItem(bg);
 
     //Valsets
     musicSli = new ValSets(bg);
@@ -317,8 +321,8 @@ SettingPage::SettingPage(QObject *parent)
 
 
     //btn
-    backBtn = addBtn("Back");
-    homeBtn = addBtn("Home");
+    backBtn = addBtn("Back",bg);
+    homeBtn = addBtn("Home",bg);
 
     QObject::connect(backBtn,&GameBtn::clicked,[this]{ emit closePage();});
     QObject::connect(homeBtn,&GameBtn::clicked,[this]{ emit goHome(); });
@@ -327,14 +331,19 @@ SettingPage::SettingPage(QObject *parent)
 
 
 TipPage::TipPage(QObject *parent):
-    TempPage(QPixmap(":/background/src/background/tipPage.png"),parent)
+    TempPage(parent)
 {
+
+    bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/tipPage.png"));
+    bg->setPos((Settings::screenWidth - bg->boundingRect().width())/2,
+               (Settings::screenHeight - bg->boundingRect().height())/2);
+    addItem(bg);
 
     answer = new QGraphicsTextItem(bg);
     MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/tipPageTextFont.ttf",answer,Qt::white,16);
 
     //btn
-    backBtn = addBtn("Back");
+    backBtn = addBtn("Back",bg);
     QObject::connect(backBtn,&GameBtn::clicked,[this]{ emit closePage(); });
 
 }
@@ -362,14 +371,19 @@ void TipPage::setAnswer(QString text,int cols)
 
 
 CompletePage::CompletePage(QObject *parent):
-    TempPage(QPixmap(":/background/src/background/completePage.png"),parent)
+    TempPage(parent)
 {
+
+    bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/completePage.png"));
+    bg->setPos((Settings::screenWidth - bg->boundingRect().width())/2,
+               (Settings::screenHeight - bg->boundingRect().height())/2);
+    addItem(bg);
 
     stepText = new QGraphicsTextItem(bg);
     MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf",stepText,Qt::white,20);
     stepText->setPos(Settings::completeScene_stepTextPos);
 
-    homeBtn = addBtn("Home");
+    homeBtn = addBtn("Home",bg);
     connect(homeBtn,&GameBtn::clicked,[this]{ emit goHome();  });
 
 
@@ -385,19 +399,25 @@ void CompletePage::showUseStep(int step)
 
 
 SavePage::SavePage(QObject *parent):
-    TempPage(QPixmap(":/background/src/background/savePage.png"),parent)
+    TempPage(parent),
+    state(NONE)
 {
 
-    //设置bg为父item会出错，原因未知。
-    SaveSlot* s1 = new SaveSlot;
-    SaveSlot* s2 = new SaveSlot;
-    SaveSlot* s3 = new SaveSlot;
-    SaveSlot* s4 = new SaveSlot;
+    bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/savePage.png"));
+    bg->setPos((Settings::screenWidth - bg->boundingRect().width())/2,
+               (Settings::screenHeight - bg->boundingRect().height())/2);
+    addItem(bg);
 
-    s1->setRect(220,200,200,150);
-    s2->setRect(480,200,200,150);
-    s3->setRect(220,400,200,150);
-    s4->setRect(480,400,200,150);
+    //设置bg为父item会出错，原因未知。
+    SaveSlot* s1 = new SaveSlot(bg);
+    SaveSlot* s2 = new SaveSlot(bg);
+    SaveSlot* s3 = new SaveSlot(bg);
+    SaveSlot* s4 = new SaveSlot(bg);
+
+    s1->setPos(bg->boundingRect().center().x() - s1->boundingRect().width() - 20,200);
+    s2->setPos(bg->boundingRect().center().x() + 20,200);
+    s3->setPos(bg->boundingRect().center().x() - s3->boundingRect().width() - 20,375);
+    s4->setPos(bg->boundingRect().center().x() + 20,375);
 
     SLslots.append(s1);
     SLslots.append(s2);
@@ -405,18 +425,66 @@ SavePage::SavePage(QObject *parent):
     SLslots.append(s4);
 
     for (int n = 0; n < SLslots.size(); ++n) {
-        connect(SLslots[n],&SaveSlot::clicked,[this,n]{ emit slotSelected(n);});
-        addItem(SLslots[n]);
+
+        //根据state发出不同的信号
+        connect(SLslots[n],&SaveSlot::clicked,[this,n]{
+            emit slotSelected(n,state);
+        });
     }
 
 
-    back = addBtn("Back");
-    save = addBtn("Save");
-    load = addBtn("Load");
+    back = addBtn("Back",bg);
+    save = addBtn("Save",bg);
+    load = addBtn("Load",bg);
 
-    connect(back,&GameBtn::clicked,[this]{ emit closePage();});
+    connect(back,&GameBtn::clicked,[this]{
+        if(state == NONE){
+            emit closePage();
+        }else{
+            backToNoneState();
+        }
+    });
+    connect(save,&GameBtn::clicked,[this]{
+        addBlack(SAVE);
+    });
+    connect(load,&GameBtn::clicked,[this]{
+        addBlack(LOAD);
+    });
+
+    black = new BlackOverlay(bg);
+    black->setPos(0,0);
+
+    //back和slots的z层在black之上
+    back->setZValue(black->zValue()+1);
+    for (int n = 0; n < SLslots.size(); ++n) {
+        SLslots[n]->setZValue(black->zValue()+1);
+
+    }
+
+    //debug
+    qDebug() << "black zval:" << black->zValue();
+    qDebug() << "back zval:" << back->zValue();
+    for (int n = 0; n < SLslots.size(); ++n) {
+        qDebug() << "slot-" << n << " zval:" << SLslots[n]->zValue();
+    }
+
+    black->setOpacity(0.7);
+    black->hide();
 
 }
+
+void SavePage::backToNoneState()
+{
+    state = NONE;
+    black->hide();
+}
+
+void SavePage::addBlack(int newState)
+{
+    state = newState;
+    black->show();
+}
+
 
 QList<SaveSlot*>& SavePage::getSlots()
 {
@@ -428,10 +496,8 @@ QList<SaveSlot*>& SavePage::getSlots()
 
 
 
-
-
 RankPage::RankPage(QObject *parent):
-    TempPage(QPixmap(""),parent)
+    TempPage(parent)
 {
 
 }

@@ -45,7 +45,8 @@ public slots:
 
     //（开始前加载load信息）加载详细slot资料
     void initSLSlot();
-    void loadSLGame(int slotNum);
+    void processSlots(int slotNum,int state);
+    void showSlotInfo(int slotNum);
 
 
 

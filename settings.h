@@ -34,6 +34,7 @@
 #include <QRandomGenerator>
 #include <QStack>
 #include <QMessageBox>
+#include <QLabel>
 
 class SideBar;
 

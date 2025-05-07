@@ -173,7 +173,7 @@ private:
 
 //savePage 的 slots按钮
 //由slot储存信息
-class SaveSlot : public QObject , public QGraphicsRectItem {
+class SaveSlot : public QObject , public QGraphicsRectItem{
 
     Q_OBJECT
 public:
@@ -187,7 +187,6 @@ public:
 
     //输出信息
     void info();
-
 
 signals:
     void clicked();

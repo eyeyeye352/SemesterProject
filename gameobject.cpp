@@ -205,11 +205,11 @@ SaveSlot::SaveSlot(QGraphicsItem *parent)
     :QGraphicsRectItem(parent)
 {
 
+    setRect(0,0,200,150);
     setPen(QPen(Qt::black,5));
     setBrush(QColor(0,150,0));
 
     text = new QGraphicsTextItem(this);
-
     MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf",text,Qt::white,15);
 
 }
@@ -219,6 +219,7 @@ void SaveSlot::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     setTransformOriginPoint(boundingRect().center());
     setScale(0.9);
+
 }
 
 void SaveSlot::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
@@ -227,6 +228,7 @@ void SaveSlot::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     setTransformOriginPoint(0,0);
     emit clicked();
 }
+
 
 void SaveSlot::init(QString filepath)
 {
@@ -290,6 +292,7 @@ void SaveSlot::init(QString filepath)
 
 void SaveSlot::info()
 {
+
     qDebug() << savetime;
     qDebug() << "mode:" << gameMode << "level:" << levelNum;
 

@@ -75,7 +75,7 @@ Gamesys::Gamesys(QWidget *parent)
     connect(completePage,&CompletePage::goHome,this,&Gamesys::goHome);
 
     connect(savePage,&TempPage::closePage,this,&Gamesys::closeTempPage);
-    connect(savePage,&SavePage::slotSelected,this,&Gamesys::loadSLGame);
+    connect(savePage,&SavePage::slotSelected,this,&Gamesys::processSlots);
 
     initSLSlot();
 
@@ -308,10 +308,23 @@ void Gamesys::initSLSlot()
     }
 }
 
-//有问题
-void Gamesys::loadSLGame(int slotNum)
+void Gamesys::processSlots(int n, int state)
 {
-    savePage->getSlots()[slotNum]->info();
+    if(state == SavePage::NONE){
+        savePage->getSlots()[n]->info();
+    }
+    else if(state == SavePage::SAVE){
+        qDebug() << "save:" << n;
+    }
+    else if(state == SavePage::LOAD){
+        qDebug() << "load:" << n;
+    }
+}
+
+//有问题
+void Gamesys::showSlotInfo(int slotNum)
+{
+
 }
 
 

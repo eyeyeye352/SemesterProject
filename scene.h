@@ -113,16 +113,15 @@ class TempPage : public Scene{
 
     Q_OBJECT
 public:
-    TempPage(QPixmap img,QObject *parent);
+    TempPage(QObject *parent);
 
-    TempPageBtn* addBtn(QString text);
+    TempPageBtn* addBtn(QString text,QGraphicsItem* btnParent = nullptr);
 
 signals:
     //关闭页面信号，一般在back按钮被点击时发出，请求gamesys关闭该场景。
     void closePage();
 
 protected:
-    QGraphicsPixmapItem* bg;
     QList<TempPageBtn*> btns;
 };
 
@@ -139,6 +138,8 @@ signals:
     void goHome();
 
 private:
+
+    QGraphicsPixmapItem* bg;
     ValSets *musicSli;
     ValSets *soundSli;
     QPointer<TempPageBtn> homeBtn;
@@ -157,6 +158,8 @@ public:
     void setAnswer(QString text,int cols);
 
 private:
+
+    QGraphicsPixmapItem* bg;
     QGraphicsTextItem* answer;
     QPointer<TempPageBtn> backBtn;
 };
@@ -170,6 +173,9 @@ class RankPage : public TempPage{
 public:
 
     RankPage(QObject* parent);
+
+private:
+    QGraphicsPixmapItem* bg;
 };
 
 
@@ -183,18 +189,38 @@ class SavePage : public TempPage{
 public:
     SavePage(QObject *parent = nullptr);
 
+    void backToNoneState();
+    void addBlack(int newState);
+
     QList<SaveSlot*>& getSlots();
 
+    //当前页面的选择状态，包括：
+    //1. None，此时点击back会发出closeTempPage信号，点击save和load进入对应状态
+    //2. load, 此时back会返回NONE状态，save和load禁用（背景变暗突出back和slots）
+    //3. save，同理
+    enum State{
+        NONE,
+        LOAD,
+        SAVE
+    };
+
 signals:
-    void slotSelected(int slotNum);
+    void slotSelected(int slotNum,int state);
+    void saveAt(int slotNum);
+    void loadAt(int slotNum);
 
 private:
+
+
+    QGraphicsPixmapItem* bg;
 
     //四个槽位
     QList<SaveSlot*> SLslots;
     TempPageBtn *back,*save,*load;
 
-    QGraphicsPixmapItem *bg;
+    //黑幕效果，state为LOAD或SAVE时凸显slot及back用
+    BlackOverlay* black;
+    int state;
 };
 
 
@@ -213,6 +239,8 @@ signals:
 
 
 private:
+
+    QGraphicsPixmapItem* bg;
     QGraphicsTextItem * stepText;
     QPointer<TempPageBtn> homeBtn;
 
