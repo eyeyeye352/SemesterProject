@@ -188,6 +188,12 @@ public:
     //输出信息
     void info();
 
+    //获取各种属性
+    int getLevelNum();
+    int getGameMode();
+    GameRecordList& getSysRecords();
+    GameRecordList& getPlayerRecords();
+
 signals:
     void clicked();
 
@@ -196,7 +202,7 @@ private:
     QGraphicsTextItem* text;
     QString savetime;
     int levelNum,gameMode;
-    QList<GameRecord> sysR,playerR;
+    GameRecordList sysR,playerR;
 
 };
 

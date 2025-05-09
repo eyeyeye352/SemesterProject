@@ -24,7 +24,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
         scene.h scene.cpp
         settings.h settings.cpp
-        src.qrc
+
         musicplayer.h musicplayer.cpp
 
         animation.h animation.cpp
@@ -35,8 +35,11 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         gamesidebar.h gamesidebar.cpp
         gamerecord.h
         myalgorithms.h myalgorithms.cpp
+        gamerecord.cpp
+        res.qrc
 
     )
+
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET SemesterPJ APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)

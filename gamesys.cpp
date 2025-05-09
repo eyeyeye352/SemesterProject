@@ -1,5 +1,6 @@
 #include "gamesys.h"
 #include "animation.h"
+#include "myalgorithms.h"
 
 
 Gamesys::Gamesys(QWidget *parent)
@@ -53,7 +54,9 @@ Gamesys::Gamesys(QWidget *parent)
     connect(startscene->saveBtn,&GameBtn::clicked,this,&Gamesys::openSavePage);
 
     for (int n = 0; n < startscene->levels.size(); ++n) {
-        connect(startscene->levels[n],&LevelSelectBlock::selected,this,&Gamesys::loadGameAnime);
+        connect(startscene->levels[n],&LevelSelectBlock::selected,[this](int levelNum){
+            loadGameAnime(levelNum,true);
+        });
     }
 
     //connections(levelScene)
@@ -118,6 +121,12 @@ void Gamesys::openTipPage()
 
 void Gamesys::openSavePage()
 {
+    if(view->scene() == startscene){
+        savePage->hideSaveBtn();
+    }else if(view->scene() == levelscene){
+        savePage->showSaveBtn();
+    }
+
     tempview->setScene(savePage);
     Animation::TempPagein(view,tempview)->start(QAbstractAnimation::DeleteWhenStopped);
 }
@@ -178,14 +187,14 @@ void Gamesys::goCreateMode()
 }
 
 //切换音乐和scene,然后在loadingscene动画中加载游戏
-void Gamesys::loadGameAnime(int levelNum)
+void Gamesys::loadGameAnime(int levelNum,bool shuffled)
 {
 
     MusicPlayer::getMPlayer()->changeBgm(QUrl("qrc:/bgm/src/bgm/ingameBgm.mp3"));
     QSequentialAnimationGroup* anime = Animation::changeScene(startscene,levelscene,view,3000);
-    connect(anime->animationAt(1),&QPropertyAnimation::finished,[this,levelNum]{
+    connect(anime->animationAt(1),&QPropertyAnimation::finished,[=]{
         //动画暂停时加载文件
-        loadGame(levelNum,true);
+        loadGame(levelNum,shuffled);
     });
     anime->start(QAbstractAnimation::DeleteWhenStopped);
 }
@@ -283,48 +292,202 @@ void Gamesys::loadGame(int levelNum,bool shuffled)
     }
 
     qDebug() << "loading finish.";
+
+    /*
     for (TextBlock* t : textBlocks) {
         qDebug() << t->Word() << "has loaded in" << t->getXY();
     }
+    */
 
     file.close();
     tipPage->setAnswer(contents,cols);
 
     curLevelNum = levelNum;
 
-    //洗牌
+    //有洗牌表示从startscene选关进入，没洗牌表示载入存档
     if(shuffled){
         shuffleLevel();
     }
 }
 
 
+
+
+
+
+
+
+
+
 //初始加载slot信息。
 void Gamesys::initSLSlot()
 {
+
+    // 获取用户文档目录，并创建一个名为 /gameSavings 的子目录
+    QString saveDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/gameSavings";
+    QDir().mkpath(saveDir); // 创建保存目录，如果不存在
+
     for (int n = 0; n < savePage->getSlots().size(); ++n) {
-        QString filepath(":/save/src/save/s%1.txt");
+        QString filepath = saveDir + "/s%1.txt";
         savePage->getSlots()[n]->init(filepath.arg(QString::number(n)));
     }
+
 }
 
-void Gamesys::processSlots(int n, int state)
+void Gamesys::processSlots(int slotNum, int state)
 {
     if(state == SavePage::NONE){
-        savePage->getSlots()[n]->info();
+        //show slot info and do nothing.
+        savePage->getSlots()[slotNum]->info();
     }
     else if(state == SavePage::SAVE){
-        qDebug() << "save:" << n;
+        //developing
+        saveSlotAt(slotNum);
+        initSLSlot();
+        savePage->backToNoneState();
+
+        qDebug() << "存档系统记录：" << sysRecord.size() << "玩家记录：" << playerRecords.size();
     }
     else if(state == SavePage::LOAD){
-        qDebug() << "load:" << n;
+        //loading
+        loadSaveGame(savePage->getSlots()[slotNum]);
+        //复原savePage
+        savePage->backToNoneState();
     }
+
 }
 
-//有问题
-void Gamesys::showSlotInfo(int slotNum)
+
+void Gamesys::loadSaveGame(SaveSlot* S)
+{
+    //检测是否为有效存档
+    if(S->getSysRecords().isEmpty()){
+        qDebug() << "无效的存档";
+        return;
+    }
+
+
+    //获取各种属性
+    curLevelNum = S->getLevelNum();
+    currentMode = S->getGameMode();
+
+    //debug
+    qDebug() << "curmode after loadSL:" << currentMode;
+    qDebug() << "curlevelnum after SL:" << curLevelNum;
+
+
+    //先关闭savePage，切换场景(关卡)、不洗牌。
+    closeTempPage();
+
+    if(view->scene() == startscene){
+        MusicPlayer::getMPlayer()->changeBgm(QUrl("qrc:/bgm/src/bgm/ingameBgm.mp3"));
+    }
+
+    QSequentialAnimationGroup* anime = Animation::changeScene(static_cast<Scene*>(view->scene()),levelscene,view,3500);
+    connect(anime->animationAt(1),&QPropertyAnimation::finished,[=]{
+
+        //注意从loadscene到loadscene时要重置关卡
+
+
+        //动画暂停时加载文件(注意加载时会把Record刷掉)
+        loadGame(curLevelNum,false);
+
+        for (int n = 0; n < textBlocks.size(); ++n) {
+            qDebug() << textBlocks[n]->Word() << " loaded at" << textBlocks[n]->getXY();
+        }
+
+        //载入存档记录
+        sysRecord = S->getSysRecords();
+        playerRecords = S->getPlayerRecords();
+
+        for (int n = 0; n < sysRecord.size(); ++n) {
+            GameRecord r = sysRecord[n];
+            qDebug() << "载入sys记录：";
+            r.info();
+            //bug点
+            selectAndSwitch(r.type,findBlockAt(r.startXY),findBlockAt(r.toXY));
+        }
+
+        if(playerRecords.size() > 0){
+            levelscene->undoBtn->setOpacity(1);
+        }
+        for (int n = 0; n < playerRecords.size(); ++n) {
+            GameRecord r = playerRecords[n];
+            qDebug() << "载入player记录：";
+            r.info();
+            selectAndSwitch(r.type,findBlockAt(r.startXY),findBlockAt(r.toXY));
+        }
+
+        //设置步数
+        useStep = playerRecords.size();
+        levelscene->setStep(useStep);
+    });
+    anime->start(QAbstractAnimation::DeleteWhenStopped);
+/*
+    for (int n = 0; n < textBlocks.size(); ++n) {
+        qDebug() << "textblock:" << textBlocks[n]->Word() << textBlocks[n]->getXY();
+    }
+*/
+}
+
+
+//存档
+void Gamesys::saveSlotAt(int slotNum)
 {
 
+    // 获取用户文档目录，并创建一个名为 /gameSavings 的子目录
+    QString saveDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/gameSavings";
+    QDir().mkpath(saveDir); // 创建保存目录，如果不存在
+
+    QString filepath = saveDir + "/s%1.txt";
+    QFile file(filepath.arg(slotNum));
+    file.open(QIODevice::WriteOnly);
+    QTextStream out(&file);
+
+    QString origtext = MyAlgorithms::saveTextOutPut;
+
+    //savetime
+    QDateTime now = QDateTime::currentDateTime();
+    QString savetime = now.toString("yyyy-MM-dd hh:mm:ss");
+
+    //mode
+    QString mode = QString::number(currentMode);
+
+    //levelnum
+    QString levelNumstr = QString::number(curLevelNum);
+
+    //record amount
+    QString rNum = QString::number(sysRecord.size() + playerRecords.size());
+
+    QStringList gamerecords;
+
+    //sys record
+    for (int n = 0; n < sysRecord.size(); ++n) {
+        //sys:(transtype) (startx) (starty) (destx) (desty)
+        gamerecords.append("sys:" + QString::number(sysRecord[n].type) + ' ' +
+                           QString::number(sysRecord[n].startXY.x()) + ' ' +
+                           QString::number(sysRecord[n].startXY.y()) + ' ' +
+                           QString::number(sysRecord[n].toXY.x()) + ' ' +
+                           QString::number(sysRecord[n].toXY.y()) + '\n');
+    }
+    //player record
+    for (int n = 0; n < playerRecords.size(); ++n) {
+        //sys:(transtype) (startx) (starty) (destx) (desty)
+        gamerecords.append("player:" + QString::number(playerRecords[n].type) + ' ' +
+                           QString::number(playerRecords[n].startXY.x()) + ' ' +
+                           QString::number(playerRecords[n].startXY.y()) + ' ' +
+                           QString::number(playerRecords[n].toXY.x()) + ' ' +
+                           QString::number(playerRecords[n].toXY.y()) + '\n');
+    }
+
+    //output
+    QString finaltext = origtext.arg(savetime).arg(mode).arg(levelNumstr).arg(rNum);
+    for (int n = 0; n < gamerecords.size(); ++n) {
+        finaltext.append(gamerecords[n]);
+    }
+    qDebug() << "finalSaveText" << finaltext;
+    out << finaltext;
+    file.close();
 }
 
 
@@ -345,7 +508,6 @@ void Gamesys::shuffleLevel()
             TranslateIcons::HEXLINE,
             TranslateIcons::HEX
         };
-
 
 
     //变换直到sysrecord有效记录次数达到指定次数
@@ -457,13 +619,11 @@ TextBlock* Gamesys::getRandBlock()
 
     //qDebug() << "rx ry" << rx << ry;
 
-    for (TextBlock* t : textBlocks) {
-
-        if(t->getXY() == QPoint(rx,ry)){
-            return t;
+    for (int n = 0; n < textBlocks.size(); ++n) {
+        if(textBlocks[n]->getXY() == QPoint(rx,ry)){
+            return textBlocks[n];
         }
     }
-
     qDebug() << "nullptr error";
     return nullptr;
 }
@@ -474,9 +634,10 @@ TextBlock* Gamesys::getRandBlockInCross()
     int rx = QRandomGenerator::global()->bounded(1,cols-1);
     int ry = QRandomGenerator::global()->bounded(1,rows-1);
 
-    for (TextBlock* t : textBlocks) {
-        if(t->getXY() == QPoint(rx,ry)){
-            return t;
+    for (int n = 0; n < textBlocks.size(); ++n) {
+        qDebug() << textBlocks[n]->Word() << "be find at" << textBlocks[n]->getXY();
+        if(textBlocks[n]->getXY() == QPoint(rx,ry)){
+            return textBlocks[n];
         }
     }
     qDebug() << "nullptr error";
@@ -486,13 +647,12 @@ TextBlock* Gamesys::getRandBlockInCross()
 //算法：返回位于目标位置的textblock
 TextBlock *Gamesys::findBlockAt(QPoint target)
 {
-    qDebug() << "findblock时有" << textBlocks.size() << "个方块";
     for (int n = 0; n < textBlocks.size(); ++n) {
         if(textBlocks[n]->getXY() == target){
             return textBlocks[n];
         }
     }
-    qDebug() << "nullptr错误";
+    qDebug() << "find block at nullptr错误";
     return nullptr;
 }
 

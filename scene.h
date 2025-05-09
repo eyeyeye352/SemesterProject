@@ -73,7 +73,7 @@ public:
     void setTitle(QString);
 
     //gamesys设置游戏模式，（调整sideBar为对应的模式）
-    void setGameMode(Mode);
+    void setGameMode(int);
 
     //设置步数显示
     void setStep(int);
@@ -191,6 +191,8 @@ public:
 
     void backToNoneState();
     void addBlack(int newState);
+    void hideSaveBtn();
+    void showSaveBtn();
 
     QList<SaveSlot*>& getSlots();
 
@@ -219,7 +221,7 @@ private:
     TempPageBtn *back,*save,*load;
 
     //黑幕效果，state为LOAD或SAVE时凸显slot及back用
-    BlackOverlay* black;
+    QGraphicsRectItem* blackLay;
     int state;
 };
 

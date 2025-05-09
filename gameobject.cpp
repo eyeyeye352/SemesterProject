@@ -201,108 +201,9 @@ void TranslateIcons::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 
 
-SaveSlot::SaveSlot(QGraphicsItem *parent)
-    :QGraphicsRectItem(parent)
-{
-
-    setRect(0,0,200,150);
-    setPen(QPen(Qt::black,5));
-    setBrush(QColor(0,150,0));
-
-    text = new QGraphicsTextItem(this);
-    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf",text,Qt::white,15);
-
-}
 
 
-void SaveSlot::mousePressEvent(QGraphicsSceneMouseEvent *event)
-{
-    setTransformOriginPoint(boundingRect().center());
-    setScale(0.9);
 
-}
-
-void SaveSlot::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
-{
-    setScale(1);
-    setTransformOriginPoint(0,0);
-    emit clicked();
-}
-
-
-void SaveSlot::init(QString filepath)
-{
-    QFile file(filepath);
-    file.open(QIODevice::ReadOnly);
-
-    QString whole = file.readAll();
-    QStringList lines = whole.split("\r\n");
-
-    for (int n = 0; n < lines.size(); ++n) {
-
-        //模式
-        if(lines[n].startsWith("mode=")){
-            gameMode = lines[n].remove("mode=").toInt();
-        }
-
-        //levelNum
-        if(lines[n].startsWith("levelnum=")){
-            levelNum = lines[n].remove("levelnum=").toInt();
-        }
-
-        //时间
-        if(lines[n].startsWith("savetime=")){
-            savetime = lines[n].remove("savetime=");
-            text->setPlainText(savetime);
-            text->setPos((boundingRect().width() - text->boundingRect().width())/2,
-                         (boundingRect().height() - text->boundingRect().height())/2);
-        }
-
-        //记录
-        if(lines[n].startsWith("gamerecords=")){
-
-            for (int recordN = n+1; recordN < lines.size(); ++recordN) {
-
-                //系统记录
-                if(lines[recordN].startsWith("sys:")){
-
-                    QStringList record = lines[recordN].remove("sys:").split(' ');
-
-                    int transType = record[0].toInt();
-                    QPoint start(record[1].toInt(),record[2].toInt());
-                    QPoint dest(record[3].toInt(),record[4].toInt());
-
-                    sysR.append(GameRecord(transType,start,dest));
-
-                }else if(lines[recordN].startsWith("player:")){
-
-                    QStringList record = lines[recordN].remove("player:").split(' ');
-
-                    int transType = record[0].toInt();
-                    QPoint start(record[1].toInt(),record[2].toInt());
-                    QPoint dest(record[3].toInt(),record[4].toInt());
-
-                    playerR.append(GameRecord(record[0].toInt(),start,dest));
-                }
-            }
-        }
-
-    }
-}
-
-void SaveSlot::info()
-{
-
-    qDebug() << savetime;
-    qDebug() << "mode:" << gameMode << "level:" << levelNum;
-
-    for (int n = 0; n < sysR.size(); ++n) {
-        sysR[n].info();
-    }
-    for (int n = 0; n < playerR.size(); ++n) {
-        playerR[n].info();
-    }
-}
 
 
 
@@ -333,4 +234,143 @@ void TempPageBtn::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     resizing(1);
     emit clicked();
+}
+
+
+
+
+SaveSlot::SaveSlot(QGraphicsItem *parent)
+    :QGraphicsRectItem(parent)
+{
+
+    setRect(0,0,200,150);
+    setPen(QPen(Qt::black,5));
+    setBrush(QColor(0,150,0));
+
+    text = new QGraphicsTextItem(this);
+    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf",text,Qt::white,16);
+
+}
+
+
+void SaveSlot::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    setTransformOriginPoint(boundingRect().center());
+    setScale(0.9);
+
+}
+
+void SaveSlot::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+    setScale(1);
+    setTransformOriginPoint(0,0);
+    emit clicked();
+}
+
+
+void SaveSlot::init(QString filepath)
+{
+    QFile file(filepath);
+    file.open(QIODevice::ReadOnly);
+
+    QString whole = file.readAll();
+    QStringList lines = whole.split("\n");
+
+    //重置保存的记录
+    sysR.clear();
+    playerR.clear();
+
+    QString showtext("");
+
+    for (int n = 0; n < lines.size(); ++n) {
+
+        //时间
+        if(lines[n].startsWith("savetime=")){
+            savetime = lines[n].remove("savetime=");
+            showtext.append(savetime + '\n');
+        }
+
+        //模式
+        if(lines[n].startsWith("mode=")){
+            gameMode = lines[n].remove("mode=").toInt();
+            if(gameMode == CLASSIC){
+                showtext.append("classic-");
+            }else if(gameMode == HEX){
+                showtext.append("hex-");
+            }
+        }
+
+        //levelNum
+        if(lines[n].startsWith("levelnum=")){
+            levelNum = lines[n].remove("levelnum=").toInt();
+            showtext.append(lines[n].remove("levelnum="));
+        }
+
+
+
+        //记录
+        if(lines[n].startsWith("gamerecords=")){
+
+            int recordnum = lines[n].remove("gamerecords=").toInt();
+            qDebug() << "n:" << n << " recordnum" << recordnum;
+
+            for (int N = n+1; N < n+1+recordnum && N < lines.size(); ++N) {
+
+                //系统记录
+                if(lines[N].startsWith("sys:")){
+
+                    QStringList record = lines[N].remove("sys:").split(' ');
+
+                    int transType = record[0].toInt();
+                    QPoint start(record[1].toInt(),record[2].toInt());
+                    QPoint dest(record[3].toInt(),record[4].toInt());
+
+                    sysR.append(GameRecord(transType,start,dest),false);
+
+                }else if(lines[N].startsWith("player:")){
+
+                    QStringList record = lines[N].remove("player:").split(' ');
+
+                    int transType = record[0].toInt();
+                    QPoint start(record[1].toInt(),record[2].toInt());
+                    QPoint dest(record[3].toInt(),record[4].toInt());
+
+                    playerR.append(GameRecord(record[0].toInt(),start,dest),false);
+                }
+            }
+        }
+
+    }
+
+    text->setPlainText(showtext);
+    text->setPos((boundingRect().width() - text->boundingRect().width())/2,
+                 (boundingRect().height() - text->boundingRect().height())/2);
+}
+
+void SaveSlot::info()
+{
+
+    qDebug() << savetime;
+    qDebug() << "mode:" << gameMode << "level:" << levelNum;
+
+    qDebug() << "sysR";
+    for (int n = 0; n < sysR.size(); ++n) {
+        sysR[n].info();
+    }
+
+    qDebug() << "playerR";
+    for (int n = 0; n < playerR.size(); ++n) {
+
+        playerR[n].info();
+    }
+}
+
+int SaveSlot::getLevelNum()
+{
+    return levelNum;
+}
+
+int SaveSlot::getGameMode()
+{
+    return gameMode;
 }

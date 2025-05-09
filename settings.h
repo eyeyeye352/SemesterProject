@@ -35,6 +35,9 @@
 #include <QStack>
 #include <QMessageBox>
 #include <QLabel>
+#include <QDateTime>
+#include <QStandardPaths>
+#include <QDir>
 
 class SideBar;
 

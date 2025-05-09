@@ -40,14 +40,19 @@ public slots:
     void goCreateMode();
 
     //选择关卡后进入游戏场景(先动画，动画到一半开始加载),参数为第几关
-    void loadGameAnime(int levelNum);
+    void loadGameAnime(int levelNum,bool shuffled);
     void loadGame(int levelNum,bool shuffled);
 
-    //（开始前加载load信息）加载详细slot资料
-    void initSLSlot();
-    void processSlots(int slotNum,int state);
-    void showSlotInfo(int slotNum);
 
+    //save&load 相关功能
+    //初始加载slot信息
+    void initSLSlot();
+    //集成的函数，接收slot点击事件执行以下对应功能：
+    void processSlots(int slotNum,int state);
+    //savestate 为 save时，点击slot存档。
+    void saveSlotAt(int slotNum);
+    //直接加载saveload记录好的关卡进度
+    void loadSaveGame(SaveSlot* s);
 
 
 private:
@@ -65,7 +70,7 @@ private:
     QTimer * bgmoveTimer;
 
     //current gameMode
-    Mode currentMode;
+    int currentMode;
 
 
 

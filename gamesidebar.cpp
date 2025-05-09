@@ -44,9 +44,9 @@ MySideBar::MySideBar(QGraphicsItem *parent):
     SideBar(parent)
 {
     //变换模式选择icons(classicMode)
-    TranslateIcons* rowt = new TranslateIcons(QPixmap(":/item/src/item/translatesIcon/rowTranslate.png"),TranslateIcons::ROWS,this);
-    TranslateIcons* colt = new TranslateIcons(QPixmap(":/item/src/item/translatesIcon/colTranslate.png"),TranslateIcons::COLS,this);
-    TranslateIcons* crosst = new TranslateIcons(QPixmap(":/item/src/item/translatesIcon/crossTranslate.png"),TranslateIcons::CROSS,this);
+    TranslateIcons* rowt = new TranslateIcons(QPixmap(":/transIcons/src/item/translatesIcon/rowTranslate.png"),TranslateIcons::ROWS,this);
+    TranslateIcons* colt = new TranslateIcons(QPixmap(":/transIcons/src/item/translatesIcon/colTranslate.png"),TranslateIcons::COLS,this);
+    TranslateIcons* crosst = new TranslateIcons(QPixmap(":/transIcons/src/item/translatesIcon/crossTranslate.png"),TranslateIcons::CROSS,this);
     TranslateIcons* hexlinet = new TranslateIcons(QPixmap(""),TranslateIcons::HEXLINE,this);
     TranslateIcons* hext = new TranslateIcons(QPixmap(""),TranslateIcons::HEX,this);
 
@@ -86,7 +86,7 @@ MySideBar::MySideBar(QGraphicsItem *parent):
 
 }
 
-void MySideBar::setGameMode(Mode m)
+void MySideBar::setGameMode(int m)
 {
     gameMode = m;
     for (TranslateIcons* t : hexIcons) {

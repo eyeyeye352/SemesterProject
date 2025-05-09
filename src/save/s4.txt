@@ -1,4 +1,0 @@
-savetime=
-mode=
-levelnum=
-gamerecords=

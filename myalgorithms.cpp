@@ -9,3 +9,9 @@ void MyAlgorithms::addFontToTextItem(QString fontsrc, QGraphicsTextItem *item,QC
     item->setFont(font);
     item->setDefaultTextColor(c);
 }
+
+//预备好的存档文件格式
+QString MyAlgorithms::saveTextOutPut = "savetime=%1\n"
+                                       "mode=%2\n"
+                                        "levelnum=%3\n"
+                                       "gamerecords=%4\n";

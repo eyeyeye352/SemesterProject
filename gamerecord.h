@@ -19,8 +19,23 @@ struct GameRecord
     int type;
     QPoint startXY;
     QPoint toXY;
+};
 
 
+
+//自己写的优化过的GameRecordList
+struct GameRecordList{
+
+    void append(GameRecord r,bool optimize);
+    GameRecord pop();
+    int size();
+    bool isEmpty();
+    void clear();
+
+    GameRecord& operator[](int n);
+
+private:
+    QStack<GameRecord> rList;
 };
 
 

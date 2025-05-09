@@ -39,7 +39,7 @@ class MySideBar : public SideBar{
 public:
     MySideBar(QGraphicsItem *parent = nullptr);
 
-    void setGameMode(Mode mode);
+    void setGameMode(int mode);
 
 signals:
     void SelectTransType(TranslateIcons::Type);
@@ -52,7 +52,7 @@ private:
     QList<TranslateIcons*> classicIcons;
     QList<TranslateIcons*> hexIcons;
 
-    Mode gameMode;
+    int gameMode;
 
 };
 

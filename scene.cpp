@@ -221,19 +221,12 @@ LevelScene::LevelScene(QObject *parent)
 
     //title
     title = new QGraphicsTextItem(sideBar);
+    stepText = new QGraphicsTextItem(bg);
+    stepText->setPos(5,5);
 
     //font
-    int fontId = QFontDatabase::addApplicationFont(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf");
-    QString fontFamily = QFontDatabase::applicationFontFamilies(fontId).at(0);
-    QFont font(fontFamily,18);
-    title->setFont(font);
-    title->setDefaultTextColor(Qt::white);
-
-    //stepText
-    stepText = new QGraphicsTextItem("已使用步数：0",bg);
-    stepText->setFont(font);
-    stepText->setDefaultTextColor(Qt::white);
-    stepText->setPos(Settings::levelscene_stepTextPos);
+    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf",title,Qt::white,18);
+    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf",stepText,Qt::white,18);
 
 }
 
@@ -261,7 +254,7 @@ void LevelScene::setTitle(QString t)
 
 
 
-void LevelScene::setGameMode(Mode m)
+void LevelScene::setGameMode(int m)
 {
     sideBar->setGameMode(m);
 }
@@ -286,6 +279,9 @@ TempPageBtn* TempPage::addBtn(QString text,QGraphicsItem* btnParent)
     //默认将btn放在父item的右侧，从上而下
     if(btnParent != nullptr){
         btn->setPos(btnParent->boundingRect().right(), 10 + 60*(btns.size()-1));
+    }else{
+        btn->setPos(0, 10 + 60*(btns.size()-1));
+        addItem(btn);
     }
 
     return btn;
@@ -380,7 +376,7 @@ CompletePage::CompletePage(QObject *parent):
     addItem(bg);
 
     stepText = new QGraphicsTextItem(bg);
-    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf",stepText,Qt::white,20);
+    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf",stepText,Qt::white,22);
     stepText->setPos(Settings::completeScene_stepTextPos);
 
     homeBtn = addBtn("Home",bg);
@@ -409,15 +405,22 @@ SavePage::SavePage(QObject *parent):
     addItem(bg);
 
     //设置bg为父item会出错，原因未知。
-    SaveSlot* s1 = new SaveSlot(bg);
-    SaveSlot* s2 = new SaveSlot(bg);
-    SaveSlot* s3 = new SaveSlot(bg);
-    SaveSlot* s4 = new SaveSlot(bg);
+    SaveSlot* s1 = new SaveSlot;
+    SaveSlot* s2 = new SaveSlot;
+    SaveSlot* s3 = new SaveSlot;
+    SaveSlot* s4 = new SaveSlot;
 
-    s1->setPos(bg->boundingRect().center().x() - s1->boundingRect().width() - 20,200);
-    s2->setPos(bg->boundingRect().center().x() + 20,200);
-    s3->setPos(bg->boundingRect().center().x() - s3->boundingRect().width() - 20,375);
-    s4->setPos(bg->boundingRect().center().x() + 20,375);
+    s1->setPos(Settings::screenWidth/2 - s1->boundingRect().width() - 15,
+               Settings::screenHeight/2 - s1->boundingRect().height() - 5);
+
+    s2->setPos(Settings::screenWidth/2 + 15,
+               Settings::screenHeight/2 - s2->boundingRect().height() - 5);
+
+    s3->setPos(Settings::screenWidth/2 - s3->boundingRect().width() - 15,
+               Settings::screenHeight/2 + 5);
+
+    s4->setPos(Settings::screenWidth/2 + 15,
+               Settings::screenHeight/2 + 5);
 
     SLslots.append(s1);
     SLslots.append(s2);
@@ -425,17 +428,24 @@ SavePage::SavePage(QObject *parent):
     SLslots.append(s4);
 
     for (int n = 0; n < SLslots.size(); ++n) {
-
         //根据state发出不同的信号
         connect(SLslots[n],&SaveSlot::clicked,[this,n]{
             emit slotSelected(n,state);
         });
+        addItem(SLslots[n]);
     }
 
 
     back = addBtn("Back",bg);
-    save = addBtn("Save",bg);
     load = addBtn("Load",bg);
+    save = addBtn("Save",bg);
+
+    //back需要搭配黑幕，黑幕和back一起作为独立item
+    back->setParentItem(nullptr);
+    back->setPos(save->sceneBoundingRect().x(),bg->sceneBoundingRect().y() + 10);
+
+    //save默认隐藏，处于levelscene时才由gamesys控制显示。
+    save->hide();
 
     connect(back,&GameBtn::clicked,[this]{
         if(state == NONE){
@@ -451,38 +461,48 @@ SavePage::SavePage(QObject *parent):
         addBlack(LOAD);
     });
 
-    black = new BlackOverlay(bg);
-    black->setPos(0,0);
+    blackLay = new QGraphicsRectItem(0,0,Settings::screenWidth,Settings::screenHeight);
+    blackLay->setBrush(Qt::black);
+    addItem(blackLay);
 
     //back和slots的z层在black之上
-    back->setZValue(black->zValue()+1);
+    back->setZValue(blackLay->zValue()+1);
     for (int n = 0; n < SLslots.size(); ++n) {
-        SLslots[n]->setZValue(black->zValue()+1);
-
+        SLslots[n]->setZValue(blackLay->zValue()+1);
     }
 
     //debug
-    qDebug() << "black zval:" << black->zValue();
+    qDebug() << "black zval:" << blackLay->zValue();
     qDebug() << "back zval:" << back->zValue();
     for (int n = 0; n < SLslots.size(); ++n) {
         qDebug() << "slot-" << n << " zval:" << SLslots[n]->zValue();
     }
 
-    black->setOpacity(0.7);
-    black->hide();
+    blackLay->setOpacity(0.7);
+    blackLay->hide();
 
 }
 
 void SavePage::backToNoneState()
 {
     state = NONE;
-    black->hide();
+    blackLay->hide();
 }
 
 void SavePage::addBlack(int newState)
 {
     state = newState;
-    black->show();
+    blackLay->show();
+}
+
+void SavePage::hideSaveBtn()
+{
+    save->hide();
+}
+
+void SavePage::showSaveBtn()
+{
+    save->show();
 }
 
 
