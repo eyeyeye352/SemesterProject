@@ -10,6 +10,55 @@ void MyAlgorithms::addFontToTextItem(QString fontsrc, QGraphicsTextItem *item,QC
     item->setDefaultTextColor(c);
 }
 
+QPolygonF MyAlgorithms::makeHex(int size)
+{
+    QPolygonF hexagon;
+    for(int i = 0; i < 6; ++i) {
+        // 当前角度（弧度制）
+        double angle =  M_PI / 3 * i;  // 60°递增
+
+        // 计算顶点坐标
+        float x = size * cos(angle);
+        float y = size * sin(angle);
+
+        hexagon << QPointF(x, y);
+    }
+    return hexagon;
+}
+
+//传入文件路径，返回整个内容。
+QString MyAlgorithms::getContentInFile(QString filepath)
+{
+    QFile file(filepath);
+    file.open(QIODevice::ReadOnly);
+
+    QString text = file.readAll();
+    file.close();
+    return text;
+}
+
+QList<HPoint> MyAlgorithms::makeHexCoordi(int radius)
+{
+    for (int row = 0; row < 2*radius-1; ++row) {
+        //前半
+        if(row < radius-1){
+
+        }
+        //最长行
+        else if(row == radius-1){
+
+        }
+        //后半
+        else{
+
+        }
+    }
+
+    for (int y = radius-1; y >= 1-radius; --y) {
+
+    }
+}
+
 //预备好的存档文件格式
 QString MyAlgorithms::saveTextOutPut = "savetime=%1\n"
                                        "mode=%2\n"

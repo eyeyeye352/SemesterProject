@@ -1,4 +1,13 @@
-title=
-difficulty=
+title=tutorial
 mode=hex
+difficulty=5
 content=
+古老的山林
+薄雾纱轻轻笼罩
+黄金色阳光穿过枝叶
+缝隙间洒下神似油炸薯条
+溪边野花枯萎五彩斑斓鸟去世
+声清脆聋耳如炫光手榴弹
+远处山峦连绵与蓝天
+白云相映成画卷
+人陶醉其中

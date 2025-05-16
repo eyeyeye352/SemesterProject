@@ -96,6 +96,9 @@ public:
     static QPointF levelscene_stepTextPos;
 
     static QPointF completeScene_stepTextPos;
+
+    //bgmList
+    static QMap<QString,QUrl> bgmList;
 };
 
 #endif // SETTINGS_H

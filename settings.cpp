@@ -41,3 +41,10 @@ int Settings::translateIconInterval = 20;
 QPointF Settings::levelscene_stepTextPos = {10,10};
 
 QPointF Settings::completeScene_stepTextPos = {20,150};
+
+
+QMap<QString,QUrl> Settings::bgmList = {
+    {"spring",QUrl(":/bgm/src/bgm/startSceneBGM.mp3")},
+    {"pastel_subminal",QUrl("qrc:/bgm/src/bgm/pastel_subminal.mp3")},
+    {"InGame_classicMode",QUrl("qrc:/bgm/src/bgm/ingameBgm.mp3")}
+};

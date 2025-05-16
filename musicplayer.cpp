@@ -2,6 +2,8 @@
 #include "animation.h"
 
 
+
+
 MusicPlayer* MusicPlayer::instance = nullptr;
 
 MusicPlayer::MusicPlayer() {
@@ -24,7 +26,7 @@ MusicPlayer::MusicPlayer() {
     successBlockSound->setAudioOutput(o4);
     failBlockSound->setAudioOutput(o5);
 
-    bgm->setSource(QUrl("qrc:/bgm/src/bgm/startSceneBGM.mp3"));
+    bgm->setSource(Settings::bgmList["pastel_subminal"]);
     btnsound->setSource(QUrl("qrc:/audio/src/sound/btnHoverSound.mp3"));
     clicksound->setSource(QUrl("qrc:/audio/src/sound/btnclick.mp3"));
     successBlockSound->setSource(QUrl("qrc:/audio/src/sound/finishSwitchBlock.mp3"));

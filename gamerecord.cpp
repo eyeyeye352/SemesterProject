@@ -27,7 +27,7 @@ void GameRecordList::append(GameRecord r1,bool optim)
                 return;
             }
             break;
-        case TranslateIcons::HEXLINE:
+        case TranslateIcons::ROTATE:
             break;
         case TranslateIcons::HEX:
             break;

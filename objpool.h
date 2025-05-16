@@ -2,6 +2,7 @@
 #define OBJPOOL_H
 
 #include "textblock.h"
+#include "hex.h"
 #include "settings.h"
 
 class objPool
@@ -24,11 +25,15 @@ public:
         }
     }
 
-    TextBlock* getTextBlock();
-    void recycle(TextBlock*);
+    RectTextBlock* getRectTextBlock();
+    HexTextBlock* getHexTextBlock();
+
+    void recycle(RectTextBlock*);
+    void recycle(HexTextBlock*);
 
 private:
-    QList<TextBlock*> textblockPool;
+    QList<RectTextBlock*> rectPool;
+    QList<HexTextBlock*> hexPool;
 
 };
 

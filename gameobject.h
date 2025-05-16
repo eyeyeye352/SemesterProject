@@ -133,7 +133,7 @@ public:
         ROWS,
         COLS,
         CROSS,
-        HEXLINE,
+        ROTATE,
         HEX
     };
 

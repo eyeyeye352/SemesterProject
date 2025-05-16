@@ -1,6 +1,6 @@
 title=春日游园
-difficulty=8,7
 mode=classic
+difficulty=8,7
 content=
 春风拂槛百花鲜
 小径蜿蜒绕翠烟

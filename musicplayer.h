@@ -41,6 +41,8 @@ public:
     QMediaPlayer* clicksound;
     QMediaPlayer* successBlockSound;
     QMediaPlayer* failBlockSound;
+
+
 };
 
 #endif // MUSICPLAYER_H

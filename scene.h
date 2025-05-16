@@ -67,7 +67,10 @@ public:
     FunctionBtn *settingBtn, *rankBtn, *saveBtn ,*tipBtn ,*undoBtn ,*doBtn;
 
     //加入textblock
-    void addTextBlock(TextBlock* t,int rows,int cols);
+    void addTextBlock(RectTextBlock* t,int rows,int cols);
+    //加入hexblock
+    void addTextBlock(HexTextBlock* h);
+
 
     //gamesys设置标题并排版
     void setTitle(QString);
@@ -77,7 +80,6 @@ public:
 
     //设置步数显示
     void setStep(int);
-
 
 signals:
 
@@ -155,7 +157,9 @@ class TipPage : public TempPage
 public:
     TipPage(QObject *parent = nullptr);
 
-    void setAnswer(QString text,int cols);
+    void setClassicAnswer(QString text,int cols);
+    void setHexAnswer(QString text,int radius);
+    void resetAnswer();
 
 private:
 

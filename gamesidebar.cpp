@@ -47,8 +47,8 @@ MySideBar::MySideBar(QGraphicsItem *parent):
     TranslateIcons* rowt = new TranslateIcons(QPixmap(":/transIcons/src/item/translatesIcon/rowTranslate.png"),TranslateIcons::ROWS,this);
     TranslateIcons* colt = new TranslateIcons(QPixmap(":/transIcons/src/item/translatesIcon/colTranslate.png"),TranslateIcons::COLS,this);
     TranslateIcons* crosst = new TranslateIcons(QPixmap(":/transIcons/src/item/translatesIcon/crossTranslate.png"),TranslateIcons::CROSS,this);
-    TranslateIcons* hexlinet = new TranslateIcons(QPixmap(""),TranslateIcons::HEXLINE,this);
-    TranslateIcons* hext = new TranslateIcons(QPixmap(""),TranslateIcons::HEX,this);
+    TranslateIcons* hexlinet = new TranslateIcons(QPixmap(":/transIcons/src/item/translatesIcon/rotateTranslate.png"),TranslateIcons::ROTATE,this);
+    TranslateIcons* hext = new TranslateIcons(QPixmap(":/transIcons/src/item/translatesIcon/hexTranslate.png"),TranslateIcons::HEX,this);
 
     classicIcons.append(rowt);
     classicIcons.append(colt);
@@ -67,7 +67,7 @@ MySideBar::MySideBar(QGraphicsItem *parent):
 
 
         QObject::connect(classicIcons[n],&TranslateIcons::selected,[this,n](TranslateIcons::Type t){
-            makeIconGold(classicIcons.at(n));
+            makeIconGold(classicIcons[n]);
             emit SelectTransType(t);
         });
     }
@@ -77,7 +77,7 @@ MySideBar::MySideBar(QGraphicsItem *parent):
             /* y:  */ Settings::translateIconInterval * (n+1) + hexIcons[n]->boundingRect().height() * n);
 
         QObject::connect(hexIcons[n],&TranslateIcons::selected,[this,n](TranslateIcons::Type t){
-            makeIconGold(hexIcons.at(n));
+            makeIconGold(hexIcons[n]);
             emit SelectTransType(t);
         });
     }

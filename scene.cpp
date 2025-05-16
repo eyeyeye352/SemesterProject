@@ -232,9 +232,10 @@ LevelScene::LevelScene(QObject *parent)
 
 
 
-void LevelScene::addTextBlock(TextBlock *t , int rows, int cols)
+void LevelScene::addTextBlock(RectTextBlock *t , int rows, int cols)
 {
-    //textblocks渲染
+
+    //textblocks排版
     double Width = cols * Settings::textBlockSize;
     double Height = rows * Settings::textBlockSize;
     double posx = (Settings::screenWidth - Width)/2 + t->getXY().x()*Settings::textBlockSize;
@@ -243,6 +244,12 @@ void LevelScene::addTextBlock(TextBlock *t , int rows, int cols)
     t->setPos(posx,posy);
     addItem(t);
     sideBar->setZValue(t->zValue() + 1);
+}
+
+void LevelScene::addTextBlock(HexTextBlock *h)
+{
+    addItem(h);
+    sideBar->setZValue(h->zValue() + 1);
 }
 
 
@@ -336,7 +343,7 @@ TipPage::TipPage(QObject *parent):
     addItem(bg);
 
     answer = new QGraphicsTextItem(bg);
-    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/tipPageTextFont.ttf",answer,Qt::white,16);
+    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/chineseMonoSpace.ttf",answer,Qt::white,16);
 
     //btn
     backBtn = addBtn("Back",bg);
@@ -344,7 +351,41 @@ TipPage::TipPage(QObject *parent):
 
 }
 
-void TipPage::setAnswer(QString text,int cols)
+void TipPage::setHexAnswer(QString text, int radius)
+{
+    //wordNum表示一行的字数
+    int wordNum = radius;
+    int spaceNum = radius-1;
+    QString ansText;
+
+    for (int line = 1; line <= 2*radius-1; ++line) {
+
+        ansText.append(QString(2*spaceNum,' ')+text.left(wordNum)+'\n');
+        text.remove(0,wordNum);
+
+        //前半部分，每行使wordNum+2
+        if(line < radius){
+            wordNum += 2;
+            --spaceNum;
+        }
+        //后半部分每行-2
+        else{
+            wordNum -= 2;
+            ++spaceNum;
+        }
+    }
+
+    answer->setPlainText(ansText);
+    answer->setPos((bg->boundingRect().width() - answer->boundingRect().width())/2,
+                   100);
+}
+
+void TipPage::resetAnswer()
+{
+    answer->setPlainText("");
+}
+
+void TipPage::setClassicAnswer(QString text,int cols)
 {
     //text传入全文内容，此处根据cols数量进行换行处理。
     QString ansText;

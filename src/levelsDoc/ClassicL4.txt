@@ -1,6 +1,6 @@
 title=千秋叹
-difficulty=8,7
 mode=classic
+difficulty=8,7
 content=
 鸿蒙初辟幻尘烟
 往古兴衰梦影牵

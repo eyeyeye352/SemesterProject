@@ -4,23 +4,28 @@ objPool* objPool::instance = nullptr;
 objPool::objPool() {
     //120个
     for (int n = 0; n < 120; ++n) {
-        textblockPool.append(new TextBlock(QPoint(0,0),"",nullptr));
+        rectPool.append(new RectTextBlock(QPoint(0,0),"",nullptr));
+        hexPool.append(new HexTextBlock(0,"",nullptr));
     }
-    qDebug() << "对象池textblocks数量：" << textblockPool.size();
+    qDebug() << "对象池初始化成功";
 }
 
 objPool::~objPool()
 {
-    for (int n = 0; n < textblockPool.size(); ++n) {
-        delete textblockPool[n];
+    for (int n = 0; n < rectPool.size(); ++n) {
+        delete rectPool[n];
     }
+    for(int n = 0; n < hexPool.size(); ++n){
+        delete hexPool[n];
+    }
+    qDebug() << "对象池析构！";
 }
 
-TextBlock * objPool::getTextBlock()
+RectTextBlock * objPool::getRectTextBlock()
 {
-    if(!textblockPool.isEmpty()){
-        TextBlock* t = textblockPool.front();
-        textblockPool.removeFirst();
+    if(!rectPool.isEmpty()){
+        RectTextBlock* t = rectPool.front();
+        rectPool.removeFirst();
         return t;
     }
     else{
@@ -30,11 +35,29 @@ TextBlock * objPool::getTextBlock()
 
 }
 
-void objPool::recycle(TextBlock * t)
+HexTextBlock *objPool::getHexTextBlock()
 {
-    textblockPool.append(t);
-    qDebug() << t->Word() << "被回收.";
-    t->reset();
+    if(!hexPool.isEmpty()){
+        HexTextBlock* h = hexPool.front();
+        hexPool.removeFirst();
+        return h;
+    }
+    else{
+        qDebug() << "pool不够用了！";
+        return nullptr;
+    }
+}
 
-    //qDebug() << "recycle success";
+void objPool::recycle(RectTextBlock * t)
+{
+    rectPool.append(t);
+    qDebug() << t->getWord() << "被回收.";
+    t->reset();
+}
+
+void objPool::recycle(HexTextBlock *h)
+{
+    hexPool.append(h);
+    qDebug() << h->getWord() << "被回收.";
+    h->reset();
 }

@@ -1,6 +1,6 @@
 title=月夜
-difficulty=4,5
 mode=classic
+difficulty=4,5
 content=
 夜静月如霜
 林深宿鸟藏

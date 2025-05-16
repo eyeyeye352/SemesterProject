@@ -96,7 +96,7 @@ void Gamesys::goLevelSelection(Mode mode)
     currentMode = mode;
     levelscene->setGameMode(currentMode);
 
-    qDebug() << "choose mode:" << currentMode;
+    qDebug() << "play mode:" << currentMode;
 }
 
 
@@ -157,12 +157,14 @@ void Gamesys::goHome()
         //设置页面退出动画
         connect(anime,&QPropertyAnimation::finished,[this]{
             Animation::changeScene(levelscene,startscene,view,1500)->start(QAbstractAnimation::DeleteWhenStopped);
-            MusicPlayer::getMPlayer()->changeBgm(QUrl("qrc:/bgm/src/bgm/startSceneBGM.mp3"));
+            MusicPlayer::getMPlayer()->changeBgm(Settings::bgmList["pastel_sublinal"]);
             tempview->setScene(nullptr);
         });
 
         anime->start(QAbstractAnimation::DeleteWhenStopped);
     }
+
+    resetLevel();
 }
 
 
@@ -190,7 +192,7 @@ void Gamesys::goCreateMode()
 void Gamesys::loadGameAnime(int levelNum,bool shuffled)
 {
 
-    MusicPlayer::getMPlayer()->changeBgm(QUrl("qrc:/bgm/src/bgm/ingameBgm.mp3"));
+    MusicPlayer::getMPlayer()->changeBgm(Settings::bgmList["InGame_classicMode"]);
     QSequentialAnimationGroup* anime = Animation::changeScene(startscene,levelscene,view,3000);
     connect(anime->animationAt(1),&QPropertyAnimation::finished,[=]{
         //动画暂停时加载文件
@@ -200,12 +202,28 @@ void Gamesys::loadGameAnime(int levelNum,bool shuffled)
 }
 
 
-//加载文件，渲染textblocks
+//加载文件
+
+//hex文本格式
+//total hexblock num = 3*radius(radius-1)+1
+//text form:
+/*
+ * radius,
+ * radius + 2,
+ * radius + 4,
+ * ...
+ * radius + (2n-2)
+ * ...
+ * radius + 4,
+ * radius + 2,
+ * radius.
+ *
+*/
 void Gamesys::loadGame(int levelNum,bool shuffled)
 {
 
     //根据模式选择关卡文件
-    QString filepath;
+    QString filepath = QString(":/Levels/src/levelsDoc/ClassicL%1.txt").arg(levelNum);
     switch(currentMode){
     case CLASSIC:
         filepath = QString(":/Levels/src/levelsDoc/ClassicL%1.txt").arg(levelNum);
@@ -214,14 +232,12 @@ void Gamesys::loadGame(int levelNum,bool shuffled)
         filepath = QString(":/Levels/src/levelsDoc/HexL%1.txt").arg(levelNum);
         break;
     }
-    QFile file(filepath);
-    file.open(QIODevice::ReadOnly);
 
     //加载前先重置各种成员
     resetLevel();
 
     //处理字符串
-    QString whole = file.readAll();
+    QString whole = MyAlgorithms::getContentInFile(filepath);
     QStringList strList = whole.split("\r\n");
 
     for (int line = 0; line < strList.size(); ++line) {
@@ -231,65 +247,68 @@ void Gamesys::loadGame(int levelNum,bool shuffled)
             levelscene->setTitle(strList[line].remove("title="));
         }
 
-        //难度（行列数）部分
-        else if(strList[line].startsWith("difficulty=")){
-
-            //regexp确保格式匹配"数字,数字"
-            QRegularExpression regex("^(\\d+),(\\d+)$");
-            QString nums = strList[line].remove("difficulty=");
-            QRegularExpressionMatch match = regex.match(nums);
-
-            if (match.hasMatch()) {
-                rows = match.captured(1).toInt();
-                cols = match.captured(2).toInt();
-            } else {
-                rows = 0;
-                cols = 0;
-            }
-        }
 
         //模式
         else if(strList[line].startsWith("mode=")){
+
             QString t = strList[line].remove("mode=");
+
             if(t == "classic") currentMode = CLASSIC;
             else if(t == "hex") currentMode = HEX;
             levelscene->setGameMode(currentMode);
         }
 
+        //处理难度部分
+        else if(strList[line].startsWith("difficulty=")){
+            readDifficulty(strList[line]);
+        }
+
+
+
         //contents内容
         else if(strList[line].startsWith("content=")){
-            for (int y = line+1; y <= line+rows && y < strList.size(); ++y) {
-                contents.append(strList[y]);
+
+            int contentLines;
+
+            if(currentMode == CLASSIC){
+                contentLines = rows;
+            }else if(currentMode == HEX){
+                contentLines = 2*radius - 1;
+            }
+
+            for (int n = line+1; n <= line+contentLines && n < strList.size(); ++n) {
+                contents.append(strList[n]);
             }
             break;
         }
     }
 
     //debug信息
-    qDebug() << "rows,cols:" << rows << ',' << cols;
-    qDebug() << "content" << contents;
+    qDebug() << "content read" << contents;
 
-    for (int y = 0; y < rows; ++y) {
-        for (int x = 0; x < cols; ++x) {
+    loadTextBlocks();
 
-            //每个textBlock储存其位置[左上角：（0,0）~ 右下角 (cols,rows)]与一个汉字
-            //目标汉字位于 contents的 y*每row字数 (即y*cols) + x
-            QString word = contents[y*cols + x];
-            TextBlock * t = objPool::getinstance()->getTextBlock();
-            t->setWord(word);
-            t->setxy({x,y});
-            textBlocks.append(t);
+    // for (int y = 0; y < rows; ++y) {
+    //     for (int x = 0; x < cols; ++x) {
 
-            //每个方块链接信号
-            disconnect(t, &TextBlock::clicked, nullptr, nullptr);
-            connect(t,&TextBlock::clicked,this,[this](TextBlock* t){
-                hasSelects ? switchBlocks(t) : selectBlocks(t);
-            },Qt::UniqueConnection);
+    //         //每个textBlock储存其位置[左上角：（0,0）~ 右下角 (cols,rows)]与一个汉字
+    //         //目标汉字位于 contents的 y*每row字数 (即y*cols) + x
+    //         QString word = contents[y*cols + x];
+    //         TextBlock * t = objPool::getinstance()->getTextBlock();
+    //         t->setWord(word);
+    //         t->setxy({x,y});
+    //         textBlocks.append(t);
 
-            //方块交给levelscene渲染
-            levelscene->addTextBlock(t,rows,cols);
-        }
-    }
+    //         //每个方块链接信号
+    //         disconnect(t, &TextBlock::clicked, nullptr, nullptr);
+    //         connect(t,&TextBlock::clicked,this,[this](TextBlock* t){
+    //             hasSelects ? switchBlocks(t) : selectBlocks(t);
+    //         },Qt::UniqueConnection);
+
+    //         //方块交给levelscene渲染
+    //         levelscene->addTextBlock(t,rows,cols);
+    //     }
+    // }
 
     qDebug() << "loading finish.";
 
@@ -299,8 +318,12 @@ void Gamesys::loadGame(int levelNum,bool shuffled)
     }
     */
 
-    file.close();
-    tipPage->setAnswer(contents,cols);
+    if(currentMode == CLASSIC){
+        tipPage->setClassicAnswer(contents,cols);
+    }else if(currentMode == HEX){
+        tipPage->setHexAnswer(contents,radius);
+    }
+
 
     curLevelNum = levelNum;
 
@@ -308,6 +331,114 @@ void Gamesys::loadGame(int levelNum,bool shuffled)
     if(shuffled){
         shuffleLevel();
     }
+}
+
+
+
+void Gamesys::readDifficulty(QString d_line)
+{
+    if(currentMode == CLASSIC){
+        //regexp确保格式匹配"数字,数字"
+        QRegularExpression regex("^(\\d+),(\\d+)$");
+        QString nums = d_line.remove("difficulty=");
+        QRegularExpressionMatch match = regex.match(nums);
+
+        if (match.hasMatch()) {
+            rows = match.captured(1).toInt();
+            cols = match.captured(2).toInt();
+        } else {
+            rows = 0;
+            cols = 0;
+        }
+
+        qDebug() << "rows,cols be read:" << rows << "," << cols;
+    }
+    else if(currentMode == HEX){
+        radius = d_line.remove("difficulty=").toInt();
+        qDebug() << "radius(difficulty) be read:" << radius;
+    }
+
+}
+
+void Gamesys::loadTextBlocks()
+{
+
+    //临时指针，指向中心hex
+    HexTextBlock* center;
+
+    if(currentMode == CLASSIC){
+        for (int y = 0; y < rows; ++y) {
+            for (int x = 0; x < cols; ++x) {
+
+                //每个textBlock储存其位置[左上角：（0,0）~ 右下角 (cols,rows)]与一个汉字
+                //目标汉字位于 contents的 y*每row字数 (即y*cols) + x
+                QString word = contents[y*cols + x];
+                RectTextBlock * t = objPool::getinstance()->getRectTextBlock();
+                t->setWord(word);
+                t->setxy({x,y});
+                textBlocks.append(t);
+
+                //每个方块链接信号
+                disconnect(t, &RectTextBlock::clicked, nullptr, nullptr);
+                connect(t,&RectTextBlock::clicked,this,[this](RectTextBlock* t){
+                    hasSelects ? switchBlocks(t) : selectBlocks(t);
+                },Qt::UniqueConnection);
+
+                //方块交给levelscene渲染
+                levelscene->addTextBlock(t,rows,cols);
+            }
+        }
+    }
+
+    else if(currentMode == HEX){
+
+
+        //中间行有 2n - 1 个方块。
+        //
+        //全部共有 3n(n-1)+1个小六边形。
+
+        //共有 2*radius - 1 个横排。
+        QList<HPoint> hexCoordis = MyAlgorithms::makeHexCoordi(radius);
+
+        for (int N = 0; N < 3*radius*(radius-1)+1; ++N) {
+
+
+        QString word = contents[N];
+        HexTextBlock * h = objPool::getinstance()->getHexTextBlock();
+        h->setWord(word);
+        h->setHpos(hexCoordis[N]);
+        textBlocks.append(h);
+
+        //每个方块链接信号
+        disconnect(h, &HexTextBlock::clicked, nullptr, nullptr);
+        connect(h,&HexTextBlock::clicked,this,[this](HexTextBlock* h){
+                    hasSelects ? switchBlocks(h) : selectBlocks(h);
+        },Qt::UniqueConnection);
+        levelscene->addTextBlock(h);
+
+        //定位中心
+        if(h->getXY() == QPoint(0,0)){
+            center = h;
+        }
+
+    }
+
+    //hex添加邻居关系
+    if(currentMode == HEX){
+        for (int n = 0; n < textBlocks.size(); ++n) {
+            for (int nn = 0; nn < textBlocks.size(); ++nn) {
+                QPoint dis = textBlocks[nn]->getXY() - textBlocks[n]->getXY();
+                if(dis == QPoint(1,0) || dis == QPoint(1,1)
+                    || dis == QPoint(0,1) || dis == QPoint(-1,0)
+                    || dis == QPoint(-1,-1) || dis == QPoint(0,-1))
+                {
+                    static_cast<HexTextBlock*>(textBlocks[n])->addNeightBor(textBlocks[nn]);
+                }
+            }
+        }
+    }
+
+    center->setThisAsCenter();
 }
 
 
@@ -324,11 +455,12 @@ void Gamesys::initSLSlot()
 {
 
     // 获取用户文档目录，并创建一个名为 /gameSavings 的子目录
-    QString saveDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/gameSavings";
+    QString saveDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/gameSavings";
     QDir().mkpath(saveDir); // 创建保存目录，如果不存在
 
     for (int n = 0; n < savePage->getSlots().size(); ++n) {
-        QString filepath = saveDir + "/s%1.txt";
+        QString filepath = QDir(saveDir).filePath("s%1.txt");
+        qDebug() << "init slots by:" << filepath.arg(QString::number(n));
         savePage->getSlots()[n]->init(filepath.arg(QString::number(n)));
     }
 
@@ -380,7 +512,7 @@ void Gamesys::loadSaveGame(SaveSlot* S)
     closeTempPage();
 
     if(view->scene() == startscene){
-        MusicPlayer::getMPlayer()->changeBgm(QUrl("qrc:/bgm/src/bgm/ingameBgm.mp3"));
+        MusicPlayer::getMPlayer()->changeBgm(Settings::bgmList["InGame_classicMode"]);
     }
 
     QSequentialAnimationGroup* anime = Animation::changeScene(static_cast<Scene*>(view->scene()),levelscene,view,3500);
@@ -393,7 +525,7 @@ void Gamesys::loadSaveGame(SaveSlot* S)
         loadGame(curLevelNum,false);
 
         for (int n = 0; n < textBlocks.size(); ++n) {
-            qDebug() << textBlocks[n]->Word() << " loaded at" << textBlocks[n]->getXY();
+            qDebug() << textBlocks[n]->getWord() << " loaded at" << textBlocks[n]->getXY();
         }
 
         //载入存档记录
@@ -436,7 +568,7 @@ void Gamesys::saveSlotAt(int slotNum)
 {
 
     // 获取用户文档目录，并创建一个名为 /gameSavings 的子目录
-    QString saveDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/gameSavings";
+    QString saveDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/gameSavings";
     QDir().mkpath(saveDir); // 创建保存目录，如果不存在
 
     QString filepath = saveDir + "/s%1.txt";
@@ -485,8 +617,9 @@ void Gamesys::saveSlotAt(int slotNum)
     for (int n = 0; n < gamerecords.size(); ++n) {
         finaltext.append(gamerecords[n]);
     }
-    qDebug() << "finalSaveText" << finaltext;
     out << finaltext;
+
+    qDebug() << "saveat:" << file.fileName();
     file.close();
 }
 
@@ -505,7 +638,7 @@ void Gamesys::shuffleLevel()
             TranslateIcons::ROWS,
             TranslateIcons::COLS,
             TranslateIcons::CROSS,
-            TranslateIcons::HEXLINE,
+            TranslateIcons::ROTATE,
             TranslateIcons::HEX
         };
 
@@ -561,7 +694,7 @@ void Gamesys::shuffleLevel()
             start = getRandBlockInCross();
             dest = getRandBlockInCross();
             break;
-        case TranslateIcons::HEXLINE:
+        case TranslateIcons::ROTATE:
             break;
         case TranslateIcons::HEX:
             break;
@@ -590,7 +723,8 @@ void Gamesys::resetLevel()
     useStep = 0;
     levelscene->setStep(0);
     cancelSelect();
-    tipPage->setAnswer("",0);
+    tipPage->resetAnswer();
+
 
     //重置记录
     undoRecords.clear();
@@ -602,17 +736,24 @@ void Gamesys::resetLevel()
 
     //回收textBlocks
     for (int n = 0; n < textBlocks.size(); ++n) {
-        objPool::getinstance()->recycle(textBlocks[n]);
-        levelscene->removeItem(textBlocks[n]);
+        if(currentMode == CLASSIC){
+            RectTextBlock* r = static_cast<RectTextBlock*>(textBlocks[n]);
+            objPool::getinstance()->recycle(r);
+            levelscene->removeItem(r);
+        }else if(currentMode == HEX){
+            HexTextBlock* h = static_cast<HexTextBlock*>(textBlocks[n]);
+            objPool::getinstance()->recycle(h);
+            levelscene->removeItem(h);
+        }
+
     }
     textBlocks.clear();
-
     qDebug() << "reset success.";
 }
 
 
 //返回随机一个textBlock
-TextBlock* Gamesys::getRandBlock()
+RectTextBlock* Gamesys::getRandBlock()
 {
     int rx = QRandomGenerator::global()->bounded(0,cols);
     int ry = QRandomGenerator::global()->bounded(0,rows);
@@ -621,7 +762,7 @@ TextBlock* Gamesys::getRandBlock()
 
     for (int n = 0; n < textBlocks.size(); ++n) {
         if(textBlocks[n]->getXY() == QPoint(rx,ry)){
-            return textBlocks[n];
+            return static_cast<RectTextBlock*>(textBlocks[n]);
         }
     }
     qDebug() << "nullptr error";
@@ -629,15 +770,15 @@ TextBlock* Gamesys::getRandBlock()
 }
 
 //返回随机一个不位于边缘的textBlock
-TextBlock* Gamesys::getRandBlockInCross()
+RectTextBlock* Gamesys::getRandBlockInCross()
 {
     int rx = QRandomGenerator::global()->bounded(1,cols-1);
     int ry = QRandomGenerator::global()->bounded(1,rows-1);
 
     for (int n = 0; n < textBlocks.size(); ++n) {
-        qDebug() << textBlocks[n]->Word() << "be find at" << textBlocks[n]->getXY();
+        qDebug() << textBlocks[n]->getWord() << "be find at" << textBlocks[n]->getXY();
         if(textBlocks[n]->getXY() == QPoint(rx,ry)){
-            return textBlocks[n];
+            return static_cast<RectTextBlock*>(textBlocks[n]);
         }
     }
     qDebug() << "nullptr error";
@@ -645,11 +786,11 @@ TextBlock* Gamesys::getRandBlockInCross()
 }
 
 //算法：返回位于目标位置的textblock
-TextBlock *Gamesys::findBlockAt(QPoint target)
+RectTextBlock *Gamesys::findBlockAt(QPoint target)
 {
     for (int n = 0; n < textBlocks.size(); ++n) {
         if(textBlocks[n]->getXY() == target){
-            return textBlocks[n];
+            return static_cast<RectTextBlock*>(textBlocks[n]);
         }
     }
     qDebug() << "find block at nullptr错误";
@@ -683,7 +824,7 @@ bool Gamesys::selectAndSwitch(int type,TextBlock *start, TextBlock *dest)
         crossSelect(start);
         success = crossSwitch(dest);
         break;
-    case TranslateIcons::HEXLINE:
+    case TranslateIcons::ROTATE:
         break;
     case TranslateIcons::HEX:
         break;
@@ -712,7 +853,7 @@ void Gamesys::selectBlocks(TextBlock * target)
     case TranslateIcons::CROSS:
         crossSelect(target);
         break;
-    case TranslateIcons::HEXLINE:
+    case TranslateIcons::ROTATE:
         break;
     case TranslateIcons::HEX:
         break;
@@ -740,7 +881,7 @@ void Gamesys::switchBlocks(TextBlock * dest)
     case TranslateIcons::CROSS:
         success = crossSwitch(dest);
         break;
-    case TranslateIcons::HEXLINE:
+    case TranslateIcons::ROTATE:
         break;
     case TranslateIcons::HEX:
         break;
@@ -772,7 +913,7 @@ void Gamesys::rowSelect(TextBlock *target)
 {
     for (TextBlock* t : textBlocks) {
         if(t->getXY().y() == target->getXY().y()){
-            t->showGoldRect();
+            t->showBorder();
             selectedBlocks.push_back(t);
         }
     }
@@ -781,7 +922,7 @@ void Gamesys::colSelect(TextBlock *target)
 {
     for (TextBlock* t : textBlocks) {
         if(t->getXY().x() == target->getXY().x()){
-            t->showGoldRect();
+            t->showBorder();
             selectedBlocks.push_back(t);
         }
     }
@@ -818,7 +959,7 @@ void Gamesys::crossSelect(TextBlock *target)
 
     //加金色框框
     for (TextBlock* t : crossTransMap) {
-        t->showGoldRect();
+        t->showBorder();
     }
 }
 
@@ -878,6 +1019,7 @@ bool Gamesys::crossSwitch(TextBlock *dest)
 
 
         for (TextBlock* t : textBlocks){
+
             //t == dest-up
             if(t->getXY() - dest->getXY() == QPoint(0,-1)){
                 TextBlock::switchWord(t,crossTransMap["UP"]);
@@ -896,7 +1038,7 @@ bool Gamesys::crossSwitch(TextBlock *dest)
             }
         }
 
-        TextBlock::switchWord(dest,crossTransMap["CENTER"]);
+        RectTextBlock::switchWord(dest,crossTransMap["CENTER"]);
         return true;
     }
 }
@@ -909,12 +1051,12 @@ void Gamesys::cancelSelect()
     hasSelects = false;
 
     for (TextBlock* t : selectedBlocks) {
-        t->hideGoldRect();
+        t->hideBorder();
     }
     selectedBlocks.clear();
 
     for (TextBlock* t : crossTransMap) {
-        t->hideGoldRect();
+        t->hideBorder();
     }
     crossTransMap.clear();
 }
@@ -928,23 +1070,28 @@ void Gamesys::DoTrans()
         return;
     }
 
-    GameRecord record = undoRecords.pop();
-    TextBlock *start,*dest;
+    if(currentMode == CLASSIC){
 
-    for (TextBlock* t : textBlocks) {
-        if(t->getXY() == record.startXY){
-            start = t;
+        GameRecord record = undoRecords.pop();
+        TextBlock *start,*dest;
+
+        for (TextBlock* t : textBlocks) {
+            if(t->getXY() == record.startXY){
+                start = t;
+            }
+            if(t->getXY() == record.toXY){
+                dest = t;
+            }
         }
-        if(t->getXY() == record.toXY){
-            dest = t;
-        }
+
+        //undoRecords储存的是player变换的起点/终点，不需要反向操作。
+        selectAndSwitch(record.type,start,dest);
+
+        //加回到playerRecord
+        addRecord(record);
     }
 
-    //undoRecords储存的是player变换的起点/终点，不需要反向操作。
-    selectAndSwitch(record.type,start,dest);
 
-    //加回到playerRecord
-    addRecord(record);
 
     //useStep还原
     ++useStep;
@@ -963,26 +1110,31 @@ void Gamesys::UndoTrans()
         return;
     }
 
-    GameRecord record = playerRecords.pop();
-    TextBlock *oldStart,*oldDest;
+    if(currentMode == CLASSIC){
+        GameRecord record = playerRecords.pop();
+        TextBlock *oldStart,*oldDest;
 
-    for (TextBlock* t : textBlocks) {
-        if(t->getXY() == record.startXY){
-            oldStart = t;
+        for (TextBlock* t : textBlocks) {
+            if(t->getXY() == record.startXY){
+                oldStart = t;
+            }
+            if(t->getXY() == record.toXY){
+                oldDest = t;
+            }
         }
-        if(t->getXY() == record.toXY){
-            oldDest = t;
-        }
+
+        //反向操作即可
+        selectAndSwitch(record.type,oldDest,oldStart);
+
+        undoRecords.append(GameRecord(record.type,record.startXY,record.toXY),false);
     }
 
-    //反向操作即可
-    selectAndSwitch(record.type,oldDest,oldStart);
+
 
     --useStep;
     levelscene->setStep(useStep);
 
     //启用doBtn
-    undoRecords.append(GameRecord(record.type,record.startXY,record.toXY),false);
     levelscene->doBtn->setOpacity(1);
 
     //检查undo是否可用
@@ -1005,11 +1157,15 @@ void Gamesys::addRecord(GameRecord record)
 void Gamesys::checkIfComplete()
 {
     QString t("");
-    for (int y = 0; y < rows; ++y) {
-        for (int x = 0; x < cols; ++x) {
-            t.append(textBlocks[x + y*cols]->Word());
+
+    if(currentMode == CLASSIC){
+        for (int y = 0; y < rows; ++y) {
+            for (int x = 0; x < cols; ++x) {
+                t.append(textBlocks[x + y*cols]->getWord());
+            }
         }
     }
+
 
     if(t == contents){
         completeGame();
@@ -1024,10 +1180,6 @@ void Gamesys::completeGame()
     tempview->setScene(completePage);
     Animation::TempPagein(view,tempview)->start(QAbstractAnimation::DeleteWhenStopped);
 }
-
-
-
-
 
 
 

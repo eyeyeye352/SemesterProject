@@ -43,6 +43,11 @@ public slots:
     void loadGameAnime(int levelNum,bool shuffled);
     void loadGame(int levelNum,bool shuffled);
 
+    //load过程用：读取difficulty信息后，classsic模式就计算行列，hex模式计算大六边形边长
+    void readDifficulty(QString difficulty_line);
+
+    //load过程用，根据模式加载textBlock或hexTextBlock
+    void loadTextBlocks();
 
     //save&load 相关功能
     //初始加载slot信息
@@ -113,14 +118,17 @@ public:
 
 
     //返回随机一个textBlock/随机一个不在边缘地带的Block
-    TextBlock* getRandBlock();
-    TextBlock* getRandBlockInCross();
-    TextBlock* findBlockAt(QPoint target);
+    RectTextBlock* getRandBlock();
+    RectTextBlock* getRandBlockInCross();
+    RectTextBlock* findBlockAt(QPoint target);
 
 
 private:
 
+    //classic模式
     int rows,cols;
+    //hex模式
+    int radius;
 
     //内容，同时作为解答
     QString contents;
@@ -132,6 +140,7 @@ private:
     //变换用容器
     QList<TextBlock*> selectedBlocks;
     QMap<QString,TextBlock*> crossTransMap;
+
     QList<TextBlock*> textBlocks;
 
     //gamerecords(sys为系统洗牌打乱的记录，player为玩家操作记录,undo时会弹栈，do会压栈)
