@@ -15,7 +15,7 @@ QPolygonF MyAlgorithms::makeHex(int size)
     QPolygonF hexagon;
     for(int i = 0; i < 6; ++i) {
         // 当前角度（弧度制）
-        double angle =  M_PI / 3 * i;  // 60°递增
+        double angle =  M_PI/6 + M_PI / 3 * i;  // 60°递增
 
         // 计算顶点坐标
         float x = size * cos(angle);
@@ -23,6 +23,7 @@ QPolygonF MyAlgorithms::makeHex(int size)
 
         hexagon << QPointF(x, y);
     }
+
     return hexagon;
 }
 
@@ -37,27 +38,36 @@ QString MyAlgorithms::getContentInFile(QString filepath)
     return text;
 }
 
-QList<HPoint> MyAlgorithms::makeHexCoordi(int radius)
+QList<QPoint> MyAlgorithms::makeHexCoordi(int radius)
 {
-    for (int row = 0; row < 2*radius-1; ++row) {
-        //前半
-        if(row < radius-1){
 
-        }
-        //最长行
-        else if(row == radius-1){
-
-        }
-        //后半
-        else{
-
-        }
-    }
+    QList<QPoint> hposList;
+    //y从radius-1 到 1-radius
+    int initX = 0;
+    int blockNum = radius;
 
     for (int y = radius-1; y >= 1-radius; --y) {
-
+        //前半
+        if(y > 0){
+            //x由左往右 从radius-1-y 到
+            for (int x = initX; x < initX + blockNum; ++x) {
+                hposList.append(HPoint(x,y));
+            }
+            --initX;
+            ++blockNum;
+        }
+        //最长行+后半
+        else if(y <= 0){
+            for (int x = initX; x < initX + blockNum; ++x) {
+                hposList.append(HPoint(x,y));
+            }
+            --blockNum;
+        }
     }
+
+    return hposList;
 }
+
 
 //预备好的存档文件格式
 QString MyAlgorithms::saveTextOutPut = "savetime=%1\n"

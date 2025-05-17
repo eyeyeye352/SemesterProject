@@ -20,7 +20,7 @@ struct MyAlgorithms
     static QString getContentInFile(QString filapath);
 
     //生成一个六边形坐标系，（从左上角开始，往上到下，从左到右）
-    static QList<HPoint> makeHexCoordi(int radius);
+    static QList<QPoint> makeHexCoordi(int radius);
 };
 
 #endif // MYALGORITHMS_H

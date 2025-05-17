@@ -23,6 +23,7 @@ double Settings::levelBlockOriginScale = 1;
 double Settings::levelBlockSpacing = 35;
 
 double Settings::textBlockSize = 50;
+double Settings::hexBlockSize = 25;
 
 double Settings::startSceneTitleScale = 1.3;
 int Settings::startSceneTitleY = 50;

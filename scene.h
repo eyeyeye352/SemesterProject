@@ -68,8 +68,11 @@ public:
 
     //加入textblock
     void addTextBlock(RectTextBlock* t,int rows,int cols);
+
     //加入hexblock
     void addTextBlock(HexTextBlock* h);
+    void addCenterHexBlock(HexTextBlock* h,int radius);
+    void processNeightbors(HexTextBlock* center,int radius);
 
 
     //gamesys设置标题并排版
@@ -91,6 +94,9 @@ private:
     QGraphicsTextItem * stepText;
 
     MySideBar* sideBar;
+
+    //辅助设置hexblock的R用
+    int curR;
 
 };
 

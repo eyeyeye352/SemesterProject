@@ -25,6 +25,8 @@ public:
         }
     }
 
+    void init();
+
     RectTextBlock* getRectTextBlock();
     HexTextBlock* getHexTextBlock();
 

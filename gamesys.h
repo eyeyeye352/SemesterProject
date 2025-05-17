@@ -110,11 +110,16 @@ public:
     void rowSelect(TextBlock*);
     void colSelect(TextBlock*);
     void crossSelect(TextBlock*);
+    void hexSelect(HexTextBlock*);
 
     //(变换成功与否)
     bool rowSwitch(TextBlock*);
     bool colSwitch(TextBlock*);
     bool crossSwitch(TextBlock*);
+    bool hexSwitch(HexTextBlock*);
+
+    //旋转变换直接变换
+    bool rotate(HexTextBlock*);
 
 
     //返回随机一个textBlock/随机一个不在边缘地带的Block
@@ -139,7 +144,7 @@ private:
 
     //变换用容器
     QList<TextBlock*> selectedBlocks;
-    QMap<QString,TextBlock*> crossTransMap;
+    QMap<QString,TextBlock*> selectedBlockMap;
 
     QList<TextBlock*> textBlocks;
 

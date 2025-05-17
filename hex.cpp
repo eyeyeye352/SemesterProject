@@ -12,7 +12,6 @@ Hex::Hex(int s, QGraphicsItem *parent):
     setPolygon(hexagon);
     setBrush(Qt::blue);
     setPen(QPen(Qt::black,2));
-
 }
 
 

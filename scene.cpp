@@ -252,6 +252,78 @@ void LevelScene::addTextBlock(HexTextBlock *h)
     sideBar->setZValue(h->zValue() + 1);
 }
 
+void LevelScene::addCenterHexBlock(HexTextBlock *h,int size)
+{
+    addTextBlock(h);
+    h->setPos(Settings::screenWidth/2,Settings::screenHeight/2);
+    h->setIsPainted(true);
+    curR = 0;
+    h->setR(0);
+
+    processNeightbors(h,size);
+}
+
+void LevelScene::processNeightbors(HexTextBlock *center,int size)
+{
+    QList<HexTextBlock*>& neighbors = center->getNeightBors();
+
+    for (int n = 0; n < neighbors.size(); ++n) {
+
+        HexTextBlock* neib = neighbors[n];
+
+        if(neib->getIsPainted()){
+            continue;
+        }
+
+        //两个六边形中心相距 = sqrt(3)*size
+        double distance = sqrt(3)*size;
+        //邻居位置相对自身位置
+        QPointF newPos(center->pos());
+
+
+
+        //右
+        if(neib->getXY() - center->getXY() == QPoint(1,0)){
+            newPos += QPointF(distance,0);
+        }
+        //右上
+        else if(neib->getXY() - center->getXY() == QPoint(1,1)){
+            newPos += QPointF(distance*cos(M_PI/3),distance*sin(M_PI/3));
+        }
+        //左上
+        else if(neib->getXY() - center->getXY() == QPoint(0,1)){
+            newPos += QPointF(distance*cos(2*M_PI/3),distance*sin(2*M_PI/3));
+        }
+        //左
+        else if(neib->getXY() - center->getXY() == QPoint(-1,0)){
+            newPos += QPointF(-distance,0);
+        }
+        //左下
+        else if(neib->getXY() - center->getXY() == QPoint(-1,-1)){
+            newPos += QPointF(distance*cos(4*M_PI/3),distance*sin(4*M_PI/3));
+        }
+        //右下
+        else if(neib->getXY() - center->getXY() == QPoint(0,-1)){
+            newPos += QPointF(distance*cos(5*M_PI/3),distance*sin(5*M_PI/3));
+        }
+
+        //设置位置
+        neib->setPos(newPos);
+        neib->setIsPainted(true);
+
+        neib->setR(center->getR() + 1);
+
+        addItem(neib);
+    }
+
+    //recursion(problem!)
+    for (int n = 0; n < neighbors.size(); ++n) {
+        HexTextBlock* neib = neighbors[n];
+        processNeightbors(neib,size);
+    }
+
+}
+
 
 void LevelScene::setTitle(QString t)
 {
@@ -360,17 +432,17 @@ void TipPage::setHexAnswer(QString text, int radius)
 
     for (int line = 1; line <= 2*radius-1; ++line) {
 
-        ansText.append(QString(2*spaceNum,' ')+text.left(wordNum)+'\n');
+        ansText.append(QString(spaceNum,' ')+text.left(wordNum)+'\n');
         text.remove(0,wordNum);
 
         //前半部分，每行使wordNum+2
         if(line < radius){
-            wordNum += 2;
+            ++wordNum;
             --spaceNum;
         }
         //后半部分每行-2
         else{
-            wordNum -= 2;
+            --wordNum;
             ++spaceNum;
         }
     }

@@ -100,21 +100,23 @@ QPoint RectTextBlock::getXY()
 
 HexTextBlock::HexTextBlock(int size, QString w, QGraphicsItem *parent)
     :Hex(size,parent),
-    isPainted(false)
+    isPainted(false),
+    R(0)
 {
     setAcceptHoverEvents(true);
 
 
     // 创建六边形路径
     word = new QGraphicsTextItem(w,this);
-    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/dinglieciweifont20250217-2.ttf",word,QColor(137,207,240),10);
-    word->moveBy(-5,-5);
+    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/dinglieciweifont20250217-2.ttf",word,QColor(137,207,240),18);
+    word->moveBy(-15,-15);
 
     //border
     border = new QGraphicsPolygonItem(this);
     border->setPolygon(MyAlgorithms::makeHex(this->size));
     border->setPen(QPen(QColor(137,207,240),4));
     border->hide();
+
 }
 
 HexTextBlock::~HexTextBlock()
@@ -186,64 +188,10 @@ void HexTextBlock::hideBorder()
 
 QPoint HexTextBlock::getXY()
 {
-    return {hpos.x,hpos.y};
+    return hpos;
 }
 
-void HexTextBlock::setThisAsCenter()
-{
-    setHpos(HPoint(0,0,0));
-    setPos(Settings::screenWidth,Settings::screenHeight);
-    isPainted = true;
-    setNeighborsPos();
-}
 
-void HexTextBlock::setNeighborsPos()
-{
-    for (int n = 0; n < neighbors.size(); ++n) {
-
-        HexTextBlock* neib = neighbors[n];
-
-        if(neib->isPainted == true){
-            continue;
-        }
-
-        //两个六边形中心相距 = sqrt(3)*size
-        double distance = sqrt(3)*size;
-        //邻居位置相对自身位置
-        QPointF newPos(this->pos());
-
-        //右
-        if(neib->getXY() - this->getXY() == QPoint(1,0)){
-            newPos += QPointF(distance,0);
-        }
-        //右上
-        else if(neib->getXY() - this->getXY() == QPoint(1,1)){
-            newPos += QPointF(distance*cos(M_PI/3),distance*sin(M_PI/3));
-        }
-        //左上
-        else if(neib->getXY() - this->getXY() == QPoint(0,1)){
-            newPos += QPointF(distance*cos(2*M_PI/3),distance*sin(2*M_PI/3));
-        }
-        //左
-        else if(neib->getXY() - this->getXY() == QPoint(-1,0)){
-            newPos += QPointF(-distance,0);
-        }
-        //左下
-        else if(neib->getXY() - this->getXY() == QPoint(-1,-1)){
-            newPos += QPointF(distance*cos(4*M_PI/3),distance*sin(4*M_PI/3));
-        }
-        //右下
-        else if(neib->getXY() - this->getXY() == QPoint(0,-1)){
-            newPos += QPointF(distance*cos(5*M_PI/3),distance*sin(5*M_PI/3));
-        }
-
-        //设置位置
-        neib->setPos(newPos);
-        neib->setIsPainted(true);
-        //recursion
-        neib->setNeighborsPos();
-    }
-}
 
 
 
@@ -257,15 +205,21 @@ void HexTextBlock::switchWord(HexTextBlock* h1,HexTextBlock* h2)
     qDebug() << h1->getWord() << "与" << h2->getWord() << " 交换了。";
 }
 
-HPoint HexTextBlock::getHpos() const
-{
-    return hpos;
-}
-
-void HexTextBlock::setHpos(HPoint newHpos)
+void HexTextBlock::setHpos(QPoint newHpos)
 {
     hpos = newHpos;
 }
+
+void HexTextBlock::setR(int nR)
+{
+    R = nR;
+}
+
+int HexTextBlock::getR()
+{
+    return R;
+}
+
 
 bool HexTextBlock::getIsPainted() const
 {
@@ -276,6 +230,12 @@ void HexTextBlock::setIsPainted(bool newIsPainted)
 {
     isPainted = newIsPainted;
 }
+
+bool HexTextBlock::atBorder()
+{
+    return neighbors.size() < 6;
+}
+
 
 void TextBlock::switchWord(TextBlock *t1, TextBlock *t2)
 {

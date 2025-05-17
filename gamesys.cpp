@@ -81,6 +81,7 @@ Gamesys::Gamesys(QWidget *parent)
     connect(savePage,&SavePage::slotSelected,this,&Gamesys::processSlots);
 
     initSLSlot();
+    objPool::getinstance()->init();
 
 }
 
@@ -264,7 +265,6 @@ void Gamesys::loadGame(int levelNum,bool shuffled)
         }
 
 
-
         //contents内容
         else if(strList[line].startsWith("content=")){
 
@@ -287,28 +287,6 @@ void Gamesys::loadGame(int levelNum,bool shuffled)
     qDebug() << "content read" << contents;
 
     loadTextBlocks();
-
-    // for (int y = 0; y < rows; ++y) {
-    //     for (int x = 0; x < cols; ++x) {
-
-    //         //每个textBlock储存其位置[左上角：（0,0）~ 右下角 (cols,rows)]与一个汉字
-    //         //目标汉字位于 contents的 y*每row字数 (即y*cols) + x
-    //         QString word = contents[y*cols + x];
-    //         TextBlock * t = objPool::getinstance()->getTextBlock();
-    //         t->setWord(word);
-    //         t->setxy({x,y});
-    //         textBlocks.append(t);
-
-    //         //每个方块链接信号
-    //         disconnect(t, &TextBlock::clicked, nullptr, nullptr);
-    //         connect(t,&TextBlock::clicked,this,[this](TextBlock* t){
-    //             hasSelects ? switchBlocks(t) : selectBlocks(t);
-    //         },Qt::UniqueConnection);
-
-    //         //方块交给levelscene渲染
-    //         levelscene->addTextBlock(t,rows,cols);
-    //     }
-    // }
 
     qDebug() << "loading finish.";
 
@@ -392,38 +370,33 @@ void Gamesys::loadTextBlocks()
 
     else if(currentMode == HEX){
 
-
-        //中间行有 2n - 1 个方块。
-        //
         //全部共有 3n(n-1)+1个小六边形。
-
-        //共有 2*radius - 1 个横排。
-        QList<HPoint> hexCoordis = MyAlgorithms::makeHexCoordi(radius);
+        QList<QPoint> hexCoordis = MyAlgorithms::makeHexCoordi(radius);
 
         for (int N = 0; N < 3*radius*(radius-1)+1; ++N) {
 
 
-        QString word = contents[N];
-        HexTextBlock * h = objPool::getinstance()->getHexTextBlock();
-        h->setWord(word);
-        h->setHpos(hexCoordis[N]);
-        textBlocks.append(h);
+            QString word = contents[N];
+            HexTextBlock * h = objPool::getinstance()->getHexTextBlock();
+            h->setWord(word);
+            h->setHpos(hexCoordis[N]);
 
-        //每个方块链接信号
-        disconnect(h, &HexTextBlock::clicked, nullptr, nullptr);
-        connect(h,&HexTextBlock::clicked,this,[this](HexTextBlock* h){
+            //每个方块链接信号
+            disconnect(h, &HexTextBlock::clicked, nullptr, nullptr);
+            connect(h,&HexTextBlock::clicked,this,[this](HexTextBlock* h){
                     hasSelects ? switchBlocks(h) : selectBlocks(h);
-        },Qt::UniqueConnection);
-        levelscene->addTextBlock(h);
+            },Qt::UniqueConnection);
 
-        //定位中心
-        if(h->getXY() == QPoint(0,0)){
-            center = h;
+            textBlocks.append(h);
+
+            //定位中心
+            if(h->getXY() == QPoint(0,0)){
+                center = h;
+            }
         }
-
     }
 
-    //hex添加邻居关系
+    //设置hex的邻居关系
     if(currentMode == HEX){
         for (int n = 0; n < textBlocks.size(); ++n) {
             for (int nn = 0; nn < textBlocks.size(); ++nn) {
@@ -438,7 +411,17 @@ void Gamesys::loadTextBlocks()
         }
     }
 
-    center->setThisAsCenter();
+
+
+    levelscene->addCenterHexBlock(center,Settings::hexBlockSize);
+
+    //debug
+    if(currentMode == HEX){
+        for (int n = 0; n < textBlocks.size(); ++n) {
+            HexTextBlock* h = static_cast<HexTextBlock*>(textBlocks[n]);
+            qDebug() << h->getWord() << " at:" << h->getXY() << " R:" << h->getR();
+        }
+    }
 }
 
 
@@ -854,12 +837,14 @@ void Gamesys::selectBlocks(TextBlock * target)
         crossSelect(target);
         break;
     case TranslateIcons::ROTATE:
+        rotate(static_cast<HexTextBlock*>(target));
         break;
     case TranslateIcons::HEX:
+        hexSelect(static_cast<HexTextBlock*>(target));
         break;
     }
 
-    if(!selectedBlocks.isEmpty() || !crossTransMap.isEmpty()){
+    if(!selectedBlocks.isEmpty() || !selectedBlockMap.isEmpty()){
         hasSelects = true;
     }
 
@@ -884,6 +869,7 @@ void Gamesys::switchBlocks(TextBlock * dest)
     case TranslateIcons::ROTATE:
         break;
     case TranslateIcons::HEX:
+        success = hexSwitch(static_cast<HexTextBlock*>(dest));
         break;
     }
 
@@ -940,27 +926,68 @@ void Gamesys::crossSelect(TextBlock *target)
     for (TextBlock* t : textBlocks){
         //t == up
         if(t->getXY() - target->getXY() == QPoint(0,-1)){
-            crossTransMap.insert("UP",t);
+            selectedBlockMap.insert("UP",t);
         }
         //t == down
         else if(t->getXY() - target->getXY() == QPoint(0,1)){
-            crossTransMap.insert("DOWN",t);
+            selectedBlockMap.insert("DOWN",t);
         }
         //t == left
         else if(t->getXY() - target->getXY() == QPoint(-1,0)){
-            crossTransMap.insert("LEFT",t);
+            selectedBlockMap.insert("LEFT",t);
         }
         //t == right
         else if(t->getXY() - target->getXY() == QPoint(1,0)){
-            crossTransMap.insert("RIGHT",t);
+            selectedBlockMap.insert("RIGHT",t);
         }
     }
-    crossTransMap.insert("CENTER",target);
+    selectedBlockMap.insert("CENTER",target);
 
     //加金色框框
-    for (TextBlock* t : crossTransMap) {
+    for (TextBlock* t : selectedBlockMap) {
         t->showBorder();
     }
+}
+
+
+void Gamesys::hexSelect(HexTextBlock *h)
+{
+    if(h->atBorder()){
+        qDebug() << "无效选取";
+        return;
+    }
+
+    QList<HexTextBlock*>& nbs = h->getNeightBors();
+    for (int n = 0; n < nbs.size(); ++n) {
+        //right
+        if(nbs[n]->getXY() - h->getXY() == QPoint(1,0)){
+            selectedBlockMap["right"] = nbs[n];
+        }
+        //left
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(-1,0)){
+            selectedBlockMap["left"] = nbs[n];
+        }
+        //right up
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(1,1)){
+            selectedBlockMap["rightUp"] = nbs[n];
+        }
+        //right down
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(0,-1)){
+            selectedBlockMap["rightDown"] = nbs[n];
+        }
+        //left up
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(0,1)){
+            selectedBlockMap["leftUp"] = nbs[n];
+        }
+        //leftDown
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(-1,-1)){
+            selectedBlockMap["leftDown"] = nbs[n];
+        }
+        nbs[n]->showBorder();
+    }
+
+    selectedBlockMap["center"] = h;
+    h->showBorder();
 }
 
 
@@ -998,7 +1025,7 @@ bool Gamesys::colSwitch(TextBlock *dest)
         }
         TextBlock::switchWord(blocksForSwitch[y],selectedBlocks[y]);
     }
-    return true;;
+    return true;
 }
 bool Gamesys::crossSwitch(TextBlock *dest)
 {
@@ -1012,7 +1039,7 @@ bool Gamesys::crossSwitch(TextBlock *dest)
         }
 
         //不能有重叠区块
-        if((dest->getXY() - crossTransMap["CENTER"]->getXY()).manhattanLength() <= 2){
+        if((dest->getXY() - selectedBlockMap["CENTER"]->getXY()).manhattanLength() <= 2){
             qDebug() << "不能有重叠区域";
             return false;
         }
@@ -1022,24 +1049,83 @@ bool Gamesys::crossSwitch(TextBlock *dest)
 
             //t == dest-up
             if(t->getXY() - dest->getXY() == QPoint(0,-1)){
-                TextBlock::switchWord(t,crossTransMap["UP"]);
+                TextBlock::switchWord(t,selectedBlockMap["UP"]);
             }
             //t == dest-down
             else if(t->getXY() - dest->getXY() == QPoint(0,1)){
-                TextBlock::switchWord(t,crossTransMap["DOWN"]);
+                TextBlock::switchWord(t,selectedBlockMap["DOWN"]);
             }
             //t == dest-left
             else if(t->getXY() - dest->getXY() == QPoint(-1,0)){
-                TextBlock::switchWord(t,crossTransMap["LEFT"]);
+                TextBlock::switchWord(t,selectedBlockMap["LEFT"]);
             }
             //t == dest-right
             else if(t->getXY() - dest->getXY() == QPoint(1,0)){
-                TextBlock::switchWord(t,crossTransMap["RIGHT"]);
+                TextBlock::switchWord(t,selectedBlockMap["RIGHT"]);
             }
         }
 
-        RectTextBlock::switchWord(dest,crossTransMap["CENTER"]);
+        RectTextBlock::switchWord(dest,selectedBlockMap["CENTER"]);
         return true;
+    }
+}
+
+
+bool Gamesys::hexSwitch(HexTextBlock *h)
+{
+    if(h->atBorder()){
+        return false;
+    }
+    //不能是邻居的邻居
+    if(abs(
+            static_cast<HexTextBlock*>(selectedBlockMap["center"])->getR()
+            - h->getR()) <= 2){
+        qDebug() << "不能有重复区域";
+        return false;
+    }
+
+    QList<HexTextBlock*>& nbs = h->getNeightBors();
+
+
+    for (int n = 0; n < nbs.size(); ++n) {
+        //right
+        if(nbs[n]->getXY() - h->getXY() == QPoint(1,0)){
+            TextBlock::switchWord(nbs[n],selectedBlockMap["right"]);
+        }
+        //left
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(-1,0)){
+            TextBlock::switchWord(nbs[n],selectedBlockMap["left"]);
+        }
+        //right up
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(1,1)){
+            TextBlock::switchWord(nbs[n],selectedBlockMap["rightUp"]);
+        }
+        //right down
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(0,-1)){
+            TextBlock::switchWord(nbs[n],selectedBlockMap["rightDown"]);
+        }
+        //left up
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(0,1)){
+            TextBlock::switchWord(nbs[n],selectedBlockMap["leftUp"]);
+        }
+        //leftDown
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(-1,-1)){
+            TextBlock::switchWord(nbs[n],selectedBlockMap["leftDown"]);
+        }
+    }
+
+    TextBlock::switchWord(h,selectedBlockMap["center"]);
+
+    for (TextBlock* hs : selectedBlockMap) {
+        hs->hideBorder();
+    }
+    return true;
+}
+
+bool Gamesys::rotate(HexTextBlock *h)
+{
+    if(h->atBorder()){
+        return false;
     }
 }
 
@@ -1055,10 +1141,10 @@ void Gamesys::cancelSelect()
     }
     selectedBlocks.clear();
 
-    for (TextBlock* t : crossTransMap) {
+    for (TextBlock* t : selectedBlockMap) {
         t->hideBorder();
     }
-    crossTransMap.clear();
+    selectedBlockMap.clear();
 }
 
 

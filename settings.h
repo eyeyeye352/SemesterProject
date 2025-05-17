@@ -83,6 +83,7 @@ public:
 
     //关卡文字方块大小
     static double textBlockSize;
+    static double hexBlockSize;
 
     //设置页面大小
     static QPointF settingPage_MusicValSetPos;

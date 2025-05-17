@@ -85,19 +85,19 @@ public:
     void hideBorder() override;
     QPoint getXY() override;
 
-    //将自身设为中心点，位置位于窗口中心，并递归遍历设置所有邻居六边形的位置。
-    void setThisAsCenter();
-    void setNeighborsPos();
-
 
     //static函数，交换两个方块的文字
     static void switchWord(HexTextBlock* h1,HexTextBlock* h2);
 
-    HPoint getHpos() const;
-    void setHpos(HPoint newHpos);
+    void setHpos(QPoint newHpos);
+    void setR(int nR);
+    int getR();
 
     bool getIsPainted() const;
     void setIsPainted(bool newIsPainted);
+
+    //返回是否位于边缘地带
+    bool atBorder();
 
 signals:
     void clicked(HexTextBlock*);
@@ -108,7 +108,8 @@ private:
     QGraphicsPolygonItem* border;
 
     //六边形坐标系
-    HPoint hpos;
+    QPoint hpos;
+    int R;
 
     //周围的六边形
     QList<HexTextBlock*> neighbors;

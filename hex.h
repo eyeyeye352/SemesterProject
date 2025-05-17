@@ -40,18 +40,9 @@ protected:
  * 该坐标可以唯一的表示大六边形中的一个小六边形，
  * 相邻六边形的相对位置按逆时针顺序是（右、右上、左上、左、左下、右下）。
  */
-struct HPoint{
-    HPoint():x(0),y(0),r(0){}
-    HPoint(int x,int y,int r):x(x),y(y),r(r){}
-    int x;
-    int y;
-    int r;
-
-    bool operator==(HPoint h){
-        return (x == h.x) &&
-               (y == h.y) &&
-               (r == h.r);
-    }
+struct HPoint : public QPoint{
+    HPoint():QPoint(0,0){}
+    HPoint(int x,int y):QPoint(x,y){}
 };
 
 

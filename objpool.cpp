@@ -1,14 +1,7 @@
 #include "objpool.h"
 
 objPool* objPool::instance = nullptr;
-objPool::objPool() {
-    //120个
-    for (int n = 0; n < 120; ++n) {
-        rectPool.append(new RectTextBlock(QPoint(0,0),"",nullptr));
-        hexPool.append(new HexTextBlock(0,"",nullptr));
-    }
-    qDebug() << "对象池初始化成功";
-}
+objPool::objPool() {}
 
 objPool::~objPool()
 {
@@ -19,6 +12,16 @@ objPool::~objPool()
         delete hexPool[n];
     }
     qDebug() << "对象池析构！";
+}
+
+void objPool::init()
+{
+    //120个
+    for (int n = 0; n < 120; ++n) {
+        rectPool.append(new RectTextBlock(QPoint(0,0),"",nullptr));
+        hexPool.append(new HexTextBlock(Settings::hexBlockSize,"",nullptr));
+    }
+    qDebug() << "对象池初始化成功";
 }
 
 RectTextBlock * objPool::getRectTextBlock()
