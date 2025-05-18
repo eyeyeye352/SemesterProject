@@ -100,8 +100,7 @@ QPoint RectTextBlock::getXY()
 
 HexTextBlock::HexTextBlock(int size, QString w, QGraphicsItem *parent)
     :Hex(size,parent),
-    isPainted(false),
-    R(0)
+    isPainted(false)
 {
     setAcceptHoverEvents(true);
 
@@ -208,16 +207,6 @@ void HexTextBlock::switchWord(HexTextBlock* h1,HexTextBlock* h2)
 void HexTextBlock::setHpos(QPoint newHpos)
 {
     hpos = newHpos;
-}
-
-void HexTextBlock::setR(int nR)
-{
-    R = nR;
-}
-
-int HexTextBlock::getR()
-{
-    return R;
 }
 
 

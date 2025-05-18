@@ -23,6 +23,7 @@ public:
 
     static QPropertyAnimation* MakeAnime(QObject* obj,QByteArray property,int time,QVariant sval,QVariant eval);
 
+
 };
 
 

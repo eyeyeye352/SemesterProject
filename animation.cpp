@@ -1,5 +1,6 @@
 #include "animation.h"
 #include "settings.h"
+#include "gamesys.h"
 
 Animation::Animation() {}
 

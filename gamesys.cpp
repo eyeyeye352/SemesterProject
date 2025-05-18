@@ -6,6 +6,9 @@
 Gamesys::Gamesys(QWidget *parent)
     : QWidget(parent)
 {
+    //bgm
+    MusicPlayer::getMPlayer()->startBGM();
+
     //窗口设置
     setFixedSize(Settings::screenWidth,Settings::screenHeight);
     setWindowIcon(QIcon(Settings::gameIconPath));
@@ -41,8 +44,7 @@ Gamesys::Gamesys(QWidget *parent)
     bgmoveTimer->start(Settings::backgroundUpdateInterval);
     connect(bgmoveTimer,&QTimer::timeout,startscene,&StartScene::moveBG);
 
-    //bgm
-    MusicPlayer::getMPlayer()->startBGM();
+
 
     //startScene connections
     connect(startscene->classicBtn,&ClassicBtn::clicked,this,&Gamesys::goLevelSelection);
@@ -97,7 +99,7 @@ void Gamesys::goLevelSelection(Mode mode)
     currentMode = mode;
     levelscene->setGameMode(currentMode);
 
-    qDebug() << "play mode:" << currentMode;
+    qDebug() << "select mode:" << currentMode;
 }
 
 
@@ -146,19 +148,16 @@ void Gamesys::goHome()
     }
 
     //关闭tempview动画结束后，返回首页
-    else if(view->scene() == levelscene){
 
-        // for (int n = 0 ; n < textBlocks.size() ; ++n) {
-        //     objPool::getinstance()->recycle(textBlocks[n]);
-        //     levelscene->removeItem(textBlocks[n]);
-        // }
+    //developing:(询问用户是否保存？)
+    else if(view->scene() == levelscene){
 
         QPropertyAnimation* anime = Animation::TempPageout(view,tempview);
 
         //设置页面退出动画
         connect(anime,&QPropertyAnimation::finished,[this]{
             Animation::changeScene(levelscene,startscene,view,1500)->start(QAbstractAnimation::DeleteWhenStopped);
-            MusicPlayer::getMPlayer()->changeBgm(Settings::bgmList["pastel_sublinal"]);
+            MusicPlayer::getMPlayer()->changeBgm(Settings::bgmList["pastel_subminal"]);
             tempview->setScene(nullptr);
         });
 
@@ -169,7 +168,7 @@ void Gamesys::goHome()
 }
 
 
-
+//关闭临时弹窗
 void Gamesys::closeTempPage()
 {
     QPropertyAnimation* anime = Animation::TempPageout(view,tempview);
@@ -179,8 +178,6 @@ void Gamesys::closeTempPage()
         tempview->setScene(nullptr);
     });
 }
-
-
 
 
 
@@ -204,37 +201,19 @@ void Gamesys::loadGameAnime(int levelNum,bool shuffled)
 
 
 //加载文件
-
-//hex文本格式
-//total hexblock num = 3*radius(radius-1)+1
-//text form:
-/*
- * radius,
- * radius + 2,
- * radius + 4,
- * ...
- * radius + (2n-2)
- * ...
- * radius + 4,
- * radius + 2,
- * radius.
- *
-*/
 void Gamesys::loadGame(int levelNum,bool shuffled)
 {
 
     //根据模式选择关卡文件
-    QString filepath = QString(":/Levels/src/levelsDoc/ClassicL%1.txt").arg(levelNum);
-    switch(currentMode){
-    case CLASSIC:
+    QString filepath;
+    if(currentMode == CLASSIC){
         filepath = QString(":/Levels/src/levelsDoc/ClassicL%1.txt").arg(levelNum);
-        break;
-    case HEX:
+    }
+    else if(currentMode == HEX){
         filepath = QString(":/Levels/src/levelsDoc/HexL%1.txt").arg(levelNum);
-        break;
     }
 
-    //加载前先重置各种成员
+    //加载前先重置关卡
     resetLevel();
 
     //处理字符串
@@ -268,6 +247,7 @@ void Gamesys::loadGame(int levelNum,bool shuffled)
         //contents内容
         else if(strList[line].startsWith("content=")){
 
+            //内容共有几行
             int contentLines;
 
             if(currentMode == CLASSIC){
@@ -276,6 +256,7 @@ void Gamesys::loadGame(int levelNum,bool shuffled)
                 contentLines = 2*radius - 1;
             }
 
+            //注意n不要越界。
             for (int n = line+1; n <= line+contentLines && n < strList.size(); ++n) {
                 contents.append(strList[n]);
             }
@@ -296,6 +277,7 @@ void Gamesys::loadGame(int levelNum,bool shuffled)
     }
     */
 
+    //设置提示页面的答案
     if(currentMode == CLASSIC){
         tipPage->setClassicAnswer(contents,cols);
     }else if(currentMode == HEX){
@@ -325,6 +307,7 @@ void Gamesys::readDifficulty(QString d_line)
             rows = match.captured(1).toInt();
             cols = match.captured(2).toInt();
         } else {
+            //防止格式错误时崩溃
             rows = 0;
             cols = 0;
         }
@@ -333,7 +316,7 @@ void Gamesys::readDifficulty(QString d_line)
     }
     else if(currentMode == HEX){
         radius = d_line.remove("difficulty=").toInt();
-        qDebug() << "radius(difficulty) be read:" << radius;
+        qDebug() << "radius be read:" << radius;
     }
 
 }
@@ -348,7 +331,7 @@ void Gamesys::loadTextBlocks()
         for (int y = 0; y < rows; ++y) {
             for (int x = 0; x < cols; ++x) {
 
-                //每个textBlock储存其位置[左上角：（0,0）~ 右下角 (cols,rows)]与一个汉字
+                //每个recttextBlock储存其位置[左上角：（0,0）~ 右下角 (cols,rows)]与一个汉字
                 //目标汉字位于 contents的 y*每row字数 (即y*cols) + x
                 QString word = contents[y*cols + x];
                 RectTextBlock * t = objPool::getinstance()->getRectTextBlock();
@@ -356,11 +339,11 @@ void Gamesys::loadTextBlocks()
                 t->setxy({x,y});
                 textBlocks.append(t);
 
-                //每个方块链接信号
+                //每个方块链接信号(注意不要重复连接)
                 disconnect(t, &RectTextBlock::clicked, nullptr, nullptr);
                 connect(t,&RectTextBlock::clicked,this,[this](RectTextBlock* t){
                     hasSelects ? switchBlocks(t) : selectBlocks(t);
-                },Qt::UniqueConnection);
+                });
 
                 //方块交给levelscene渲染
                 levelscene->addTextBlock(t,rows,cols);
@@ -375,17 +358,15 @@ void Gamesys::loadTextBlocks()
 
         for (int N = 0; N < 3*radius*(radius-1)+1; ++N) {
 
-
-            QString word = contents[N];
             HexTextBlock * h = objPool::getinstance()->getHexTextBlock();
-            h->setWord(word);
+            h->setWord(contents[N]);
             h->setHpos(hexCoordis[N]);
 
             //每个方块链接信号
             disconnect(h, &HexTextBlock::clicked, nullptr, nullptr);
             connect(h,&HexTextBlock::clicked,this,[this](HexTextBlock* h){
                     hasSelects ? switchBlocks(h) : selectBlocks(h);
-            },Qt::UniqueConnection);
+            });
 
             textBlocks.append(h);
 
@@ -394,13 +375,12 @@ void Gamesys::loadTextBlocks()
                 center = h;
             }
         }
-    }
 
-    //设置hex的邻居关系
-    if(currentMode == HEX){
+        //设置hex的邻居关系
         for (int n = 0; n < textBlocks.size(); ++n) {
             for (int nn = 0; nn < textBlocks.size(); ++nn) {
                 QPoint dis = textBlocks[nn]->getXY() - textBlocks[n]->getXY();
+                //符合以下条件，即为邻居
                 if(dis == QPoint(1,0) || dis == QPoint(1,1)
                     || dis == QPoint(0,1) || dis == QPoint(-1,0)
                     || dis == QPoint(-1,-1) || dis == QPoint(0,-1))
@@ -409,18 +389,16 @@ void Gamesys::loadTextBlocks()
                 }
             }
         }
+
+        //设置好邻居关系后，渲染其位置
+        levelscene->addCenterHexBlock(center,Settings::hexBlockSize);
     }
 
 
-
-    levelscene->addCenterHexBlock(center,Settings::hexBlockSize);
-
-    //debug
-    if(currentMode == HEX){
-        for (int n = 0; n < textBlocks.size(); ++n) {
-            HexTextBlock* h = static_cast<HexTextBlock*>(textBlocks[n]);
-            qDebug() << h->getWord() << " at:" << h->getXY() << " R:" << h->getR();
-        }
+    //debug信息
+    for (int n = 0; n < textBlocks.size(); ++n) {
+        TextBlock* t = textBlocks[n];
+        qDebug() << t->getWord() << " at:" << t->getXY();
     }
 }
 
@@ -428,12 +406,7 @@ void Gamesys::loadTextBlocks()
 
 
 
-
-
-
-
-
-//初始加载slot信息。
+//初始加载本地文件显示在slot上。
 void Gamesys::initSLSlot()
 {
 
@@ -444,6 +417,7 @@ void Gamesys::initSLSlot()
     for (int n = 0; n < savePage->getSlots().size(); ++n) {
         QString filepath = QDir(saveDir).filePath("s%1.txt");
         qDebug() << "init slots by:" << filepath.arg(QString::number(n));
+        //存档信息记录在slot中
         savePage->getSlots()[n]->init(filepath.arg(QString::number(n)));
     }
 
@@ -452,11 +426,11 @@ void Gamesys::initSLSlot()
 void Gamesys::processSlots(int slotNum, int state)
 {
     if(state == SavePage::NONE){
-        //show slot info and do nothing.
+        //show slot info and do nothing，输出调试信息
         savePage->getSlots()[slotNum]->info();
     }
     else if(state == SavePage::SAVE){
-        //developing
+        //developing（hexmode）
         saveSlotAt(slotNum);
         initSLSlot();
         savePage->backToNoneState();
@@ -481,14 +455,13 @@ void Gamesys::loadSaveGame(SaveSlot* S)
         return;
     }
 
+    //防止bug：存档切换游戏模式时回收错误类型的textblock
+    resetLevel();
+
 
     //获取各种属性
     curLevelNum = S->getLevelNum();
     currentMode = S->getGameMode();
-
-    //debug
-    qDebug() << "curmode after loadSL:" << currentMode;
-    qDebug() << "curlevelnum after SL:" << curLevelNum;
 
 
     //先关闭savePage，切换场景(关卡)、不洗牌。
@@ -510,6 +483,8 @@ void Gamesys::loadSaveGame(SaveSlot* S)
         for (int n = 0; n < textBlocks.size(); ++n) {
             qDebug() << textBlocks[n]->getWord() << " loaded at" << textBlocks[n]->getXY();
         }
+
+
 
         //载入存档记录
         sysRecord = S->getSysRecords();
@@ -614,7 +589,6 @@ void Gamesys::shuffleLevel()
     //变换次数随关卡数字提升
     int transtimes = curLevelNum*5;
 
-
     //变换模式列表
     QList<TranslateIcons::Type> types =
         {
@@ -637,11 +611,12 @@ void Gamesys::shuffleLevel()
         else if(currentMode == CLASSIC){
             index = QRandomGenerator::global()->bounded(0,3);
         }
-        //hex模式
+        //hex模式（同样，1，3关不进行hex变换）
+        else if(currentMode == HEX && (curLevelNum == 1 || curLevelNum == 3)){
+            index = 4;
+        }
         else if(currentMode == HEX){
             index = QRandomGenerator::global()->bounded(3,5);
-            //先退出，还未开发
-            break;
         }
 
         //qDebug() << "洗牌模式：" << index;
@@ -677,9 +652,17 @@ void Gamesys::shuffleLevel()
             start = getRandBlockInCross();
             dest = getRandBlockInCross();
             break;
+
         case TranslateIcons::ROTATE:
+
+            start = dest = getRandBlockNotAtBorder();
             break;
         case TranslateIcons::HEX:
+
+            do{
+                start = getRandBlockNotAtBorder();
+                dest = getRandBlockNotAtBorder();
+            }while(start == dest);
             break;
         }
 
@@ -700,6 +683,7 @@ void Gamesys::shuffleLevel()
 //重置关卡
 void Gamesys::resetLevel()
 {
+    //rows cols radius isselected都会在别处重置。
     //重置内容
     contents = "";
     curTransType = TranslateIcons::NONE;
@@ -768,12 +752,25 @@ RectTextBlock* Gamesys::getRandBlockInCross()
     return nullptr;
 }
 
+//返回一个不位于边缘的hextextblock
+HexTextBlock *Gamesys::getRandBlockNotAtBorder()
+{
+    refind:
+    int n = QRandomGenerator::global()->bounded(0,textBlocks.size());
+    if(static_cast<HexTextBlock*>(textBlocks[n])->atBorder()){
+        //不能在边缘
+        goto refind;
+    }
+
+    return static_cast<HexTextBlock*>(textBlocks[n]);
+}
+
 //算法：返回位于目标位置的textblock
-RectTextBlock *Gamesys::findBlockAt(QPoint target)
+TextBlock *Gamesys::findBlockAt(QPoint target)
 {
     for (int n = 0; n < textBlocks.size(); ++n) {
         if(textBlocks[n]->getXY() == target){
-            return static_cast<RectTextBlock*>(textBlocks[n]);
+            return textBlocks[n];
         }
     }
     qDebug() << "find block at nullptr错误";
@@ -789,7 +786,7 @@ void Gamesys::changeTransType(TranslateIcons::Type type)
     cancelSelect();
 }
 
-//直接进行选择+变换，洗牌、undo/do使用。
+//直接进行选择+变换，洗牌、undo（undo rotate时另采其他方案）/do使用。
 bool Gamesys::selectAndSwitch(int type,TextBlock *start, TextBlock *dest)
 {
     bool success = true;
@@ -808,13 +805,15 @@ bool Gamesys::selectAndSwitch(int type,TextBlock *start, TextBlock *dest)
         success = crossSwitch(dest);
         break;
     case TranslateIcons::ROTATE:
+        success = AntiRotate(static_cast<HexTextBlock*>(start));
         break;
     case TranslateIcons::HEX:
+        hexSelect(static_cast<HexTextBlock*>(start));
+        success = hexSwitch(static_cast<HexTextBlock*>(dest));
         break;
     }
 
     cancelSelect();
-
     return success;
 }
 
@@ -825,6 +824,9 @@ bool Gamesys::selectAndSwitch(int type,TextBlock *start, TextBlock *dest)
 //变换成功时添加进playertrans记录表
 void Gamesys::selectBlocks(TextBlock * target)
 {
+
+    temp = target;
+
     switch(curTransType){
 
     case TranslateIcons::ROWS:
@@ -837,7 +839,8 @@ void Gamesys::selectBlocks(TextBlock * target)
         crossSelect(target);
         break;
     case TranslateIcons::ROTATE:
-        rotate(static_cast<HexTextBlock*>(target));
+        //旋转无选取概念，直接转
+        switchBlocks(target);
         break;
     case TranslateIcons::HEX:
         hexSelect(static_cast<HexTextBlock*>(target));
@@ -848,7 +851,7 @@ void Gamesys::selectBlocks(TextBlock * target)
         hasSelects = true;
     }
 
-    temp = target;
+
 }
 
 void Gamesys::switchBlocks(TextBlock * dest)
@@ -867,6 +870,7 @@ void Gamesys::switchBlocks(TextBlock * dest)
         success = crossSwitch(dest);
         break;
     case TranslateIcons::ROTATE:
+        success = AntiRotate(static_cast<HexTextBlock*>(dest));
         break;
     case TranslateIcons::HEX:
         success = hexSwitch(static_cast<HexTextBlock*>(dest));
@@ -876,14 +880,14 @@ void Gamesys::switchBlocks(TextBlock * dest)
     //成功变换时，播放音效、添加进记录，重置do功能, useStep + 1.
     if(success){
         MusicPlayer::getMPlayer()->playBlockSound(true);
+
         addRecord(GameRecord(curTransType,temp->getXY(),dest->getXY()));
         cancelSelect();
 
         undoRecords.clear();
         levelscene->doBtn->setOpacity(0.5);
 
-        ++useStep;
-        levelscene->setStep(useStep);
+        levelscene->setStep(++useStep);
 
         checkIfComplete();
 
@@ -948,8 +952,6 @@ void Gamesys::crossSelect(TextBlock *target)
         t->showBorder();
     }
 }
-
-
 void Gamesys::hexSelect(HexTextBlock *h)
 {
     if(h->atBorder()){
@@ -986,7 +988,7 @@ void Gamesys::hexSelect(HexTextBlock *h)
         nbs[n]->showBorder();
     }
 
-    selectedBlockMap["center"] = h;
+    temp = selectedBlockMap["center"] = h;
     h->showBorder();
 }
 
@@ -1069,19 +1071,19 @@ bool Gamesys::crossSwitch(TextBlock *dest)
         return true;
     }
 }
-
-
 bool Gamesys::hexSwitch(HexTextBlock *h)
 {
     if(h->atBorder()){
         return false;
     }
     //不能是邻居的邻居
-    if(abs(
-            static_cast<HexTextBlock*>(selectedBlockMap["center"])->getR()
-            - h->getR()) <= 2){
-        qDebug() << "不能有重复区域";
-        return false;
+    for (HexTextBlock* nb1 : static_cast<HexTextBlock*>(temp)->getNeightBors()) {
+        for (HexTextBlock* nb2 : h->getNeightBors()) {
+            if(nb1 == nb2){
+                qDebug() << "不能有重复区域";
+                return false;
+            }
+        }
     }
 
     QList<HexTextBlock*>& nbs = h->getNeightBors();
@@ -1122,11 +1124,88 @@ bool Gamesys::hexSwitch(HexTextBlock *h)
     return true;
 }
 
-bool Gamesys::rotate(HexTextBlock *h)
+//顺时针旋转仅unditrans使用，必定成功，无需返回值
+void Gamesys::NRotate(HexTextBlock *h)
+{
+    QList<HexTextBlock*>& nbs = h->getNeightBors();
+    QMap<QString,HexTextBlock*> rotMap;
+
+    for (int n = 0; n < nbs.size(); ++n) {
+        //right
+        if(nbs[n]->getXY() - h->getXY() == QPoint(1,0)){
+            rotMap["right"] = nbs[n];
+        }
+        //left
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(-1,0)){
+            rotMap["left"] = nbs[n];
+        }
+        //right up
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(1,1)){
+            rotMap["rightUp"] = nbs[n];
+        }
+        //right down
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(0,-1)){
+            rotMap["rightDown"] = nbs[n];
+        }
+        //left up
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(0,1)){
+            rotMap["leftUp"] = nbs[n];
+        }
+        //leftDown
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(-1,-1)){
+            rotMap["leftDown"] = nbs[n];
+        }
+    }
+    //顺时钟旋转
+    TextBlock::switchWord(rotMap["right"],rotMap["rightDown"]);
+    TextBlock::switchWord(rotMap["right"],rotMap["leftDown"]);
+    TextBlock::switchWord(rotMap["right"],rotMap["left"]);
+    TextBlock::switchWord(rotMap["right"],rotMap["leftUp"]);
+    TextBlock::switchWord(rotMap["right"],rotMap["rightUp"]);
+}
+bool Gamesys::AntiRotate(HexTextBlock *h)
 {
     if(h->atBorder()){
         return false;
     }
+
+    QList<HexTextBlock*>& nbs = h->getNeightBors();
+    QMap<QString,HexTextBlock*> rotMap;
+
+    for (int n = 0; n < nbs.size(); ++n) {
+        //right
+        if(nbs[n]->getXY() - h->getXY() == QPoint(1,0)){
+            rotMap["right"] = nbs[n];
+        }
+        //left
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(-1,0)){
+            rotMap["left"] = nbs[n];
+        }
+        //right up
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(1,1)){
+            rotMap["rightUp"] = nbs[n];
+        }
+        //right down
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(0,-1)){
+            rotMap["rightDown"] = nbs[n];
+        }
+        //left up
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(0,1)){
+            rotMap["leftUp"] = nbs[n];
+        }
+        //leftDown
+        else if(nbs[n]->getXY() - h->getXY() == QPoint(-1,-1)){
+            rotMap["leftDown"] = nbs[n];
+        }
+    }
+
+    //逆时针旋转：12 23 34 45 56
+    TextBlock::switchWord(rotMap["right"],rotMap["rightUp"]);
+    TextBlock::switchWord(rotMap["right"],rotMap["leftUp"]);
+    TextBlock::switchWord(rotMap["right"],rotMap["left"]);
+    TextBlock::switchWord(rotMap["right"],rotMap["leftDown"]);
+    TextBlock::switchWord(rotMap["right"],rotMap["rightDown"]);
+    return true;
 }
 
 
@@ -1156,39 +1235,32 @@ void Gamesys::DoTrans()
         return;
     }
 
-    if(currentMode == CLASSIC){
+    GameRecord record = undoRecords.pop();
+    TextBlock *start,*dest;
 
-        GameRecord record = undoRecords.pop();
-        TextBlock *start,*dest;
-
-        for (TextBlock* t : textBlocks) {
-            if(t->getXY() == record.startXY){
-                start = t;
-            }
-            if(t->getXY() == record.toXY){
-                dest = t;
-            }
+    for (int n = 0; n < textBlocks.size(); ++n) {
+        if(textBlocks[n]->getXY() == record.startXY){
+            start = textBlocks[n];
         }
-
-        //undoRecords储存的是player变换的起点/终点，不需要反向操作。
-        selectAndSwitch(record.type,start,dest);
-
-        //加回到playerRecord
-        addRecord(record);
+        if(textBlocks[n]->getXY() == record.toXY){
+            dest = textBlocks[n];
+        }
     }
 
+    //undoRecords储存的是player变换的起点/终点，不需要反向操作。
+    selectAndSwitch(record.type,start,dest);
 
+    //加回到playerRecord
+    addRecord(record);
 
     //useStep还原
-    ++useStep;
-    levelscene->setStep(useStep);
+    levelscene->setStep(++useStep);
 
     //检查do是否可用
     if(undoRecords.isEmpty()){
         levelscene->doBtn->setOpacity(0.5);
     }
 }
-
 void Gamesys::UndoTrans()
 {
     //先检查是否可undo
@@ -1196,39 +1268,38 @@ void Gamesys::UndoTrans()
         return;
     }
 
-    if(currentMode == CLASSIC){
-        GameRecord record = playerRecords.pop();
-        TextBlock *oldStart,*oldDest;
+    GameRecord record = playerRecords.pop();
+    TextBlock *oldStart,*oldDest;
 
-        for (TextBlock* t : textBlocks) {
-            if(t->getXY() == record.startXY){
-                oldStart = t;
-            }
-            if(t->getXY() == record.toXY){
-                oldDest = t;
-            }
+    for (TextBlock* t : textBlocks) {
+        if(t->getXY() == record.startXY){
+            oldStart = t;
         }
-
-        //反向操作即可
-        selectAndSwitch(record.type,oldDest,oldStart);
-
-        undoRecords.append(GameRecord(record.type,record.startXY,record.toXY),false);
+        if(t->getXY() == record.toXY){
+            oldDest = t;
+        }
     }
 
+    //反向操作即可
+    if(record.type != TranslateIcons::Type::ROTATE){
+        selectAndSwitch(record.type,oldDest,oldStart);
+    }
+    //rotate变换直接顺时钟复原
+    else{
+        NRotate(static_cast<HexTextBlock*>(oldStart));
+    }
 
-
-    --useStep;
-    levelscene->setStep(useStep);
-
-    //启用doBtn
+    //加到undorecords供do操作使用。
+    undoRecords.append(GameRecord(record.type,record.startXY,record.toXY),false);
     levelscene->doBtn->setOpacity(1);
 
-    //检查undo是否可用
+    levelscene->setStep(--useStep);
+
+    //检查undo是否还可用
     if(playerRecords.isEmpty()){
         levelscene->undoBtn->setOpacity(0.5);
     }
 }
-
 
 
 
@@ -1250,6 +1321,10 @@ void Gamesys::checkIfComplete()
                 t.append(textBlocks[x + y*cols]->getWord());
             }
         }
+    }else if(currentMode == HEX){
+        //将现有文字方块排列转换为QString的算法
+        QString str = MyAlgorithms::hexblock_to_str(textBlocks);
+        t.append(str);
     }
 
 
@@ -1261,13 +1336,12 @@ void Gamesys::checkIfComplete()
 
 void Gamesys::completeGame()
 {
-    //得分 = 100 - 系统变换次数与使用步数之差。（暂定）
     completePage->showUseStep(useStep);
     tempview->setScene(completePage);
     Animation::TempPagein(view,tempview)->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
-
+//要一个可选 打勾 或 x 的对话框。
 
 
 

@@ -23,14 +23,12 @@ void GameRecordList::append(GameRecord r1,bool optim)
             }
             break;
         case TranslateIcons::CROSS:
+        case TranslateIcons::HEX:
             if(r1.startXY == r2.toXY && r1.toXY == r2.startXY){
                 return;
             }
             break;
-        case TranslateIcons::ROTATE:
-            break;
-        case TranslateIcons::HEX:
-            break;
+            //rotate不用优化
         }
     }
 

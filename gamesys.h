@@ -118,24 +118,26 @@ public:
     bool crossSwitch(TextBlock*);
     bool hexSwitch(HexTextBlock*);
 
-    //旋转变换直接变换
-    bool rotate(HexTextBlock*);
+    //旋转变换直接变换(逆时针/顺时针，顺时针用于还原)
+    bool AntiRotate(HexTextBlock*);
+    void NRotate(HexTextBlock*);
 
 
     //返回随机一个textBlock/随机一个不在边缘地带的Block
     RectTextBlock* getRandBlock();
     RectTextBlock* getRandBlockInCross();
-    RectTextBlock* findBlockAt(QPoint target);
+    HexTextBlock* getRandBlockNotAtBorder();
+    TextBlock* findBlockAt(QPoint target);
 
 
 private:
 
-    //classic模式
+    //classic模式：行列
     int rows,cols;
-    //hex模式
+    //hex模式：边长
     int radius;
 
-    //内容，同时作为解答
+    //题目内容，作为解答
     QString contents;
 
     //根据当前是否有选中的block执行select或switch
@@ -146,6 +148,7 @@ private:
     QList<TextBlock*> selectedBlocks;
     QMap<QString,TextBlock*> selectedBlockMap;
 
+    //目前关卡内的所有方块
     QList<TextBlock*> textBlocks;
 
     //gamerecords(sys为系统洗牌打乱的记录，player为玩家操作记录,undo时会弹栈，do会压栈)

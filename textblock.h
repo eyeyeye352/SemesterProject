@@ -90,8 +90,6 @@ public:
     static void switchWord(HexTextBlock* h1,HexTextBlock* h2);
 
     void setHpos(QPoint newHpos);
-    void setR(int nR);
-    int getR();
 
     bool getIsPainted() const;
     void setIsPainted(bool newIsPainted);
@@ -109,7 +107,6 @@ private:
 
     //六边形坐标系
     QPoint hpos;
-    int R;
 
     //周围的六边形
     QList<HexTextBlock*> neighbors;

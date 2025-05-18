@@ -68,6 +68,11 @@ QList<QPoint> MyAlgorithms::makeHexCoordi(int radius)
     return hposList;
 }
 
+QString MyAlgorithms::hexblock_to_str(QList<TextBlock *> textblocks)
+{
+    return "";
+}
+
 
 //预备好的存档文件格式
 QString MyAlgorithms::saveTextOutPut = "savetime=%1\n"

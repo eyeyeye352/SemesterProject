@@ -1,4 +1,11 @@
-title=
-difficulty=
+title=小数字
+difficulty=4
 mode=hex
 content=
+十二片月
+敲窗棂叮咚
+成调九尾鱼衔
+碎光游过二十四
+桥我数尽檐角
+铜铃十三声
+歪比巴卜

@@ -1,4 +1,13 @@
-title=
-difficulty=
+title=茶肆
+difficulty=5
 mode=hex
 content=
+卯时六钱晨
+露滴落青瓷第
+三道釉裂申时二
+两暮云卡进紫砂壶
+嘴第九道螺旋子夜整
+壶月光在茶垢里析
+出十三克陈年雪
+虽然说这东西
+和茶肆无关

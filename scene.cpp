@@ -257,13 +257,11 @@ void LevelScene::addCenterHexBlock(HexTextBlock *h,int size)
     addTextBlock(h);
     h->setPos(Settings::screenWidth/2,Settings::screenHeight/2);
     h->setIsPainted(true);
-    curR = 0;
-    h->setR(0);
 
     processNeightbors(h,size);
 }
 
-void LevelScene::processNeightbors(HexTextBlock *center,int size)
+void LevelScene::processNeightbors(HexTextBlock *center,int blockSize)
 {
     QList<HexTextBlock*>& neighbors = center->getNeightBors();
 
@@ -276,23 +274,22 @@ void LevelScene::processNeightbors(HexTextBlock *center,int size)
         }
 
         //两个六边形中心相距 = sqrt(3)*size
-        double distance = sqrt(3)*size;
+        double distance = sqrt(3)*blockSize;
         //邻居位置相对自身位置
         QPointF newPos(center->pos());
 
-
-
+        //注意：Qt y轴向下为正
         //右
         if(neib->getXY() - center->getXY() == QPoint(1,0)){
             newPos += QPointF(distance,0);
         }
         //右上
         else if(neib->getXY() - center->getXY() == QPoint(1,1)){
-            newPos += QPointF(distance*cos(M_PI/3),distance*sin(M_PI/3));
+            newPos += QPointF(distance*cos(M_PI/3),-distance*sin(M_PI/3));
         }
         //左上
         else if(neib->getXY() - center->getXY() == QPoint(0,1)){
-            newPos += QPointF(distance*cos(2*M_PI/3),distance*sin(2*M_PI/3));
+            newPos += QPointF(distance*cos(2*M_PI/3),-distance*sin(2*M_PI/3));
         }
         //左
         else if(neib->getXY() - center->getXY() == QPoint(-1,0)){
@@ -300,28 +297,19 @@ void LevelScene::processNeightbors(HexTextBlock *center,int size)
         }
         //左下
         else if(neib->getXY() - center->getXY() == QPoint(-1,-1)){
-            newPos += QPointF(distance*cos(4*M_PI/3),distance*sin(4*M_PI/3));
+            newPos += QPointF(distance*cos(4*M_PI/3),-distance*sin(4*M_PI/3));
         }
         //右下
         else if(neib->getXY() - center->getXY() == QPoint(0,-1)){
-            newPos += QPointF(distance*cos(5*M_PI/3),distance*sin(5*M_PI/3));
+            newPos += QPointF(distance*cos(5*M_PI/3),-distance*sin(5*M_PI/3));
         }
 
         //设置位置
         neib->setPos(newPos);
         neib->setIsPainted(true);
-
-        neib->setR(center->getR() + 1);
-
         addItem(neib);
+        processNeightbors(neib,blockSize);
     }
-
-    //recursion(problem!)
-    for (int n = 0; n < neighbors.size(); ++n) {
-        HexTextBlock* neib = neighbors[n];
-        processNeightbors(neib,size);
-    }
-
 }
 
 
