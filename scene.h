@@ -184,8 +184,12 @@ public:
 
     RankPage(QObject* parent);
 
+    void Update();
+
 private:
     QGraphicsPixmapItem* bg;
+    QGraphicsTextItem* content;
+    QPointer<TempPageBtn> backBtn;
 };
 
 
@@ -244,7 +248,7 @@ class CompletePage : public TempPage{
 public:
     CompletePage(QObject *parent = nullptr);
 
-    void showUseStep(int step);
+    void setContent(int step,QString time_spending);
 
 signals:
     void goHome();

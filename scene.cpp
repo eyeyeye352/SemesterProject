@@ -486,9 +486,11 @@ CompletePage::CompletePage(QObject *parent):
 
 }
 
-void CompletePage::showUseStep(int step)
+void CompletePage::setContent(int step,QString time_spending)
 {
-    stepText->setPlainText(QString("Using step:        %1").arg(QString::number(step)));
+    QString text = QString("Using step:        %1\n").arg(QString::number(step));
+    text.append("time using:   " + time_spending);
+    stepText->setPlainText(text);
 }
 
 
@@ -572,12 +574,6 @@ SavePage::SavePage(QObject *parent):
         SLslots[n]->setZValue(blackLay->zValue()+1);
     }
 
-    //debug
-    qDebug() << "black zval:" << blackLay->zValue();
-    qDebug() << "back zval:" << back->zValue();
-    for (int n = 0; n < SLslots.size(); ++n) {
-        qDebug() << "slot-" << n << " zval:" << SLslots[n]->zValue();
-    }
 
     blackLay->setOpacity(0.7);
     blackLay->hide();
@@ -619,6 +615,25 @@ QList<SaveSlot*>& SavePage::getSlots()
 
 RankPage::RankPage(QObject *parent):
     TempPage(parent)
+{
+    bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/rankPage.png"));
+    bg->setPos((Settings::screenWidth - bg->boundingRect().width())/2,
+               (Settings::screenHeight - bg->boundingRect().height())/2);
+    addItem(bg);
+
+    backBtn = addBtn("back",bg);
+    connect(backBtn,&GameBtn::clicked,[this]{
+        emit closePage();
+    });
+
+    content = new QGraphicsTextItem(bg);
+    QString saveDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/gameRank";
+    QDir().mkpath(saveDir); // 创建保存目录，如果不存在
+    QString filepath = QDir(saveDir).filePath("rank.txt");
+    MyAlgorithms::getContentInFile(filepath);
+}
+
+void RankPage::Update()
 {
 
 }

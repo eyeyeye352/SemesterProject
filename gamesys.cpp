@@ -82,6 +82,8 @@ Gamesys::Gamesys(QWidget *parent)
     connect(savePage,&TempPage::closePage,this,&Gamesys::closeTempPage);
     connect(savePage,&SavePage::slotSelected,this,&Gamesys::processSlots);
 
+    connect(rankPage,&TempPage::closePage,this,&Gamesys::closeTempPage);
+
     initSLSlot();
     objPool::getinstance()->init();
 
@@ -136,7 +138,8 @@ void Gamesys::openSavePage()
 
 void Gamesys::openRankPage()
 {
-
+    tempview->setScene(rankPage);
+    Animation::TempPagein(view,tempview)->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
 //设置页面返回首页
@@ -195,6 +198,11 @@ void Gamesys::loadGameAnime(int levelNum,bool shuffled)
     connect(anime->animationAt(1),&QPropertyAnimation::finished,[=]{
         //动画暂停时加载文件
         loadGame(levelNum,shuffled);
+    });
+
+    //加载动画结束，开始计时
+    connect(anime,&QSequentialAnimationGroup::finished,[this]{
+        startTiming = QTime::currentTime();
     });
     anime->start(QAbstractAnimation::DeleteWhenStopped);
 }
@@ -271,11 +279,6 @@ void Gamesys::loadGame(int levelNum,bool shuffled)
 
     qDebug() << "loading finish.";
 
-    /*
-    for (TextBlock* t : textBlocks) {
-        qDebug() << t->Word() << "has loaded in" << t->getXY();
-    }
-    */
 
     //设置提示页面的答案
     if(currentMode == CLASSIC){
@@ -474,37 +477,28 @@ void Gamesys::loadSaveGame(SaveSlot* S)
     QSequentialAnimationGroup* anime = Animation::changeScene(static_cast<Scene*>(view->scene()),levelscene,view,3500);
     connect(anime->animationAt(1),&QPropertyAnimation::finished,[=]{
 
-        //注意从loadscene到loadscene时要重置关卡
 
-
-        //动画暂停时加载文件(注意加载时会把Record刷掉)
+        //动画暂停时加载文件 (注意加载时会Reset一次)
         loadGame(curLevelNum,false);
-
-        for (int n = 0; n < textBlocks.size(); ++n) {
-            qDebug() << textBlocks[n]->getWord() << " loaded at" << textBlocks[n]->getXY();
-        }
-
 
 
         //载入存档记录
         sysRecord = S->getSysRecords();
         playerRecords = S->getPlayerRecords();
+        recordTiming = S->getTime_spending();
 
         for (int n = 0; n < sysRecord.size(); ++n) {
             GameRecord r = sysRecord[n];
-            qDebug() << "载入sys记录：";
-            r.info();
-            //bug点
             selectAndSwitch(r.type,findBlockAt(r.startXY),findBlockAt(r.toXY));
         }
 
+        //启用undo
         if(playerRecords.size() > 0){
             levelscene->undoBtn->setOpacity(1);
         }
+
         for (int n = 0; n < playerRecords.size(); ++n) {
             GameRecord r = playerRecords[n];
-            qDebug() << "载入player记录：";
-            r.info();
             selectAndSwitch(r.type,findBlockAt(r.startXY),findBlockAt(r.toXY));
         }
 
@@ -512,12 +506,15 @@ void Gamesys::loadSaveGame(SaveSlot* S)
         useStep = playerRecords.size();
         levelscene->setStep(useStep);
     });
+
+    //开始计时
+    connect(anime,&QSequentialAnimationGroup::finished,[=]{
+        //转成秒数
+        startTiming = QTime::currentTime().addMSecs(-recordTiming.msecsSinceStartOfDay());
+        qDebug() << "starttiming:" << startTiming;
+        qDebug() << "recordtiming:" << recordTiming;
+    });
     anime->start(QAbstractAnimation::DeleteWhenStopped);
-/*
-    for (int n = 0; n < textBlocks.size(); ++n) {
-        qDebug() << "textblock:" << textBlocks[n]->Word() << textBlocks[n]->getXY();
-    }
-*/
 }
 
 
@@ -539,6 +536,9 @@ void Gamesys::saveSlotAt(int slotNum)
     //savetime
     QDateTime now = QDateTime::currentDateTime();
     QString savetime = now.toString("yyyy-MM-dd hh:mm:ss");
+
+    //time——spending
+    QString timeSpendingStr = MyAlgorithms::timeInterval(startTiming,QTime::currentTime());
 
     //mode
     QString mode = QString::number(currentMode);
@@ -571,13 +571,12 @@ void Gamesys::saveSlotAt(int slotNum)
     }
 
     //output
-    QString finaltext = origtext.arg(savetime).arg(mode).arg(levelNumstr).arg(rNum);
+    QString finaltext = origtext.arg(savetime).arg(mode).arg(levelNumstr).arg(timeSpendingStr).arg(rNum);
     for (int n = 0; n < gamerecords.size(); ++n) {
         finaltext.append(gamerecords[n]);
     }
     out << finaltext;
 
-    qDebug() << "saveat:" << file.fileName();
     file.close();
 }
 
@@ -587,7 +586,12 @@ void Gamesys::saveSlotAt(int slotNum)
 void Gamesys::shuffleLevel()
 {
     //变换次数随关卡数字提升
-    int transtimes = curLevelNum*5;
+    int transtimes;
+    if(currentMode == CLASSIC){
+        transtimes = curLevelNum*5;
+    }else if(currentMode == HEX){
+        transtimes = curLevelNum*3;
+    }
 
     //变换模式列表
     QList<TranslateIcons::Type> types =
@@ -613,7 +617,7 @@ void Gamesys::shuffleLevel()
         }
         //hex模式（同样，1，3关不进行hex变换）
         else if(currentMode == HEX && (curLevelNum == 1 || curLevelNum == 3)){
-            index = 4;
+            index = 3;
         }
         else if(currentMode == HEX){
             index = QRandomGenerator::global()->bounded(3,5);
@@ -659,10 +663,9 @@ void Gamesys::shuffleLevel()
             break;
         case TranslateIcons::HEX:
 
-            do{
-                start = getRandBlockNotAtBorder();
-                dest = getRandBlockNotAtBorder();
-            }while(start == dest);
+            //不进行变换确认
+            start = getRandBlockNotAtBorder();
+            dest = getRandBlockNotAtBorder();
             break;
         }
 
@@ -691,6 +694,7 @@ void Gamesys::resetLevel()
     levelscene->setStep(0);
     cancelSelect();
     tipPage->resetAnswer();
+    recordTiming = QTime(0,0,0,0);
 
 
     //重置记录
@@ -1313,22 +1317,44 @@ void Gamesys::addRecord(GameRecord record)
 
 void Gamesys::checkIfComplete()
 {
-    QString t("");
+    QString str("");
 
     if(currentMode == CLASSIC){
         for (int y = 0; y < rows; ++y) {
             for (int x = 0; x < cols; ++x) {
-                t.append(textBlocks[x + y*cols]->getWord());
+                str.append(textBlocks[x + y*cols]->getWord());
             }
         }
     }else if(currentMode == HEX){
+
+        int initX = 0;
+        int blockNum = radius;
+
         //将现有文字方块排列转换为QString的算法
-        QString str = MyAlgorithms::hexblock_to_str(textBlocks);
-        t.append(str);
+        for (int y = radius-1; y >= 1-radius; --y) {
+            //前半
+            if(y > 0){
+                //x由左往右 从radius-1-y 到
+                for (int x = initX; x < initX + blockNum; ++x) {
+                    QPoint pos(x,y);
+                    str.append(findBlockAt(pos)->getWord());
+                }
+                --initX;
+                ++blockNum;
+            }
+            //最长行+后半
+            else if(y <= 0){
+                for (int x = initX; x < initX + blockNum; ++x) {
+                    QPoint pos(x,y);
+                    str.append(findBlockAt(pos)->getWord());
+                }
+                --blockNum;
+            }
+        }
     }
 
 
-    if(t == contents){
+    if(str == contents){
         completeGame();
     }
 }
@@ -1336,7 +1362,9 @@ void Gamesys::checkIfComplete()
 
 void Gamesys::completeGame()
 {
-    completePage->showUseStep(useStep);
+    QString finishTime = MyAlgorithms::timeInterval(startTiming,QTime::currentTime());
+
+    completePage->setContent(useStep,finishTime);
     tempview->setScene(completePage);
     Animation::TempPagein(view,tempview)->start(QAbstractAnimation::DeleteWhenStopped);
 }

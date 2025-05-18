@@ -22,8 +22,8 @@ struct MyAlgorithms
     //生成一个六边形坐标系，（从左上角开始，往上到下，从左到右）
     static QList<QPoint> makeHexCoordi(int radius);
 
-    //转换六边形方块们为string的算法
-    static QString hexblock_to_str(QList<TextBlock*> textblocks);
+    //传入两个时间，将其转换为qstring（hh：mm：ss）
+    static QString timeInterval(QTime t1,QTime t2);
 };
 
 #endif // MYALGORITHMS_H

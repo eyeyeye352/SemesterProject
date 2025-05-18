@@ -68,14 +68,18 @@ QList<QPoint> MyAlgorithms::makeHexCoordi(int radius)
     return hposList;
 }
 
-QString MyAlgorithms::hexblock_to_str(QList<TextBlock *> textblocks)
+QString MyAlgorithms::timeInterval(QTime t1, QTime t2)
 {
-    return "";
+    //time——spending
+    int msecs = abs(t1.msecsTo(t2));
+    return QTime::fromMSecsSinceStartOfDay(msecs).toString("hh:mm:ss");
 }
+
 
 
 //预备好的存档文件格式
 QString MyAlgorithms::saveTextOutPut = "savetime=%1\n"
                                        "mode=%2\n"
                                         "levelnum=%3\n"
-                                       "gamerecords=%4\n";
+                                       "time_spending=%4\n"
+                                       "gamerecords=%5\n";

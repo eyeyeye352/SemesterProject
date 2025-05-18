@@ -39,4 +39,17 @@ private:
 };
 
 
+
+//排行的记录
+struct RankRecord{
+    RankRecord() = default;
+    RankRecord(QString name,int step,QTime time):
+        username(name),step_using(step),time_spending(time){}
+
+    QString username;
+    int step_using;
+    QTime time_spending;
+};
+
+
 #endif // GAMERECORD_H

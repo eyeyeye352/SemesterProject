@@ -194,6 +194,8 @@ public:
     GameRecordList& getSysRecords();
     GameRecordList& getPlayerRecords();
 
+    QTime getTime_spending() const;
+
 signals:
     void clicked();
 
@@ -201,6 +203,7 @@ private:
 
     QGraphicsTextItem* text;
     QString savetime;
+    QTime time_spending;
     int levelNum,gameMode;
     GameRecordList sysR,playerR;
 

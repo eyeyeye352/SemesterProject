@@ -77,6 +77,8 @@ private:
     //current gameMode
     int currentMode;
 
+    //username and password
+    QString username;
 
 
 
@@ -160,8 +162,10 @@ private:
     //临时记录用的textBlock指针
     TextBlock* temp;
 
-    //玩家使用的步数
+    //玩家使用的步数,时间
     int useStep;
+    QTime startTiming;
+    QTime recordTiming;
 
     //玩家当前进行的关卡
     int curLevelNum;

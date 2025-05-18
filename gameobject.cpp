@@ -306,6 +306,11 @@ void SaveSlot::init(QString filepath)
             showtext.append(lines[n].remove("levelnum="));
         }
 
+        //time spending
+        if(lines[n].startsWith("time_spending=")){
+            time_spending = QTime::fromString(lines[n].remove("time_spending="),"hh:mm:ss");
+        }
+
 
 
         //记录
@@ -373,4 +378,9 @@ int SaveSlot::getLevelNum()
 int SaveSlot::getGameMode()
 {
     return gameMode;
+}
+
+QTime SaveSlot::getTime_spending() const
+{
+    return time_spending;
 }
