@@ -42,7 +42,7 @@ public:
     QGraphicsPixmapItem *title;
 
     //4个功能按钮
-    FunctionBtn * settingBtn, *rankBtn, *createModeBtn ,*backBtn ,*saveBtn;
+    FunctionBtn * settingBtn, *createModeBtn ,*backBtn ,*saveBtn;
 
     //五个关卡
     QList<LevelSelectBlock*> levels;
@@ -182,14 +182,22 @@ class RankPage : public TempPage{
     Q_OBJECT
 public:
 
+    //初始读取文件
     RankPage(QObject* parent);
 
-    void Update();
+    //通关时新增记录到rankrecord文件
+    void showContents(QList<RankRecord>& rList);
+
+signals:
+    void orderByTime();
+    void orderByStep();
+
 
 private:
     QGraphicsPixmapItem* bg;
-    QGraphicsTextItem* content;
-    QPointer<TempPageBtn> backBtn;
+    QPointer<QTextEdit> text;
+    QGraphicsTextItem* description;
+    QPointer<TempPageBtn> backBtn , timeOrderBtn , stepOrderBtn;
 };
 
 

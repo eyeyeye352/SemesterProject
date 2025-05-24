@@ -43,10 +43,13 @@ private:
 //排行的记录
 struct RankRecord{
     RankRecord() = default;
-    RankRecord(QString name,int step,QTime time):
-        username(name),step_using(step),time_spending(time){}
+    RankRecord(QDate d,int step,QTime ts):
+        save_date(d),step_using(step),time_spending(ts){}
+    RankRecord(QString line);
 
-    QString username;
+    QString toString();
+
+    QDate save_date;
     int step_using;
     QTime time_spending;
 };

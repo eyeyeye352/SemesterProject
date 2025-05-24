@@ -70,3 +70,22 @@ GameRecordList& SaveSlot::getPlayerRecords()
 {
     return playerR;
 }
+
+RankRecord::RankRecord(QString line)
+{
+    if(line == ""){
+        return;
+    }
+    QStringList linelist(line.split(' '));
+    save_date = QDate::fromString(linelist[0],"yyyy/M/d");
+    step_using = linelist[1].toInt();
+    time_spending = QTime::fromString(linelist[2],"hh:mm:ss");
+}
+
+QString RankRecord::toString()
+{
+    QString saveDateStr(save_date.toString("yyyy/M/d"));
+    QString timeSpendStr(time_spending.toString("hh:mm:ss"));
+    return saveDateStr + ' ' + QString::number(step_using) + ' ' + timeSpendStr;
+}
+

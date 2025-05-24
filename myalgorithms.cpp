@@ -10,6 +10,18 @@ void MyAlgorithms::addFontToTextItem(QString fontsrc, QGraphicsTextItem *item,QC
     item->setDefaultTextColor(c);
 }
 
+QFont MyAlgorithms::getFontByPath(QString fontsrc,int size)
+{
+    // 加载字体
+    int fontId = QFontDatabase::addApplicationFont(fontsrc);
+    if (fontId == -1) {
+        qDebug() << "font loaded failed!";
+        return QFont();
+    }
+    QString fontFamily = QFontDatabase::applicationFontFamilies(fontId).at(0);
+    return QFont(fontFamily, size);
+}
+
 QPolygonF MyAlgorithms::makeHex(int size)
 {
     QPolygonF hexagon;
@@ -72,7 +84,7 @@ QString MyAlgorithms::timeInterval(QTime t1, QTime t2)
 {
     //time——spending
     int msecs = abs(t1.msecsTo(t2));
-    return QTime::fromMSecsSinceStartOfDay(msecs).toString("hh:mm:ss");
+    return QTime::fromMSecsSinceStartOfDay(msecs).toString("HH:mm:ss");
 }
 
 

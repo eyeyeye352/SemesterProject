@@ -53,7 +53,6 @@ StartScene::StartScene(QObject *parent)
 
     //functional btns
     settingBtn = new FunctionBtn(QPixmap(":/item/src/item/settingIcon.png"));
-    rankBtn = new FunctionBtn(QPixmap(":/item/src/item/rankIcon.png"));
     createModeBtn = new FunctionBtn(QPixmap(":/item/src/item/createModeIcon.png"));
     backBtn = new FunctionBtn(QPixmap(":/item/src/item/backIcon.png"));
     saveBtn = new FunctionBtn(QPixmap(":/item/src/item/saveIcon.png"));
@@ -62,16 +61,13 @@ StartScene::StartScene(QObject *parent)
     settingBtn->setPos(Settings::functionBtnInterval,
                        Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
 
-    rankBtn->setPos(2*Settings::functionBtnInterval + settingBtn->sceneBoundingRect().width(),
+    createModeBtn->setPos(2*Settings::functionBtnInterval + settingBtn->sceneBoundingRect().width(),
                     Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
 
-    createModeBtn->setPos(3*Settings::functionBtnInterval + 2*settingBtn->sceneBoundingRect().width(),
-                          Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
-
-    saveBtn->setPos(4*Settings::functionBtnInterval + 3*settingBtn->sceneBoundingRect().width(),
+    saveBtn->setPos(3*Settings::functionBtnInterval + 2*settingBtn->sceneBoundingRect().width(),
                     Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
 
-    backBtn->setPos(5*Settings::functionBtnInterval + 4*settingBtn->sceneBoundingRect().width(),
+    backBtn->setPos(4*Settings::functionBtnInterval + 3*settingBtn->sceneBoundingRect().width(),
                     Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
 
 
@@ -81,7 +77,6 @@ StartScene::StartScene(QObject *parent)
     backBtn->setOpacity(0);
 
     addItem(settingBtn);
-    addItem(rankBtn);
     addItem(createModeBtn);
     addItem(saveBtn);
     addItem(backBtn);
@@ -626,14 +621,49 @@ RankPage::RankPage(QObject *parent):
         emit closePage();
     });
 
-    content = new QGraphicsTextItem(bg);
-    QString saveDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/gameRank";
-    QDir().mkpath(saveDir); // 创建保存目录，如果不存在
-    QString filepath = QDir(saveDir).filePath("rank.txt");
-    MyAlgorithms::getContentInFile(filepath);
+    timeOrderBtn = addBtn("Time-Order",bg);
+    connect(timeOrderBtn,&GameBtn::clicked,[this]{ emit orderByTime(); });
+    stepOrderBtn = addBtn("Step-Order",bg);
+    connect(stepOrderBtn,&GameBtn::clicked,[this]{ emit orderByStep(); });
+
+    description = new QGraphicsTextItem("No." + QString(7,' ') + "Date" +
+                                            QString(8,' ') + "step" +
+                                            QString(8,' ') + "use-time\n\n",bg);
+    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf",description,
+                                    Qt::black,15);
+    description->setPos((bg->boundingRect().width() - description->boundingRect().width())/2 - 30,100);
+
+    text = new QTextEdit;
+    text->setFont(MyAlgorithms::getFontByPath(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf",15));
+    text->setTextColor(Qt::black);
+    text->setFrameStyle(QFrame::NoFrame);
+    text->setTextBackgroundColor(Qt::transparent);
+    text->setFixedSize(400,250);
+    text->setReadOnly(true);
+    text->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    text->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    addWidget(text);
 }
 
-void RankPage::Update()
+void RankPage::showContents(QList<RankRecord> &rList)
 {
 
+    QString content;
+
+    for (int n = 0; n < rList.size(); ++n) {
+
+        QString savedate = rList[n].save_date.toString("yyyy/MM/dd");
+        int step = rList[n].step_using;
+        QString timeuse = rList[n].time_spending.toString("HH:mm:ss");
+
+        //十位数会多一格
+        content.append(QString::number(n+1) + '.' + QString( (n+1<10?6:5),' ') +
+                        savedate + QString(6,' ') + QString::number(step) +
+                        QString(8,' ') + timeuse + '\n');
+
+    }
+    text->setPlainText(content);
+    text->move((Settings::screenWidth - text->width())/2,
+               description->sceneBoundingRect().y() + 50);
 }

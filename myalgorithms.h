@@ -11,6 +11,9 @@ struct MyAlgorithms
     //为指定textitem设置字体、颜色、大小。
     static void addFontToTextItem(QString fontsrc,QGraphicsTextItem* item,QColor textDefaultColor,int fontsize);
 
+    //传入路径获取字体
+    static QFont getFontByPath(QString fontsrc,int size);
+
     static QString saveTextOutPut;
 
     //传入size，生成一个对应的六边形

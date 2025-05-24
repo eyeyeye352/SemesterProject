@@ -59,6 +59,12 @@ public slots:
     //直接加载saveload记录好的关卡进度
     void loadSaveGame(SaveSlot* s);
 
+    //加载排行记录
+    void loadRankList(int levelNum);
+
+    //添加记录
+    void addRankRecord(RankRecord r);
+
 
 private:
     StartScene* startscene;
@@ -92,6 +98,9 @@ public slots:
     void DoTrans();
     void UndoTrans();
 
+    //排序排行揭露
+    void orderByTime();
+    void orderByStep();
 public:
 
     //洗牌出题
@@ -169,6 +178,9 @@ private:
 
     //玩家当前进行的关卡
     int curLevelNum;
+
+    //记录排行信息用
+    QList<RankRecord> rankRecords;
 
 };
 

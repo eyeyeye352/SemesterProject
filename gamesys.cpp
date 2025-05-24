@@ -50,7 +50,6 @@ Gamesys::Gamesys(QWidget *parent)
     connect(startscene->classicBtn,&ClassicBtn::clicked,this,&Gamesys::goLevelSelection);
     connect(startscene->hexBtn,&HexBtn::clicked,this,&Gamesys::goLevelSelection);
     connect(startscene->settingBtn,&GameBtn::clicked,this,&Gamesys::openSettingPage);
-    connect(startscene->rankBtn,&GameBtn::clicked,this,&Gamesys::openRankPage);
     connect(startscene->createModeBtn,&GameBtn::clicked,this,&Gamesys::goCreateMode);
     connect(startscene->backBtn,&GameBtn::clicked,this,&Gamesys::backModeSelection);
     connect(startscene->saveBtn,&GameBtn::clicked,this,&Gamesys::openSavePage);
@@ -83,6 +82,8 @@ Gamesys::Gamesys(QWidget *parent)
     connect(savePage,&SavePage::slotSelected,this,&Gamesys::processSlots);
 
     connect(rankPage,&TempPage::closePage,this,&Gamesys::closeTempPage);
+    connect(rankPage,&RankPage::orderByStep,this,&Gamesys::orderByStep);
+    connect(rankPage,&RankPage::orderByTime,this,&Gamesys::orderByTime);
 
     initSLSlot();
     objPool::getinstance()->init();
@@ -224,6 +225,9 @@ void Gamesys::loadGame(int levelNum,bool shuffled)
     //加载前先重置关卡
     resetLevel();
 
+    //设置rankpage
+    loadRankList(levelNum);
+
     //处理字符串
     QString whole = MyAlgorithms::getContentInFile(filepath);
     QStringList strList = whole.split("\r\n");
@@ -295,8 +299,6 @@ void Gamesys::loadGame(int levelNum,bool shuffled)
         shuffleLevel();
     }
 }
-
-
 
 void Gamesys::readDifficulty(QString d_line)
 {
@@ -405,10 +407,6 @@ void Gamesys::loadTextBlocks()
     }
 }
 
-
-
-
-
 //初始加载本地文件显示在slot上。
 void Gamesys::initSLSlot()
 {
@@ -448,7 +446,6 @@ void Gamesys::processSlots(int slotNum, int state)
     }
 
 }
-
 
 void Gamesys::loadSaveGame(SaveSlot* S)
 {
@@ -515,6 +512,93 @@ void Gamesys::loadSaveGame(SaveSlot* S)
         qDebug() << "recordtiming:" << recordTiming;
     });
     anime->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+void Gamesys::loadRankList(int levelNum)
+{
+    QString rankDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/gameRank";
+    QDir().mkpath(rankDir); // 创建保存目录，如果不存在
+    QString filepath;
+
+    if(currentMode == CLASSIC){
+        filepath = rankDir + QString("/classic%1.txt").arg(levelNum);
+    }else if(currentMode == HEX){
+        filepath = rankDir + QString("/hex%1.txt").arg(levelNum);
+    }
+
+    QString content = MyAlgorithms::getContentInFile(filepath);
+    qDebug() << "rank content:" << content;
+    QString fixedContent = content.replace("\r\n","\n");
+    QStringList linelist = fixedContent.split('\n');
+    for (int n = 0; n < linelist.size(); ++n) {
+        //跳过空行
+        if(linelist[n] != ""){
+            RankRecord r(linelist[n]);
+            rankRecords.append(r);
+        }
+    }
+
+    //根据通关用时排序并显示
+    orderByTime();
+
+}
+
+void Gamesys::orderByTime()
+{
+    std::sort(rankRecords.begin(),rankRecords.end(),[](const RankRecord& r1,const RankRecord& r2){
+        if(r1.time_spending != r2.time_spending){
+            return r1.time_spending < r2.time_spending;
+        }
+        else{
+            return r1.step_using < r2.step_using;
+        }
+    });
+    rankPage->showContents(rankRecords);
+}
+
+void Gamesys::orderByStep()
+{
+    std::sort(rankRecords.begin(),rankRecords.end(),[](const RankRecord& r1,const RankRecord& r2){
+        if(r1.step_using != r2.step_using){
+            return r1.step_using < r2.step_using;
+        }
+        else{
+            return r1.time_spending < r2.time_spending;
+        }
+    });
+    rankPage->showContents(rankRecords);
+}
+
+void Gamesys::addRankRecord(RankRecord r)
+{
+    while(rankRecords.size() > 99){
+        rankRecords.pop_back();
+    }
+    rankRecords.append(r);
+    QString rankDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/gameRank";
+    QDir().mkpath(rankDir); // 创建保存目录，如果不存在
+    QString filepath;
+
+    if(currentMode == CLASSIC){
+        filepath = rankDir + QString("/classic%1.txt").arg(curLevelNum);
+    }else if(currentMode == HEX){
+        filepath = rankDir + QString("/hex%1.txt").arg(curLevelNum);
+    }
+
+    //更新本地文件
+    QFile file(filepath);
+    file.open(QIODevice::WriteOnly);
+    QTextStream stream(&file);
+    for (int n = 0; n < rankRecords.size(); ++n) {
+
+        if(n != rankRecords.size()-1){
+            stream << rankRecords[n].toString() << '\n';
+        }else{
+            stream << rankRecords[n].toString();
+        }
+
+    }
+    file.close();
 }
 
 
@@ -701,6 +785,7 @@ void Gamesys::resetLevel()
     undoRecords.clear();
     playerRecords.clear();
     sysRecord.clear();
+    rankRecords.clear();
     levelscene->undoBtn->setOpacity(0.5);
     levelscene->doBtn->setOpacity(0.5);
 
@@ -1367,6 +1452,10 @@ void Gamesys::completeGame()
     completePage->setContent(useStep,finishTime);
     tempview->setScene(completePage);
     Animation::TempPagein(view,tempview)->start(QAbstractAnimation::DeleteWhenStopped);
+
+    //记录在排行文件
+    RankRecord r(QDate::currentDate(),useStep,QTime::fromString(finishTime,"HH:mm:ss"));
+    addRankRecord(r);
 }
 
 //要一个可选 打勾 或 x 的对话框。

@@ -38,6 +38,7 @@
 #include <QDateTime>
 #include <QStandardPaths>
 #include <QDir>
+#include <QTextEdit>
 
 class SideBar;
 
