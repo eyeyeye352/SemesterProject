@@ -642,6 +642,7 @@ RankPage::RankPage(QObject *parent):
     text->setReadOnly(true);
     text->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     text->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    text->setFocusPolicy(Qt::NoFocus);
 
     addWidget(text);
 }
@@ -657,10 +658,13 @@ void RankPage::showContents(QList<RankRecord> &rList)
         int step = rList[n].step_using;
         QString timeuse = rList[n].time_spending.toString("HH:mm:ss");
 
-        //十位数会多一格
+        //十位数会多一格,最后一行就不加空行了。
         content.append(QString::number(n+1) + '.' + QString( (n+1<10?6:5),' ') +
                         savedate + QString(6,' ') + QString::number(step) +
-                        QString(8,' ') + timeuse + '\n');
+                        QString(8,' ') + timeuse);
+        if(n != rList.size()-1){
+            content.append('\n');
+        }
 
     }
     text->setPlainText(content);
