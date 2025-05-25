@@ -178,3 +178,8 @@ QPropertyAnimation *Animation::MakeAnime(QObject *obj, QByteArray property, int 
     return anime;
 }
 
+QSequentialAnimationGroup *Animation::bgMoveLoopAnime(QGraphicsPixmapItem *bg)
+{
+
+}
+

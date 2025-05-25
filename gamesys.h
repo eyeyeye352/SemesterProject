@@ -1,7 +1,7 @@
 #ifndef GAMESYS_H
 #define GAMESYS_H
 
-#include "scene.h"
+#include "temppage.h"
 #include "settings.h"
 #include "objpool.h"
 #include "gamerecord.h"
@@ -25,6 +25,15 @@ public slots:
     //返回模式选择页面
     void backModeSelection();
 
+    //enter create scene
+    void goCreateScene();
+
+    //go create level
+    void goCreate(Mode);
+
+    //open createmode rankpage
+    void openCreateRankPage();
+
     //打开，关闭temppage
     void openSettingPage();
     void openSavePage();
@@ -34,10 +43,6 @@ public slots:
 
     void goHome();
     void closeTempPage();
-
-
-    //creation mode
-    void goCreateMode();
 
     //选择关卡后进入游戏场景(先动画，动画到一半开始加载),参数为第几关
     void loadGameAnime(int levelNum,bool shuffled);
@@ -69,6 +74,7 @@ public slots:
 private:
     StartScene* startscene;
     LevelScene* levelscene;
+    CreateScene* createscene;
     SettingPage* settingPage;
     TipPage* tipPage;
     RankPage* rankPage;
@@ -78,7 +84,7 @@ private:
     QGraphicsView* view , *tempview;
 
     //timers
-    QTimer * bgmoveTimer;
+    QTimer * bgmoveTimer1;
 
     //current gameMode
     int currentMode;

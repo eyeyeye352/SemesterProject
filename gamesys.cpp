@@ -16,6 +16,7 @@ Gamesys::Gamesys(QWidget *parent)
     //scene and view
     startscene = new StartScene(this);
     levelscene = new LevelScene(this);
+    createscene = new CreateScene(this);
 
     view = new QGraphicsView(this);
     view->setGeometry(0,0,Settings::screenWidth,Settings::screenHeight);
@@ -40,9 +41,9 @@ Gamesys::Gamesys(QWidget *parent)
 
 
     //timers
-    bgmoveTimer = new QTimer(this);
-    bgmoveTimer->start(Settings::backgroundUpdateInterval);
-    connect(bgmoveTimer,&QTimer::timeout,startscene,&StartScene::moveBG);
+    bgmoveTimer1 = new QTimer(this);
+    bgmoveTimer1->start(Settings::backgroundUpdateInterval);
+    connect(bgmoveTimer1,&QTimer::timeout,startscene,&StartScene::moveBG);
 
 
 
@@ -50,7 +51,7 @@ Gamesys::Gamesys(QWidget *parent)
     connect(startscene->classicBtn,&ClassicBtn::clicked,this,&Gamesys::goLevelSelection);
     connect(startscene->hexBtn,&HexBtn::clicked,this,&Gamesys::goLevelSelection);
     connect(startscene->settingBtn,&GameBtn::clicked,this,&Gamesys::openSettingPage);
-    connect(startscene->createModeBtn,&GameBtn::clicked,this,&Gamesys::goCreateMode);
+    connect(startscene->createModeBtn,&GameBtn::clicked,this,&Gamesys::goCreateScene);
     connect(startscene->backBtn,&GameBtn::clicked,this,&Gamesys::backModeSelection);
     connect(startscene->saveBtn,&GameBtn::clicked,this,&Gamesys::openSavePage);
 
@@ -69,6 +70,13 @@ Gamesys::Gamesys(QWidget *parent)
     connect(levelscene->doBtn,&GameBtn::clicked,this,&Gamesys::DoTrans);
     connect(levelscene->sideBar,&MySideBar::SelectTransType,this,&Gamesys::changeTransType);
     connect(levelscene,&LevelScene::clickBg,this,&Gamesys::cancelSelect);
+
+    //connections(createscene)
+    connect(createscene->classicBtn,&ClassicBtn::clicked,this,&Gamesys::goCreate);
+    connect(createscene->hexBtn,&HexBtn::clicked,this,&Gamesys::goCreate);
+    connect(createscene->settingBtn,&GameBtn::clicked,this,&Gamesys::openSettingPage);
+    connect(createscene->rankBtn,&GameBtn::clicked,this,&Gamesys::openCreateRankPage);
+    connect(createscene->backBtn,&GameBtn::clicked,this,&Gamesys::goHome);
 
     //connection(otherpage)
     connect(settingPage,&SettingPage::goHome,this,&Gamesys::goHome);
@@ -109,6 +117,27 @@ void Gamesys::goLevelSelection(Mode mode)
 void Gamesys::backModeSelection()
 {
     Animation::backModeSelection(startscene);
+}
+
+void Gamesys::goCreateScene()
+{
+    //更换bgm
+    MusicPlayer::getMPlayer()->changeBgm(Settings::bgmList["InGame_classicMode"]);
+    QSequentialAnimationGroup* anime = Animation::changeScene(startscene,createscene,view,3000);
+    anime->start(QAbstractAnimation::DeleteWhenStopped);
+
+    Animation::bgMoveLoopAnime(createscene->bg1);
+
+}
+
+void Gamesys::goCreate(Mode m)
+{
+    qDebug() << "go create mode :" << m;
+}
+
+void Gamesys::openCreateRankPage()
+{
+    qDebug() << "open rankpage in create mode.";
 }
 
 
@@ -154,21 +183,23 @@ void Gamesys::goHome()
     //关闭tempview动画结束后，返回首页
 
     //developing:(询问用户是否保存？)
-    else if(view->scene() == levelscene){
+    else{
+
+        if(view->scene() == levelscene){
+            resetLevel();
+        }
 
         QPropertyAnimation* anime = Animation::TempPageout(view,tempview);
 
         //设置页面退出动画
         connect(anime,&QPropertyAnimation::finished,[this]{
-            Animation::changeScene(levelscene,startscene,view,1500)->start(QAbstractAnimation::DeleteWhenStopped);
+            Animation::changeScene(static_cast<Scene*>(view->scene()),startscene,view,1500)->start(QAbstractAnimation::DeleteWhenStopped);
             MusicPlayer::getMPlayer()->changeBgm(Settings::bgmList["pastel_subminal"]);
             tempview->setScene(nullptr);
         });
 
         anime->start(QAbstractAnimation::DeleteWhenStopped);
     }
-
-    resetLevel();
 }
 
 
@@ -184,11 +215,6 @@ void Gamesys::closeTempPage()
 }
 
 
-
-void Gamesys::goCreateMode()
-{
-
-}
 
 //切换音乐和scene,然后在loadingscene动画中加载游戏
 void Gamesys::loadGameAnime(int levelNum,bool shuffled)

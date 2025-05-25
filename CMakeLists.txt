@@ -38,6 +38,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         gamerecord.cpp
         res.qrc
         hex.h hex.cpp
+        temppage.h temppage.cpp
 
     )
 
