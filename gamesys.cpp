@@ -121,10 +121,7 @@ void Gamesys::backModeSelection()
 
 void Gamesys::goCreateScene()
 {
-    //更换bgm
-    MusicPlayer::getMPlayer()->changeBgm(Settings::bgmList["InGame_classicMode"]);
-    QSequentialAnimationGroup* anime = Animation::changeScene(startscene,createscene,view,3000);
-    anime->start(QAbstractAnimation::DeleteWhenStopped);
+    Animation::changeScene(startscene,createscene,view,3000)->start(QAbstractAnimation::DeleteWhenStopped);
 
     Animation::bgMoveLoopAnime(createscene->bg1);
 
