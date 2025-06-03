@@ -63,7 +63,7 @@ QList<QPoint> MyAlgorithms::makeHexCoordi(int radius)
         if(y > 0){
             //x由左往右 从radius-1-y 到
             for (int x = initX; x < initX + blockNum; ++x) {
-                hposList.append(HPoint(x,y));
+                hposList.append(QPoint(x,y));
             }
             --initX;
             ++blockNum;
@@ -71,7 +71,7 @@ QList<QPoint> MyAlgorithms::makeHexCoordi(int radius)
         //最长行+后半
         else if(y <= 0){
             for (int x = initX; x < initX + blockNum; ++x) {
-                hposList.append(HPoint(x,y));
+                hposList.append(QPoint(x,y));
             }
             --blockNum;
         }
