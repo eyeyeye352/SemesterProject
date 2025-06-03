@@ -157,6 +157,11 @@ LoadScene::LoadScene(QObject *parent):
     });
 }
 
+LoadScene::~LoadScene()
+{
+    clear();
+}
+
 
 
 
@@ -332,20 +337,10 @@ void LevelScene::setStep(int step)
 CreateScene::CreateScene(QObject *parent)
     :Scene{parent}
 {
-    bg1 = new QGraphicsPixmapItem(QPixmap(":/background/src/background/createscene.png"));
+    bg1 = new GameObject(QPixmap(":/background/src/background/createscene.png"));
     bg1->moveBy((Settings::screenWidth - bg1->boundingRect().width())/2,
                 (Settings::screenHeight - bg1->boundingRect().height())/2);
     addItem(bg1);
-
-    //btns
-    classicBtn = new ClassicBtn;
-    hexBtn = new HexBtn;
-
-    classicBtn->setPos((Settings::screenWidth - classicBtn->sceneBoundingRect().width())/2,Settings::classicBtnY);
-    hexBtn->setPos(Settings::screenWidth/2 - hexBtn->sceneBoundingRect().width()/2,Settings::hexBtnY);
-
-    addItem(classicBtn);
-    addItem(hexBtn);
 
 
     //title
@@ -360,20 +355,37 @@ CreateScene::CreateScene(QObject *parent)
     settingBtn = new FunctionBtn(QPixmap(":/item/src/item/settingIcon.png"));
     rankBtn = new FunctionBtn(QPixmap(":/item/src/item/rankIcon.png"));
     backBtn = new FunctionBtn(QPixmap(":/item/src/item/backIcon.png"));
+    importBtn = new FunctionBtn(QPixmap(":/item/src/item/importIcon.png"));
+    shareBtn = new FunctionBtn(QPixmap(":/item/src/item/shareIcon.png"));
 
     //功能按键列的位置排版
-    settingBtn->setPos(Settings::functionBtnInterval,
+    settingBtn->setPos(Settings::screenWidth - (settingBtn->boundingRect().width() + Settings::functionBtnInterval),
                        Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
 
-    backBtn->setPos(2*Settings::functionBtnInterval + settingBtn->sceneBoundingRect().width(),
+    backBtn->setPos(Settings::screenWidth - 2*(Settings::functionBtnInterval + settingBtn->sceneBoundingRect().width()),
                           Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
 
-    rankBtn->setPos(3*Settings::functionBtnInterval + 2*settingBtn->sceneBoundingRect().width(),
+    rankBtn->setPos(Settings::screenWidth - 3*(Settings::functionBtnInterval + settingBtn->sceneBoundingRect().width()),
+                    Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
+
+    importBtn->setPos(Settings::screenWidth - 4*(Settings::functionBtnInterval + settingBtn->sceneBoundingRect().width()),
+                    Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
+
+    shareBtn->setPos(Settings::screenWidth - 5*(Settings::functionBtnInterval + settingBtn->sceneBoundingRect().width()),
                     Settings::screenHeight - settingBtn->sceneBoundingRect().height() - 5);
 
 
     addItem(settingBtn);
     addItem(rankBtn);
     addItem(backBtn);
+    addItem(shareBtn);
+    addItem(importBtn);
+
+    levelblock = new FunctionBtn(QPixmap(":/item/src/item/myLevelBlock.png"));
+    buildblock = new FunctionBtn(QPixmap(":/item/src/item/buildblock.png"));
+    levelblock->setPos(Settings::screenWidth/2 - 3/2*levelblock->boundingRect().width(),(Settings::screenHeight - levelblock->boundingRect().height())/2);
+    buildblock->setPos(Settings::screenWidth/2 + levelblock->boundingRect().width()/2,(Settings::screenHeight - levelblock->boundingRect().height())/2);
+    addItem(levelblock);
+    addItem(buildblock);
 }
 

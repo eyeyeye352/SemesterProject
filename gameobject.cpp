@@ -384,3 +384,4 @@ QTime SaveSlot::getTime_spending() const
 {
     return time_spending;
 }
+

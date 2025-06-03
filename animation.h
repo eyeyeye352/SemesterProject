@@ -24,7 +24,7 @@ public:
     static QPropertyAnimation* MakeAnime(QObject* obj,QByteArray property,int time,QVariant sval,QVariant eval);
 
     //createmode的背景移动效果
-    static QSequentialAnimationGroup* bgMoveLoopAnime(QGraphicsPixmapItem* bg);
+    static QSequentialAnimationGroup* bgMoveLoopAnime(GameObject* bg);
 
 
 };

@@ -6,6 +6,9 @@
 Gamesys::Gamesys(QWidget *parent)
     : QWidget(parent)
 {
+
+    enterFromCreateScene = false;
+
     //bgm
     MusicPlayer::getMPlayer()->startBGM();
 
@@ -45,6 +48,8 @@ Gamesys::Gamesys(QWidget *parent)
     bgmoveTimer1->start(Settings::backgroundUpdateInterval);
     connect(bgmoveTimer1,&QTimer::timeout,startscene,&StartScene::moveBG);
 
+    BG_move_Anime = Animation::bgMoveLoopAnime(createscene->bg1);
+
 
 
     //startScene connections
@@ -72,11 +77,13 @@ Gamesys::Gamesys(QWidget *parent)
     connect(levelscene,&LevelScene::clickBg,this,&Gamesys::cancelSelect);
 
     //connections(createscene)
-    connect(createscene->classicBtn,&ClassicBtn::clicked,this,&Gamesys::goCreate);
-    connect(createscene->hexBtn,&HexBtn::clicked,this,&Gamesys::goCreate);
+    connect(createscene->importBtn,&GameBtn::clicked,this,&Gamesys::importLevel);
+    connect(createscene->shareBtn,&GameBtn::clicked,this,&Gamesys::shareLevel);
     connect(createscene->settingBtn,&GameBtn::clicked,this,&Gamesys::openSettingPage);
-    connect(createscene->rankBtn,&GameBtn::clicked,this,&Gamesys::openCreateRankPage);
+    connect(createscene->rankBtn,&GameBtn::clicked,this,&Gamesys::openRankPage);
     connect(createscene->backBtn,&GameBtn::clicked,this,&Gamesys::goHome);
+    connect(createscene->buildblock,&GameBtn::clicked,this,&Gamesys::goBuildLevel);
+    connect(createscene->levelblock,&GameBtn::clicked,this,&Gamesys::loadMyLevel);
 
     //connection(otherpage)
     connect(settingPage,&SettingPage::goHome,this,&Gamesys::goHome);
@@ -121,21 +128,34 @@ void Gamesys::backModeSelection()
 
 void Gamesys::goCreateScene()
 {
-    Animation::changeScene(startscene,createscene,view,3000)->start(QAbstractAnimation::DeleteWhenStopped);
+    Animation::changeScene(startscene,createscene,view,2000)->start(QAbstractAnimation::DeleteWhenStopped);
 
-    Animation::bgMoveLoopAnime(createscene->bg1);
+    loadRankList_CreateMode();
+
+    if(BG_move_Anime->state() == QAbstractAnimation::Paused){
+        BG_move_Anime->resume();
+    }else{
+        BG_move_Anime->start(QAbstractAnimation::DeleteWhenStopped);
+    }
 
 }
 
-void Gamesys::goCreate(Mode m)
+void Gamesys::goBuildLevel()
 {
-    qDebug() << "go create mode :" << m;
+    qDebug() << "developing : build level";
 }
 
-void Gamesys::openCreateRankPage()
+
+void Gamesys::shareLevel()
 {
-    qDebug() << "open rankpage in create mode.";
+    qDebug() << "developping: share";
 }
+
+void Gamesys::importLevel()
+{
+    qDebug() << "developping: import";
+}
+
 
 
 //子功能页面 settingPage、tipPage、rankPage、savePage
@@ -182,20 +202,30 @@ void Gamesys::goHome()
     //developing:(询问用户是否保存？)
     else{
 
+        bool changemusic = false;
+
         if(view->scene() == levelscene){
             resetLevel();
+            changemusic = true;
         }
 
         QPropertyAnimation* anime = Animation::TempPageout(view,tempview);
 
         //设置页面退出动画
-        connect(anime,&QPropertyAnimation::finished,[this]{
-            Animation::changeScene(static_cast<Scene*>(view->scene()),startscene,view,1500)->start(QAbstractAnimation::DeleteWhenStopped);
-            MusicPlayer::getMPlayer()->changeBgm(Settings::bgmList["pastel_subminal"]);
+        connect(anime,&QPropertyAnimation::finished,[this,changemusic]{
+            if(changemusic){
+                MusicPlayer::getMPlayer()->changeBgm(Settings::bgmList["pastel_subminal"]);
+            }
+            if(enterFromCreateScene){
+                Animation::changeScene(static_cast<Scene*>(view->scene()),createscene,view,2000)->start(QAbstractAnimation::DeleteWhenStopped);
+            }else{
+                Animation::changeScene(static_cast<Scene*>(view->scene()),startscene,view,2000)->start(QAbstractAnimation::DeleteWhenStopped);
+            }
             tempview->setScene(nullptr);
         });
 
         anime->start(QAbstractAnimation::DeleteWhenStopped);
+        BG_move_Anime->pause();
     }
 }
 
@@ -218,7 +248,7 @@ void Gamesys::loadGameAnime(int levelNum,bool shuffled)
 {
 
     MusicPlayer::getMPlayer()->changeBgm(Settings::bgmList["InGame_classicMode"]);
-    QSequentialAnimationGroup* anime = Animation::changeScene(startscene,levelscene,view,3000);
+    QSequentialAnimationGroup* anime = Animation::changeScene(startscene,levelscene,view,2500);
     connect(anime->animationAt(1),&QPropertyAnimation::finished,[=]{
         //动画暂停时加载文件
         loadGame(levelNum,shuffled);
@@ -235,6 +265,8 @@ void Gamesys::loadGameAnime(int levelNum,bool shuffled)
 //加载文件
 void Gamesys::loadGame(int levelNum,bool shuffled)
 {
+
+    enterFromCreateScene = false;
 
     //根据模式选择关卡文件
     QString filepath;
@@ -321,6 +353,23 @@ void Gamesys::loadGame(int levelNum,bool shuffled)
     if(shuffled){
         shuffleLevel();
     }
+}
+
+void Gamesys::loadMyLevel()
+{
+    qDebug() << "加载自定义关卡。";
+    // enterFromCreateScene = true;
+
+    // /*未加载成功：显示messagebox*/
+    // if(openMessageBox("")){
+
+    // }
+}
+
+bool Gamesys::openMessageBox(QString text)
+{
+    qDebug() << text << "msbox!";
+    return true;
 }
 
 void Gamesys::readDifficulty(QString d_line)
@@ -564,6 +613,28 @@ void Gamesys::loadRankList(int levelNum)
     //根据通关用时排序并显示
     orderByTime();
 
+}
+
+void Gamesys::loadRankList_CreateMode()
+{
+    QString rankDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/gameRank/create.txt";
+    QDir().mkpath(rankDir); // 创建保存目录，如果不存在
+
+
+    QString content = MyAlgorithms::getContentInFile(rankDir);
+    qDebug() << "rank content:" << content;
+    QString fixedContent = content.replace("\r\n","\n");
+    QStringList linelist = fixedContent.split('\n');
+    for (int n = 0; n < linelist.size(); ++n) {
+        //跳过空行
+        if(linelist[n] != ""){
+            RankRecord r(linelist[n]);
+            rankRecords.append(r);
+        }
+    }
+
+    //根据通关用时排序并显示
+    orderByTime();
 }
 
 void Gamesys::orderByTime()

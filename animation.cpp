@@ -8,8 +8,8 @@ Animation::Animation() {}
 QSequentialAnimationGroup* Animation::changeScene(Scene *origin, Scene *dest,QGraphicsView* view,int loadingTime)
 {
     //先用黑布盖住
-    BlackOverlay* black = new BlackOverlay;
-    LoadScene* loadScene = new LoadScene;
+    QPointer<BlackOverlay> black = new BlackOverlay;
+    QPointer<LoadScene> loadScene = new LoadScene;
     black->setZValue(999);
 
     origin->addItem(black);
@@ -32,13 +32,21 @@ QSequentialAnimationGroup* Animation::changeScene(Scene *origin, Scene *dest,QGr
     QObject::connect(anime->animationAt(3),&QPropertyAnimation::finished,[=]{
         dest->addItem(black);
         view->setScene(dest);
-        delete loadScene;
     });
 
     //释放和黑幕资源
     QObject::connect(anime,&QSequentialAnimationGroup::finished,[=]{
         origin->removeItem(black);
         dest->removeItem(black);
+
+        if(black){
+            delete black;
+            qDebug() << "black过度删除";
+        }
+        if(loadScene){
+            delete loadScene;
+            qDebug() << "loadscene过度删除";
+        }
     });
     return anime;
 }
@@ -178,8 +186,39 @@ QPropertyAnimation *Animation::MakeAnime(QObject *obj, QByteArray property, int 
     return anime;
 }
 
-QSequentialAnimationGroup *Animation::bgMoveLoopAnime(QGraphicsPixmapItem *bg)
+QSequentialAnimationGroup *Animation::bgMoveLoopAnime(GameObject *bg)
 {
 
+    bg->setTransformOriginPoint(bg->sceneBoundingRect().center());
+    QSequentialAnimationGroup* anime = new QSequentialAnimationGroup;
+    QPointF curPos = bg->pos();
+
+    //右50 左100 右50上50 下100 上50
+    QPropertyAnimation *a1,*a2,*a3,*a4,*a5;
+    a1 = MakeAnime(bg,"pos",2000,curPos,curPos+QPointF(50,0));
+    curPos.rx() += 50;
+    a2 = MakeAnime(bg,"pos",1500,curPos,curPos+QPointF(-100,0));
+    curPos.rx() -= 100;
+    a3 = MakeAnime(bg,"pos",2000,curPos,curPos+QPointF(50,-50));
+    curPos += QPointF(50,-50);
+    a4 = MakeAnime(bg,"pos",1500,curPos,curPos+QPointF(0,100));
+    curPos.ry() += 100;
+    a5 = MakeAnime(bg,"pos",1500,curPos,curPos+QPointF(0,-50));
+
+
+    a1->setEasingCurve(QEasingCurve::InOutCubic);
+    a2->setEasingCurve(QEasingCurve::InOutCubic);
+    a3->setEasingCurve(QEasingCurve::InOutCubic);
+    a4->setEasingCurve(QEasingCurve::InOutCubic);
+    a5->setEasingCurve(QEasingCurve::InOutCubic);
+
+
+    anime->addAnimation(a1);
+    anime->addAnimation(a2);
+    anime->addAnimation(a3);
+    anime->addAnimation(a4);
+    anime->addAnimation(a5);
+    anime->setLoopCount(-1);
+    return anime;
 }
 

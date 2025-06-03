@@ -107,10 +107,11 @@ class LoadScene : public Scene{
 
 public:
     LoadScene(QObject* parent = nullptr);
+    ~LoadScene();
 
 private:
     //loading... 三个点轮流变换的效果
-    QGraphicsTextItem* loadingText;
+    QPointer<QGraphicsTextItem> loadingText;
     int dotNum;
 };
 
@@ -121,20 +122,17 @@ public:
     CreateScene(QObject* parent = nullptr);
 
     //循环播放的移动式场景
-    QGraphicsPixmapItem *bg1;
-
-    //两个模式的按钮
-    ClassicBtn *classicBtn;
-    HexBtn *hexBtn;
+    GameObject *bg1;
 
     //title
     QGraphicsPixmapItem *title;
 
     //4个功能按钮
-    FunctionBtn * settingBtn, *backBtn , *rankBtn;
+    FunctionBtn * settingBtn, *backBtn , *rankBtn , *importBtn , *shareBtn;
 
-    //五个关卡
-    QList<LevelSelectBlock*> levels;
+    //关卡
+    FunctionBtn* levelblock,*buildblock;
+
 
 };
 

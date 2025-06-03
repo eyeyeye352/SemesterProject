@@ -321,6 +321,7 @@ RankPage::RankPage(QObject *parent):
     addWidget(text);
 }
 
+
 void RankPage::showContents(QList<RankRecord> &rList)
 {
 

@@ -45,7 +45,4 @@ struct HPoint : public QPoint{
     HPoint(int x,int y):QPoint(x,y){}
 };
 
-
-
-
 #endif // HEX_H

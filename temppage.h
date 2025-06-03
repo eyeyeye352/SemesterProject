@@ -71,8 +71,8 @@ class RankPage : public TempPage{
     Q_OBJECT
 public:
 
-    //初始读取文件
     RankPage(QObject* parent);
+
 
     //通关时新增记录到rankrecord文件
     void showContents(QList<RankRecord>& rList);

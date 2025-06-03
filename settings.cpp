@@ -8,6 +8,7 @@ QString Settings::gameIconPath = ":/icons/src/icon/gameIcon.ico";
 
 double Settings::backgroundMoveSpeed = 1;
 int Settings::backgroundUpdateInterval = 16;
+int Settings::backgroundUpdateInterval_2 = 100;
 
 int Settings::classicBtnY = 200;
 int Settings::hexBtnY = 350;

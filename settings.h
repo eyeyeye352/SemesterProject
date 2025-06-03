@@ -58,6 +58,7 @@ public:
 
     static double backgroundMoveSpeed;
     static int backgroundUpdateInterval;
+    static int backgroundUpdateInterval_2;
 
     //起始界面按钮位置
     static int classicBtnY;

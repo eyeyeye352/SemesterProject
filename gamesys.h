@@ -25,14 +25,19 @@ public slots:
     //返回模式选择页面
     void backModeSelection();
 
-    //enter create scene
+    //创意工坊相关：
+    //进入创意工坊
     void goCreateScene();
 
-    //go create level
-    void goCreate(Mode);
+    //建造关卡
+    void goBuildLevel();
 
-    //open createmode rankpage
-    void openCreateRankPage();
+    //游玩自定义关卡
+    void loadMyLevel();
+
+    //share/import 自定义关卡
+    void shareLevel();
+    void importLevel();
 
     //打开，关闭temppage
     void openSettingPage();
@@ -47,6 +52,10 @@ public slots:
     //选择关卡后进入游戏场景(先动画，动画到一半开始加载),参数为第几关
     void loadGameAnime(int levelNum,bool shuffled);
     void loadGame(int levelNum,bool shuffled);
+
+
+    //弹窗
+    bool openMessageBox(QString text);
 
     //load过程用：读取difficulty信息后，classsic模式就计算行列，hex模式计算大六边形边长
     void readDifficulty(QString difficulty_line);
@@ -66,6 +75,8 @@ public slots:
 
     //加载排行记录
     void loadRankList(int levelNum);
+    //加载自定义关卡的排行记录
+    void loadRankList_CreateMode();
 
     //添加记录
     void addRankRecord(RankRecord r);
@@ -86,11 +97,17 @@ private:
     //timers
     QTimer * bgmoveTimer1;
 
+    //animation handle
+    QSequentialAnimationGroup* BG_move_Anime;
+
     //current gameMode
     int currentMode;
 
     //username and password
     QString username;
+
+    //当你从创意工坊退出时，该变量决定你是返回首页还是创意工坊。
+    bool enterFromCreateScene;
 
 
 
@@ -189,20 +206,6 @@ private:
     QList<RankRecord> rankRecords;
 
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #endif // GAMESYS_H
