@@ -43,12 +43,10 @@ SettingPage::SettingPage(QObject *parent)
 
     //设置页面内部连接信号更改声音
     connect(musicSli,&ValSets::valueChanged,[this](double vol){
-        Settings::musicVol = vol;
-        MusicPlayer::getMPlayer()->setBgmVol(vol);
+        MusicPlayer::getMPlayer()->setBgmVol(vol/10);
     });
     connect(soundSli,&ValSets::valueChanged,[this](double vol){
-        Settings::soundVol = vol;
-        MusicPlayer::getMPlayer()->setSoundVol(vol);
+        MusicPlayer::getMPlayer()->setSoundVol(vol/10);
     });
 
 
@@ -345,4 +343,60 @@ void RankPage::showContents(QList<RankRecord> &rList)
     text->setPlainText(content);
     text->move((Settings::screenWidth - text->width())/2,
                description->sceneBoundingRect().y() + 50);
+}
+
+MsgBox::MsgBox(QObject *parent):TempPage{parent}
+{
+    bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/messageBox.png"));
+    bg->setPos((Settings::screenWidth - bg->boundingRect().width())/2,
+               (Settings::screenHeight - bg->boundingRect().height())/2);
+    text = new QGraphicsTextItem("",bg);
+    addItem(bg);
+}
+
+void MsgBox::setContent(QString content)
+{
+    text->setPlainText(content);
+}
+
+LevelSetScene::LevelSetScene(QObject *parent)
+    :TempPage{parent}
+{
+    bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/createscene_levelsets.png"));
+    bg->setPos((Settings::screenWidth - bg->boundingRect().width())/2,
+               (Settings::screenHeight - bg->boundingRect().height())/2);
+    addItem(bg);
+
+
+    //Valsets
+    modeSet = new ModeValSets(bg);
+    modeSet->setPos(bg->boundingRect().width()/2,130);
+    hardSet = new ValSets(bg);
+    hardSet->setPos(bg->boundingRect().width()/2,190);
+
+    connect(modeSet,&ModeValSets::modeChanged,[this](int mode){
+        if(mode == Mode::CLASSIC){
+            hardSet->setBound(10,4);
+        }else{
+            hardSet->setBound(6,3);
+        }
+    });
+
+
+    //btn
+    back = addBtn("Back",bg);
+    finish = addBtn("Finish",bg);
+
+    QObject::connect(back,&GameBtn::clicked,[this]{ emit closePage();});
+    QObject::connect(finish,&GameBtn::clicked,[this]{ emit finished(); });
+}
+
+int LevelSetScene::getMode()
+{
+    return modeSet->getMode();
+}
+
+int LevelSetScene::getDifficulty()
+{
+    return hardSet->getVal();
 }

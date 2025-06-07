@@ -43,7 +43,10 @@ QPolygonF MyAlgorithms::makeHex(int size)
 QString MyAlgorithms::getContentInFile(QString filepath)
 {
     QFile file(filepath);
-    file.open(QIODevice::ReadOnly);
+    if(!file.open(QIODevice::ReadOnly)){
+        return "";
+    };
+
 
     QString text = file.readAll();
     file.close();

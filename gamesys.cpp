@@ -7,7 +7,6 @@ Gamesys::Gamesys(QWidget *parent)
     : QWidget(parent)
 {
 
-    enterFromCreateScene = false;
 
     //bgm
     MusicPlayer::getMPlayer()->startBGM();
@@ -41,6 +40,8 @@ Gamesys::Gamesys(QWidget *parent)
     completePage = new CompletePage(this);
     savePage = new SavePage(this);
     rankPage = new RankPage(this);
+    msgBox = new MsgBox(this);
+    levelSetPage = new LevelSetScene(this);
 
 
     //timers
@@ -77,13 +78,11 @@ Gamesys::Gamesys(QWidget *parent)
     connect(levelscene,&LevelScene::clickBg,this,&Gamesys::cancelSelect);
 
     //connections(createscene)
-    connect(createscene->importBtn,&GameBtn::clicked,this,&Gamesys::importLevel);
-    connect(createscene->shareBtn,&GameBtn::clicked,this,&Gamesys::shareLevel);
     connect(createscene->settingBtn,&GameBtn::clicked,this,&Gamesys::openSettingPage);
-    connect(createscene->rankBtn,&GameBtn::clicked,this,&Gamesys::openRankPage);
     connect(createscene->backBtn,&GameBtn::clicked,this,&Gamesys::goHome);
-    connect(createscene->buildblock,&GameBtn::clicked,this,&Gamesys::goBuildLevel);
+    connect(createscene->buildblock,&GameBtn::clicked,this,&Gamesys::openLevelSetPage);
     connect(createscene->levelblock,&GameBtn::clicked,this,&Gamesys::loadMyLevel);
+
 
     //connection(otherpage)
     connect(settingPage,&SettingPage::goHome,this,&Gamesys::goHome);
@@ -99,6 +98,9 @@ Gamesys::Gamesys(QWidget *parent)
     connect(rankPage,&TempPage::closePage,this,&Gamesys::closeTempPage);
     connect(rankPage,&RankPage::orderByStep,this,&Gamesys::orderByStep);
     connect(rankPage,&RankPage::orderByTime,this,&Gamesys::orderByTime);
+
+    connect(levelSetPage,&LevelSetScene::closePage,this,&Gamesys::closeTempPage);
+    connect(levelSetPage,&LevelSetScene::finished,this,&Gamesys::goBuildLevel);
 
     initSLSlot();
     objPool::getinstance()->init();
@@ -140,9 +142,17 @@ void Gamesys::goCreateScene()
 
 }
 
+void Gamesys::openLevelSetPage()
+{
+    tempview->setScene(levelSetPage);
+    Animation::TempPagein(view,tempview)->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
 void Gamesys::goBuildLevel()
 {
-    qDebug() << "developing : build level";
+    int mode = levelSetPage->getMode();
+    int difficulty = levelSetPage->getDifficulty();
+    qDebug() << "mode:" << mode << " difficulty；" << difficulty;
 }
 
 
@@ -151,10 +161,6 @@ void Gamesys::shareLevel()
     qDebug() << "developping: share";
 }
 
-void Gamesys::importLevel()
-{
-    qDebug() << "developping: import";
-}
 
 
 
@@ -216,11 +222,8 @@ void Gamesys::goHome()
             if(changemusic){
                 MusicPlayer::getMPlayer()->changeBgm(Settings::bgmList["pastel_subminal"]);
             }
-            if(enterFromCreateScene){
-                Animation::changeScene(static_cast<Scene*>(view->scene()),createscene,view,2000)->start(QAbstractAnimation::DeleteWhenStopped);
-            }else{
-                Animation::changeScene(static_cast<Scene*>(view->scene()),startscene,view,2000)->start(QAbstractAnimation::DeleteWhenStopped);
-            }
+
+            Animation::changeScene(static_cast<Scene*>(view->scene()),startscene,view,2000)->start(QAbstractAnimation::DeleteWhenStopped);
             tempview->setScene(nullptr);
         });
 
@@ -244,14 +247,14 @@ void Gamesys::closeTempPage()
 
 
 //切换音乐和scene,然后在loadingscene动画中加载游戏
-void Gamesys::loadGameAnime(int levelNum,bool shuffled)
+void Gamesys::loadGameAnime(int levelNum, bool shuffled, QString path)
 {
 
     MusicPlayer::getMPlayer()->changeBgm(Settings::bgmList["InGame_classicMode"]);
     QSequentialAnimationGroup* anime = Animation::changeScene(startscene,levelscene,view,2500);
     connect(anime->animationAt(1),&QPropertyAnimation::finished,[=]{
         //动画暂停时加载文件
-        loadGame(levelNum,shuffled);
+        loadGame(levelNum,shuffled,path);
     });
 
     //加载动画结束，开始计时
@@ -263,19 +266,30 @@ void Gamesys::loadGameAnime(int levelNum,bool shuffled)
 
 
 //加载文件
-void Gamesys::loadGame(int levelNum,bool shuffled)
+void Gamesys::loadGame(int levelNum,bool shuffled,QString path)
 {
 
-    enterFromCreateScene = false;
+    //path 为空时，表示加载官方关卡
+    if(levelNum == 0){
+        levelscene->enterFromCreateScene();
+    }else{
+        levelscene->recover();
+    }
+
 
     //根据模式选择关卡文件
     QString filepath;
-    if(currentMode == CLASSIC){
+
+    if(!path.isEmpty()){
+        filepath = path;
+    }
+    else if(currentMode == CLASSIC){
         filepath = QString(":/Levels/src/levelsDoc/ClassicL%1.txt").arg(levelNum);
     }
     else if(currentMode == HEX){
         filepath = QString(":/Levels/src/levelsDoc/HexL%1.txt").arg(levelNum);
     }
+
 
     //加载前先重置关卡
     resetLevel();
@@ -287,11 +301,14 @@ void Gamesys::loadGame(int levelNum,bool shuffled)
     QString whole = MyAlgorithms::getContentInFile(filepath);
     QStringList strList = whole.split("\r\n");
 
+    bool b1 = false,b2 = b1,b3 = b1,b4 = b1;
+
     for (int line = 0; line < strList.size(); ++line) {
 
         //title部分
         if(strList[line].startsWith("title=")){
             levelscene->setTitle(strList[line].remove("title="));
+            b1 = true;
         }
 
 
@@ -303,11 +320,13 @@ void Gamesys::loadGame(int levelNum,bool shuffled)
             if(t == "classic") currentMode = CLASSIC;
             else if(t == "hex") currentMode = HEX;
             levelscene->setGameMode(currentMode);
+            b2 = true;
         }
 
         //处理难度部分
         else if(strList[line].startsWith("difficulty=")){
             readDifficulty(strList[line]);
+            b3 = true;
         }
 
 
@@ -327,8 +346,14 @@ void Gamesys::loadGame(int levelNum,bool shuffled)
             for (int n = line+1; n <= line+contentLines && n < strList.size(); ++n) {
                 contents.append(strList[n]);
             }
+            b4 = true;
             break;
         }
+    }
+
+    if(!(b1 && b2 && b3 && b4)){
+        resetLevel();
+        return;
     }
 
     //debug信息
@@ -357,13 +382,21 @@ void Gamesys::loadGame(int levelNum,bool shuffled)
 
 void Gamesys::loadMyLevel()
 {
-    qDebug() << "加载自定义关卡。";
-    // enterFromCreateScene = true;
+    // 打开文件选择对话框
+    QString filepath = QFileDialog::getOpenFileName(
+        this,
+        "导入自定义关卡 (.txt)",
+        "",
+        "文本文件 (*.txt);;所有文件 (*)"
+    );
+    QString content  = MyAlgorithms::getContentInFile(filepath);
+    if(content.isEmpty()){
+        QMessageBox::information(this,"错误的地图文件","地图文件内容格式可能有误，或者内容为空！");
+        return;
+    }
 
-    // /*未加载成功：显示messagebox*/
-    // if(openMessageBox("")){
+    loadGameAnime(0,true,filepath);
 
-    // }
 }
 
 bool Gamesys::openMessageBox(QString text)
@@ -765,9 +798,13 @@ void Gamesys::shuffleLevel()
 {
     //变换次数随关卡数字提升
     int transtimes;
-    if(currentMode == CLASSIC){
+    if(curLevelNum == 0){
+        transtimes = 10;
+    }
+    else if(currentMode == CLASSIC){
         transtimes = curLevelNum*5;
-    }else if(currentMode == HEX){
+    }
+    else if(currentMode == HEX){
         transtimes = curLevelNum*3;
     }
 
@@ -1498,6 +1535,7 @@ void Gamesys::checkIfComplete()
 {
     QString str("");
 
+
     if(currentMode == CLASSIC){
         for (int y = 0; y < rows; ++y) {
             for (int x = 0; x < cols; ++x) {
@@ -1547,9 +1585,12 @@ void Gamesys::completeGame()
     tempview->setScene(completePage);
     Animation::TempPagein(view,tempview)->start(QAbstractAnimation::DeleteWhenStopped);
 
-    //记录在排行文件
-    RankRecord r(QDate::currentDate(),useStep,QTime::fromString(finishTime,"HH:mm:ss"));
-    addRankRecord(r);
+    //记录在排行文件(若非自定义关卡)
+    if(curLevelNum != 0){
+        RankRecord r(QDate::currentDate(),useStep,QTime::fromString(finishTime,"HH:mm:ss"));
+        addRankRecord(r);
+    }
+
 }
 
 //要一个可选 打勾 或 x 的对话框。

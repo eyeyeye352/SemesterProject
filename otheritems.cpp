@@ -1,6 +1,5 @@
 #include "otheritems.h"
-#include "animation.h"
-
+#include "myalgorithms.h"
 
 DragableObj::DragableObj(QPixmap pixmap, QGraphicsItem *parent)
     :GameObject(pixmap,parent),isDragging(false),
@@ -84,23 +83,16 @@ BlackOverlay::BlackOverlay(QGraphicsItem *parent):
 
 
 
-ValSets::ValSets(QGraphicsItem *parent):
+ValSets::ValSets(QGraphicsItem *parent, int Max, int Min):
     GameObject(parent),
     upBtn(new FunctionBtn(QPixmap(":/item/src/item/valSetsBtn.png"),this)),
     downBtn(new FunctionBtn(QPixmap(":/item/src/item/valSetsBtn.png"),this)),
-    val(1)
+    val(Max),max(Max),min(Min)
 {
 
 
-    upBtn->setOpacity(1);
-
-    valText = new QGraphicsTextItem(QString::number(val*10),this);
-    //style
-    int fontId = QFontDatabase::addApplicationFont(":/fonts/src/fonts/XiangJiaoKuanMaoShuaLingGanTi-2.ttf");
-    QString fontFamily = QFontDatabase::applicationFontFamilies(fontId).at(0);
-    QFont font(fontFamily,25);
-    valText->setFont(font);
-    valText->setDefaultTextColor(Qt::white);
+    valText = new QGraphicsTextItem(QString::number(val),this);
+    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/XiangJiaoKuanMaoShuaLingGanTi-2.ttf",valText,Qt::white,25);
     valText->setPos(upBtn->boundingRect().right() ,
                     (upBtn->boundingRect().height() - valText->boundingRect().height())/2);
 
@@ -114,23 +106,23 @@ ValSets::ValSets(QGraphicsItem *parent):
 
 
     connect(upBtn,&GameBtn::clicked,[this]{
-        if(val + 0.1 <= 1){
-            val+=0.1;
+        if(val + 1 <= max){
+            ++val;
+        }else{
+            val = max;
         }
-        valText->setPlainText(QString::number(val*10,'f',0));
+        valText->setPlainText(QString::number(val));
         emit valueChanged(val);
     });
     connect(downBtn,&GameBtn::clicked,[this]{
 
-        if(val - 0.1 > 0){
-            val-=0.1;
-            emit valueChanged(val);
+        if(val - 1 >= min){
+            --val;
         }else{
-            val = 0;
-            emit valueChanged(0);
+            val = min;
         }
-        valText->setPlainText(QString::number(val*10,'f',0));
-
+        valText->setPlainText(QString::number(val));
+        emit valueChanged(val);
     });
 }
 
@@ -146,4 +138,62 @@ QRectF ValSets::boundingRect() const
                 2*upBtn->boundingRect().width() + valText->boundingRect().width(),
                 valText->boundingRect().height());
     return rect;
+}
+
+int ValSets::getVal()
+{
+    return val;
+}
+
+void ValSets::setBound(int Max, int Min)
+{
+    max = Max;
+    min = Min;
+    if(val < Min || val > Max){
+        val = Max;
+        valText->setPlainText(QString::number(val));
+    }
+}
+
+ModeValSets::ModeValSets(QGraphicsItem *parent):
+    ValSets{parent}
+{
+    valText->setOpacity(0);
+    text = new QGraphicsTextItem("Classic",this);
+    text->setPos(upBtn->boundingRect().right() ,
+                 (upBtn->boundingRect().height() - text->boundingRect().height())/2);
+    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/XiangJiaoKuanMaoShuaLingGanTi-2.ttf",text,Qt::white,25);
+
+    downBtn->setPos(upBtn->boundingRect().width()+text->boundingRect().width() ,
+                    upBtn->boundingRect().y());
+
+    disconnect(upBtn,&GameBtn::clicked,nullptr,nullptr);
+    disconnect(downBtn,&GameBtn::clicked,nullptr,nullptr);
+
+
+    connect(upBtn,&GameBtn::clicked,[this]{
+        if(text->toPlainText() == "Classic"){
+            text->setPlainText("Hex");
+            emit modeChanged(Mode::HEX);
+        }
+
+    });
+    connect(downBtn,&GameBtn::clicked,[this]{
+        if(text->toPlainText() == "Hex"){
+            text->setPlainText("Classic");
+            emit modeChanged(Mode::CLASSIC);
+        }
+    });
+}
+
+ModeValSets::~ModeValSets()
+{}
+
+int ModeValSets::getMode()
+{
+    if(text->toPlainText() == "Classic"){
+        return Mode::CLASSIC;
+    }else{
+        return Mode::HEX;
+    }
 }

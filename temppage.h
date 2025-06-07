@@ -159,4 +159,45 @@ private:
 
 };
 
+
+//临时弹窗
+class MsgBox : public TempPage{
+
+    Q_OBJECT
+
+public:
+    MsgBox(QObject *parent = nullptr);
+
+    void setContent(QString content);
+
+signals:
+    void clicked();
+
+private:
+
+    QGraphicsTextItem* text;
+    QGraphicsPixmapItem* bg;
+
+};
+
+
+
+class LevelSetScene : public TempPage{
+    Q_OBJECT
+
+public:
+    LevelSetScene(QObject *parent = nullptr);
+
+    QGraphicsPixmapItem* bg;
+    TempPageBtn *back,*finish;
+    ModeValSets *modeSet;
+    ValSets *hardSet;
+
+    int getMode();
+    int getDifficulty();
+
+signals:
+    void finished();
+};
+
 #endif // TEMPPAGE_H

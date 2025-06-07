@@ -39,6 +39,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QTextEdit>
+#include <QFileDialog>
 
 class SideBar;
 

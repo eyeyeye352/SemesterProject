@@ -49,7 +49,7 @@ class ValSets : public GameObject{
     Q_OBJECT
 
 public:
-    ValSets(QGraphicsItem *parent = nullptr);
+    ValSets(QGraphicsItem *parent = nullptr,int Max = 10,int Min = 0);
     ~ValSets();
 
     FunctionBtn* upBtn, *downBtn;
@@ -57,11 +57,35 @@ public:
 
     QRectF boundingRect() const override;
 
+    int getVal();
+    void setBound(int Max,int Min);
+
+
+
 signals:
-    void valueChanged(double);
+    void valueChanged(int);
 
 private:
-    double val;
+    int val,max,min;
+};
+
+
+
+class ModeValSets : public ValSets{
+
+    Q_OBJECT
+
+public:
+    ModeValSets(QGraphicsItem *parent = nullptr);
+    ~ModeValSets();
+    int getMode();
+
+signals:
+    void modeChanged(int);
+
+private:
+    QGraphicsTextItem* text;
+
 };
 
 #endif // OTHERITEMS_H

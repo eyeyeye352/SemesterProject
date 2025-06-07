@@ -30,14 +30,14 @@ public slots:
     void goCreateScene();
 
     //建造关卡
+    void openLevelSetPage();
     void goBuildLevel();
 
     //游玩自定义关卡
     void loadMyLevel();
 
-    //share/import 自定义关卡
+    //share 自定义关卡
     void shareLevel();
-    void importLevel();
 
     //打开，关闭temppage
     void openSettingPage();
@@ -50,8 +50,10 @@ public slots:
     void closeTempPage();
 
     //选择关卡后进入游戏场景(先动画，动画到一半开始加载),参数为第几关
-    void loadGameAnime(int levelNum,bool shuffled);
-    void loadGame(int levelNum,bool shuffled);
+    //加载自定义关卡时，使用path
+    void loadGameAnime(int levelNum,bool shuffled,QString path = "");
+
+    void loadGame(int levelNum,bool shuffled,QString path = "");
 
 
     //弹窗
@@ -91,6 +93,8 @@ private:
     RankPage* rankPage;
     SavePage* savePage;
     CompletePage* completePage;
+    MsgBox* msgBox;
+    LevelSetScene* levelSetPage;
 
     QGraphicsView* view , *tempview;
 
@@ -102,13 +106,6 @@ private:
 
     //current gameMode
     int currentMode;
-
-    //username and password
-    QString username;
-
-    //当你从创意工坊退出时，该变量决定你是返回首页还是创意工坊。
-    bool enterFromCreateScene;
-
 
 
 public slots:

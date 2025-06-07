@@ -74,6 +74,10 @@ public:
     void addCenterHexBlock(HexTextBlock* h,int radius);
     void processNeightbors(HexTextBlock* center,int radius);
 
+    //自定义关卡不支持存档与排行
+    void enterFromCreateScene();
+    void recover();
+
 
     //gamesys设置标题并排版
     void setTitle(QString);
@@ -128,11 +132,10 @@ public:
     QGraphicsPixmapItem *title;
 
     //4个功能按钮
-    FunctionBtn * settingBtn, *backBtn , *rankBtn , *importBtn , *shareBtn;
+    FunctionBtn * settingBtn, *backBtn;
 
     //关卡
     FunctionBtn* levelblock,*buildblock;
-
 
 };
 
