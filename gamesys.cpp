@@ -19,6 +19,7 @@ Gamesys::Gamesys(QWidget *parent)
     startscene = new StartScene(this);
     levelscene = new LevelScene(this);
     createscene = new CreateScene(this);
+    create_level_scene = new CreateLevelScene(this);
 
     view = new QGraphicsView(this);
     view->setGeometry(0,0,Settings::screenWidth,Settings::screenHeight);
@@ -102,6 +103,9 @@ Gamesys::Gamesys(QWidget *parent)
     connect(levelSetPage,&LevelSetScene::closePage,this,&Gamesys::closeTempPage);
     connect(levelSetPage,&LevelSetScene::finished,this,&Gamesys::goBuildLevel);
 
+    connect(create_level_scene->settingBtn,&GameBtn::clicked,this,&Gamesys::openSettingPage);
+    connect(create_level_scene->shareBtn,&GameBtn::clicked,this,&Gamesys::shareLevel);
+
     initSLSlot();
     objPool::getinstance()->init();
 
@@ -153,12 +157,41 @@ void Gamesys::goBuildLevel()
     int mode = levelSetPage->getMode();
     int difficulty = levelSetPage->getDifficulty();
     qDebug() << "mode:" << mode << " difficulty；" << difficulty;
+
+    create_level_scene->setDifficulty(difficulty);
+    create_level_scene->setMode(mode);
+
+    closeTempPage();
+    Animation::changeScene(startscene,create_level_scene,view,1500)->start(QAbstractAnimation::DeleteWhenStopped);
+    MusicPlayer::getMPlayer()->changeBgm(QUrl(":/bgm/src/bgm/ingameBgm.mp3"));
 }
 
 
 void Gamesys::shareLevel()
 {
     qDebug() << "developping: share";
+    QString text = create_level_scene->getWholeText();
+    if(text.isEmpty()){
+        return;
+    }else{
+        qDebug() << text;
+    }
+
+
+    QString filepath = QFileDialog::getSaveFileName(
+        this,
+        "保存到",
+        "",
+        "文本文件 (*.txt)"
+    );
+
+    QFile file(filepath);
+    file.open(QIODevice::WriteOnly | QIODevice::Text);
+    QTextStream fs(&file);
+    fs << text;
+    file.close();
+
+    QMessageBox::information(this,"保存成功！","您可以导入您的自定义关卡");
 }
 
 
@@ -210,7 +243,7 @@ void Gamesys::goHome()
 
         bool changemusic = false;
 
-        if(view->scene() == levelscene){
+        if(view->scene() == levelscene || view->scene() == create_level_scene){
             resetLevel();
             changemusic = true;
         }
@@ -228,7 +261,6 @@ void Gamesys::goHome()
         });
 
         anime->start(QAbstractAnimation::DeleteWhenStopped);
-        BG_move_Anime->pause();
     }
 }
 

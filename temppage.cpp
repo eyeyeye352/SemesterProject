@@ -373,6 +373,7 @@ LevelSetScene::LevelSetScene(QObject *parent)
     modeSet->setPos(bg->boundingRect().width()/2,130);
     hardSet = new ValSets(bg);
     hardSet->setPos(bg->boundingRect().width()/2,190);
+    hardSet->setBound(10,4);
 
     connect(modeSet,&ModeValSets::modeChanged,[this](int mode){
         if(mode == Mode::CLASSIC){

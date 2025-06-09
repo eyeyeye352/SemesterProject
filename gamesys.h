@@ -95,6 +95,7 @@ private:
     CompletePage* completePage;
     MsgBox* msgBox;
     LevelSetScene* levelSetPage;
+    CreateLevelScene* create_level_scene;
 
     QGraphicsView* view , *tempview;
 

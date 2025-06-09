@@ -141,4 +141,34 @@ public:
 
 
 
+class CreateLevelScene : public Scene{
+    Q_OBJECT
+
+public:
+    CreateLevelScene(QObject* parent = nullptr);
+
+    //设置、排行查看、存档按钮
+    FunctionBtn *settingBtn, *shareBtn;
+
+    //加入textblock
+    QGraphicsTextItem *content,*title;
+    QTextEdit* content_edit,*title_edit;
+
+    QGraphicsPixmapItem* bg;
+
+    QString getContent();
+    QString getTitle();
+
+    void setDifficulty(int);
+    void setMode(int);
+    QString getWholeText();
+
+private:
+    int mode;
+    int difficulty;
+
+
+};
+
+
 #endif // SCENE_H

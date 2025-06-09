@@ -381,3 +381,130 @@ CreateScene::CreateScene(QObject *parent)
     addItem(buildblock);
 }
 
+
+CreateLevelScene::CreateLevelScene(QObject *parent)
+    :Scene{parent}
+{
+    bg = new QGraphicsPixmapItem(QPixmap(":/background/src/background/ingame_background1.png"));
+    addItem(bg);
+
+    //functional btns
+    settingBtn = new FunctionBtn(QPixmap(":/item/src/item/settingIcon.png"),bg);
+    shareBtn = new FunctionBtn(QPixmap(":/item/src/item/shareIcon.png"),bg);
+
+    settingBtn->setPos(Settings::functionBtnInterval,
+                       Settings::screenHeight - settingBtn->boundingRect().height() - 5);
+
+    shareBtn->setPos(2*Settings::functionBtnInterval + settingBtn->boundingRect().width(),
+                    Settings::screenHeight - settingBtn->boundingRect().height() - 5);
+
+    //加入textblock
+    content = new QGraphicsTextItem("content:",bg);
+    title =  new QGraphicsTextItem("title:",bg);
+    title->setPos(QPointF(100,100));
+    content->setPos(QPointF(100,200));
+    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf",title,Qt::black,20);
+    MyAlgorithms::addFontToTextItem(":/fonts/src/fonts/AaHuanMengKongJianXiangSuTi-2.ttf",content,Qt::black,20);
+
+    content_edit = new QTextEdit;
+    content_edit->setPlaceholderText("输入关卡内容...");
+    title_edit = new QTextEdit;
+    title_edit->setPlaceholderText("输入关卡标题...");
+
+    content_edit->setFixedSize(400,400);
+    title_edit->setFixedSize(250,30);
+    content_edit->move(content->x() + 150,content->y());
+    title_edit->move(content_edit->x(),title->y());
+
+    addWidget(title_edit);
+    addWidget(content_edit);
+
+}
+
+QString CreateLevelScene::getContent()
+{
+    return content_edit->toPlainText();
+}
+
+QString CreateLevelScene::getTitle()
+{
+    return title_edit->toPlainText();
+}
+
+void CreateLevelScene::setDifficulty(int h)
+{
+    difficulty = h;
+}
+
+void CreateLevelScene::setMode(int m)
+{
+    mode = m;
+}
+
+QString CreateLevelScene::getWholeText()
+{
+    QString l1 = "title=" + getTitle() + "\n";
+    QString temp,temp2;
+    if(mode == CLASSIC){
+        temp = "classic";
+        temp2 = QString::number(difficulty) + ',' + QString::number(difficulty);
+    }else{
+        temp = "hex";
+        temp2 = QString::number(difficulty);
+    }
+
+    QString l2 = "mode=" + temp + "\n";
+    QString l3 = "difficulty=" + temp2 + '\n';
+
+    QString l4 = "content=\n";
+    QString l5;
+    if(mode == CLASSIC){
+
+        if(getContent().size() < difficulty*difficulty){
+            QMessageBox::information(nullptr,"内容字数不够！","CLassic模式至少需要" + QString::number(difficulty*difficulty) + "个字符！");
+            return "";
+        }
+
+        int index = 0;
+        for (int j = 0; j < difficulty; ++j) {
+            for (int i = 0; i < difficulty; ++i) {
+                l5.append(getContent()[index]);
+                ++index;
+            }
+            l5 += '\n';
+        }
+
+    }
+    else{
+
+        if(getContent().size() < 3*difficulty*(difficulty-1)+1){
+            QMessageBox::information(nullptr,"内容字数不够！","至少需要" + QString::number(3*difficulty*(difficulty-1)+1) + "个字符！");
+            return "";
+        }
+
+        int wordNum = difficulty;
+        int index = 0;
+        for (int line = 1; line <= 2*difficulty-1; ++line) {
+
+            for (int i = index; i < index+wordNum; ++i) {
+                l5.append(getContent()[i]);
+            }
+
+            index += wordNum;
+            l5 += '\n';
+
+            //前半部分，每行使wordNum++
+            if(line < difficulty){
+                ++wordNum;
+            }
+            //后半部分每行--
+            else{
+                --wordNum;
+            }
+        }
+    };
+
+    return QString(l1+l2+l3+l4+l5);
+
+
+}
